@@ -7,7 +7,7 @@ import { Marquee } from "@/components/Marquee";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useCart } from "@/lib/cart";
 import { formatEuros } from "@/lib/money";
-import { checkoutSchema, PROVINCES, type CheckoutInput } from "@/lib/checkout-schema";
+import { checkoutFormSchema, PROVINCES, type CheckoutFormInput } from "@/lib/checkout-schema";
 import { createCheckoutSession } from "@/lib/checkout.server";
 
 export const Route = createFileRoute("/checkout")({
@@ -26,7 +26,7 @@ const labelClass = "block text-[11px] uppercase tracking-[0.2em] text-muted-fore
 
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
-  return <p className="mt-1.5 text-[11px] text-red-600">{msg}</p>;
+  return <p className="field-error mt-1.5 text-[11px] text-red-600">{msg}</p>;
 }
 
 function CheckoutPage() {
@@ -45,8 +45,8 @@ function CheckoutPage() {
     handleSubmit,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<CheckoutInput>({
-    resolver: zodResolver(checkoutSchema),
+  } = useForm<CheckoutFormInput>({
+    resolver: zodResolver(checkoutFormSchema),
     defaultValues: {
       email: "",
       phone: "",
@@ -63,34 +63,41 @@ function CheckoutPage() {
       orderNotes: "",
       acceptTerms: false,
       marketingOptIn: false,
-      items: [],
     },
   });
 
   const billingSame = watch("billingSameAsShipping");
 
-  const onSubmit = handleSubmit(async (values) => {
-    setSubmitError(null);
-    const items = detailedLines.map((l) => ({ id: l.id, size: l.size, qty: l.qty }));
-    if (items.length === 0) {
-      navigate({ to: "/eclipssebrand" });
-      return;
-    }
-    try {
-      const result = await createCheckoutSession({ data: { ...values, items } });
-      // Pre-Stripe: el pago aún no está activo. Guardamos el carrito y vamos a la página puente.
-      if (!result.ready) {
-        navigate({ to: "/pedido/pendiente" });
+  const onSubmit = handleSubmit(
+    async (values) => {
+      setSubmitError(null);
+      const items = detailedLines.map((l) => ({ id: l.id, size: l.size, qty: l.qty }));
+      if (items.length === 0) {
+        navigate({ to: "/eclipssebrand" });
         return;
       }
-      // (Cuando Stripe esté activo, aquí se redirige a result.url y se limpia el carrito tras el pago.)
-      clear();
-    } catch {
-      setSubmitError(
-        "No se ha podido procesar el pedido. Revisa los datos e inténtalo de nuevo en unos segundos.",
-      );
-    }
-  });
+      try {
+        const result = await createCheckoutSession({ data: { ...values, items } });
+        // Pre-Stripe: el pago aún no está activo. Guardamos el carrito y vamos a la página puente.
+        if (!result.ready) {
+          navigate({ to: "/pedido/pendiente" });
+          return;
+        }
+        // (Cuando Stripe esté activo, aquí se redirige a result.url y se limpia el carrito tras el pago.)
+        clear();
+      } catch {
+        setSubmitError(
+          "No se ha podido procesar el pedido. Revisa los datos e inténtalo de nuevo en unos segundos.",
+        );
+      }
+    },
+    () => {
+      setSubmitError("Revisa los campos marcados en rojo y vuelve a intentarlo.");
+      document
+        .querySelector(".field-error")
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    },
+  );
 
   if (hydrated && detailedLines.length === 0) return null;
 

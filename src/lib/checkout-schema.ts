@@ -59,3 +59,12 @@ export const checkoutSchema = z.object({
 });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
+
+/**
+ * Esquema del formulario de checkout (sin `items`): el formulario solo valida los
+ * datos del cliente. Las líneas del carrito se añaden en el submit y se validan
+ * en el servidor con `checkoutSchema`.
+ */
+export const checkoutFormSchema = checkoutSchema.omit({ items: true });
+
+export type CheckoutFormInput = z.infer<typeof checkoutFormSchema>;
