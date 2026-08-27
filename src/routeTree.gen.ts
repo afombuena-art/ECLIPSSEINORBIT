@@ -13,12 +13,14 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as EclipssebrandRouteImport } from './routes/eclipssebrand'
 import { Route as PersonalizaRouteImport } from './routes/personaliza'
+import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe-webhook'
 import { Route as LegalAvisoLegalRouteImport } from './routes/legal.aviso-legal'
 import { Route as LegalCookiesRouteImport } from './routes/legal.cookies'
 import { Route as LegalDevolucionesRouteImport } from './routes/legal.devoluciones'
 import { Route as LegalPrivacidadRouteImport } from './routes/legal.privacidad'
 import { Route as LegalTerminosRouteImport } from './routes/legal.terminos'
-import { Route as PedidoPendienteRouteImport } from './routes/pedido.pendiente'
+import { Route as PedidoCanceladoRouteImport } from './routes/pedido.cancelado'
+import { Route as PedidoConfirmadoRouteImport } from './routes/pedido.confirmado'
 import { Route as PrendasSlugRouteImport } from './routes/prendas.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -39,6 +41,11 @@ const EclipssebrandRoute = EclipssebrandRouteImport.update({
 const PersonalizaRoute = PersonalizaRouteImport.update({
   id: '/personaliza',
   path: '/personaliza',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
+  id: '/api/stripe-webhook',
+  path: '/api/stripe-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LegalAvisoLegalRoute = LegalAvisoLegalRouteImport.update({
@@ -66,9 +73,14 @@ const LegalTerminosRoute = LegalTerminosRouteImport.update({
   path: '/legal/terminos',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PedidoPendienteRoute = PedidoPendienteRouteImport.update({
-  id: '/pedido/pendiente',
-  path: '/pedido/pendiente',
+const PedidoCanceladoRoute = PedidoCanceladoRouteImport.update({
+  id: '/pedido/cancelado',
+  path: '/pedido/cancelado',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PedidoConfirmadoRoute = PedidoConfirmadoRouteImport.update({
+  id: '/pedido/confirmado',
+  path: '/pedido/confirmado',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrendasSlugRoute = PrendasSlugRouteImport.update({
@@ -82,12 +94,14 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof CheckoutRoute
   '/eclipssebrand': typeof EclipssebrandRoute
   '/personaliza': typeof PersonalizaRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/legal/aviso-legal': typeof LegalAvisoLegalRoute
   '/legal/cookies': typeof LegalCookiesRoute
   '/legal/devoluciones': typeof LegalDevolucionesRoute
   '/legal/privacidad': typeof LegalPrivacidadRoute
   '/legal/terminos': typeof LegalTerminosRoute
-  '/pedido/pendiente': typeof PedidoPendienteRoute
+  '/pedido/cancelado': typeof PedidoCanceladoRoute
+  '/pedido/confirmado': typeof PedidoConfirmadoRoute
   '/prendas/$slug': typeof PrendasSlugRoute
 }
 export interface FileRoutesByTo {
@@ -95,12 +109,14 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutRoute
   '/eclipssebrand': typeof EclipssebrandRoute
   '/personaliza': typeof PersonalizaRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/legal/aviso-legal': typeof LegalAvisoLegalRoute
   '/legal/cookies': typeof LegalCookiesRoute
   '/legal/devoluciones': typeof LegalDevolucionesRoute
   '/legal/privacidad': typeof LegalPrivacidadRoute
   '/legal/terminos': typeof LegalTerminosRoute
-  '/pedido/pendiente': typeof PedidoPendienteRoute
+  '/pedido/cancelado': typeof PedidoCanceladoRoute
+  '/pedido/confirmado': typeof PedidoConfirmadoRoute
   '/prendas/$slug': typeof PrendasSlugRoute
 }
 export interface FileRoutesById {
@@ -109,12 +125,14 @@ export interface FileRoutesById {
   '/checkout': typeof CheckoutRoute
   '/eclipssebrand': typeof EclipssebrandRoute
   '/personaliza': typeof PersonalizaRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/legal/aviso-legal': typeof LegalAvisoLegalRoute
   '/legal/cookies': typeof LegalCookiesRoute
   '/legal/devoluciones': typeof LegalDevolucionesRoute
   '/legal/privacidad': typeof LegalPrivacidadRoute
   '/legal/terminos': typeof LegalTerminosRoute
-  '/pedido/pendiente': typeof PedidoPendienteRoute
+  '/pedido/cancelado': typeof PedidoCanceladoRoute
+  '/pedido/confirmado': typeof PedidoConfirmadoRoute
   '/prendas/$slug': typeof PrendasSlugRoute
 }
 export interface FileRouteTypes {
@@ -124,12 +142,14 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/eclipssebrand'
     | '/personaliza'
+    | '/api/stripe-webhook'
     | '/legal/aviso-legal'
     | '/legal/cookies'
     | '/legal/devoluciones'
     | '/legal/privacidad'
     | '/legal/terminos'
-    | '/pedido/pendiente'
+    | '/pedido/cancelado'
+    | '/pedido/confirmado'
     | '/prendas/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -137,12 +157,14 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/eclipssebrand'
     | '/personaliza'
+    | '/api/stripe-webhook'
     | '/legal/aviso-legal'
     | '/legal/cookies'
     | '/legal/devoluciones'
     | '/legal/privacidad'
     | '/legal/terminos'
-    | '/pedido/pendiente'
+    | '/pedido/cancelado'
+    | '/pedido/confirmado'
     | '/prendas/$slug'
   id:
     | '__root__'
@@ -150,12 +172,14 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/eclipssebrand'
     | '/personaliza'
+    | '/api/stripe-webhook'
     | '/legal/aviso-legal'
     | '/legal/cookies'
     | '/legal/devoluciones'
     | '/legal/privacidad'
     | '/legal/terminos'
-    | '/pedido/pendiente'
+    | '/pedido/cancelado'
+    | '/pedido/confirmado'
     | '/prendas/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -164,12 +188,14 @@ export interface RootRouteChildren {
   CheckoutRoute: typeof CheckoutRoute
   EclipssebrandRoute: typeof EclipssebrandRoute
   PersonalizaRoute: typeof PersonalizaRoute
+  ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   LegalAvisoLegalRoute: typeof LegalAvisoLegalRoute
   LegalCookiesRoute: typeof LegalCookiesRoute
   LegalDevolucionesRoute: typeof LegalDevolucionesRoute
   LegalPrivacidadRoute: typeof LegalPrivacidadRoute
   LegalTerminosRoute: typeof LegalTerminosRoute
-  PedidoPendienteRoute: typeof PedidoPendienteRoute
+  PedidoCanceladoRoute: typeof PedidoCanceladoRoute
+  PedidoConfirmadoRoute: typeof PedidoConfirmadoRoute
   PrendasSlugRoute: typeof PrendasSlugRoute
 }
 
@@ -201,6 +227,13 @@ declare module '@tanstack/react-router' {
       path: '/personaliza'
       fullPath: '/personaliza'
       preLoaderRoute: typeof PersonalizaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stripe-webhook': {
+      id: '/api/stripe-webhook'
+      path: '/api/stripe-webhook'
+      fullPath: '/api/stripe-webhook'
+      preLoaderRoute: typeof ApiStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/legal/aviso-legal': {
@@ -238,11 +271,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalTerminosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/pedido/pendiente': {
-      id: '/pedido/pendiente'
-      path: '/pedido/pendiente'
-      fullPath: '/pedido/pendiente'
-      preLoaderRoute: typeof PedidoPendienteRouteImport
+    '/pedido/cancelado': {
+      id: '/pedido/cancelado'
+      path: '/pedido/cancelado'
+      fullPath: '/pedido/cancelado'
+      preLoaderRoute: typeof PedidoCanceladoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pedido/confirmado': {
+      id: '/pedido/confirmado'
+      path: '/pedido/confirmado'
+      fullPath: '/pedido/confirmado'
+      preLoaderRoute: typeof PedidoConfirmadoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/prendas/$slug': {
@@ -260,12 +300,14 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutRoute: CheckoutRoute,
   EclipssebrandRoute: EclipssebrandRoute,
   PersonalizaRoute: PersonalizaRoute,
+  ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   LegalAvisoLegalRoute: LegalAvisoLegalRoute,
   LegalCookiesRoute: LegalCookiesRoute,
   LegalDevolucionesRoute: LegalDevolucionesRoute,
   LegalPrivacidadRoute: LegalPrivacidadRoute,
   LegalTerminosRoute: LegalTerminosRoute,
-  PedidoPendienteRoute: PedidoPendienteRoute,
+  PedidoCanceladoRoute: PedidoCanceladoRoute,
+  PedidoConfirmadoRoute: PedidoConfirmadoRoute,
   PrendasSlugRoute: PrendasSlugRoute,
 }
 export const routeTree = rootRouteImport

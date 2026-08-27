@@ -7,7 +7,7 @@ import { Marquee } from "@/components/Marquee";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useCart } from "@/lib/cart";
 import { formatEuros } from "@/lib/money";
-import { checkoutFormSchema, PROVINCES, type CheckoutFormInput } from "@/lib/checkout-schema";
+import { checkoutFormSchema, type CheckoutFormInput } from "@/lib/checkout-schema";
 import { createCheckoutSession } from "@/lib/checkout.server";
 
 export const Route = createFileRoute("/checkout")({
@@ -22,16 +22,10 @@ export const Route = createFileRoute("/checkout")({
 
 const inputClass =
   "w-full border border-black/20 bg-white px-3.5 py-3 text-sm outline-none transition-colors focus:border-black";
-const labelClass = "block text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-2";
-
-function FieldError({ msg }: { msg?: string }) {
-  if (!msg) return null;
-  return <p className="field-error mt-1.5 text-[11px] text-red-600">{msg}</p>;
-}
 
 function CheckoutPage() {
   const navigate = useNavigate();
-  const { detailedLines, subtotalCents, shippingCents, totalCents, hydrated, clear } = useCart();
+  const { detailedLines, subtotalCents, shippingCents, totalCents, hydrated } = useCart();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -43,30 +37,11 @@ function CheckoutPage() {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<CheckoutFormInput>({
     resolver: zodResolver(checkoutFormSchema),
-    defaultValues: {
-      email: "",
-      phone: "",
-      firstName: "",
-      lastName: "",
-      address1: "",
-      address2: "",
-      postalCode: "",
-      city: "",
-      province: "",
-      country: "ES",
-      billingSameAsShipping: true,
-      invoiceNif: "",
-      orderNotes: "",
-      acceptTerms: false,
-      marketingOptIn: false,
-    },
+    defaultValues: { orderNotes: "", acceptTerms: false, marketingOptIn: false },
   });
-
-  const billingSame = watch("billingSameAsShipping");
 
   const onSubmit = handleSubmit(
     async (values) => {
@@ -77,25 +52,16 @@ function CheckoutPage() {
         return;
       }
       try {
-        const result = await createCheckoutSession({ data: { ...values, items } });
-        // Pre-Stripe: el pago aún no está activo. Guardamos el carrito y vamos a la página puente.
-        if (!result.ready) {
-          navigate({ to: "/pedido/pendiente" });
-          return;
-        }
-        // (Cuando Stripe esté activo, aquí se redirige a result.url y se limpia el carrito tras el pago.)
-        clear();
+        const { url } = await createCheckoutSession({ data: { ...values, items } });
+        window.location.href = url;
       } catch {
         setSubmitError(
-          "No se ha podido procesar el pedido. Revisa los datos e inténtalo de nuevo en unos segundos.",
+          "No se ha podido iniciar el pago. Inténtalo de nuevo en unos segundos.",
         );
       }
     },
     () => {
       setSubmitError("Revisa los campos marcados en rojo y vuelve a intentarlo.");
-      document
-        .querySelector(".field-error")
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
     },
   );
 
@@ -106,103 +72,23 @@ function CheckoutPage() {
       <Marquee text="POR Y PARA JÓVENES" />
       <SiteHeader current="brand" />
 
-      <section className="mx-auto max-w-6xl px-5 md:px-8 py-10 md:py-16">
+      <section className="mx-auto max-w-4xl px-5 md:px-8 py-10 md:py-16">
         <Link to="/eclipssebrand" className="text-[11px] uppercase tracking-[0.25em] hover:underline">
           ← Seguir comprando
         </Link>
         <h1 className="mt-6 font-display text-4xl md:text-6xl leading-tight">Finalizar compra</h1>
 
-        <div className="mt-10 grid lg:grid-cols-[1fr_380px] gap-10 lg:gap-16 items-start">
-          {/* Formulario */}
-          <form onSubmit={onSubmit} noValidate className="space-y-10">
-            <fieldset className="space-y-5">
-              <legend className="font-display text-lg mb-4">Contacto</legend>
-              <div>
-                <label className={labelClass} htmlFor="email">Email</label>
-                <input id="email" type="email" autoComplete="email" className={inputClass} {...register("email")} />
-                <FieldError msg={errors.email?.message} />
-              </div>
-              <div>
-                <label className={labelClass} htmlFor="phone">Teléfono</label>
-                <input id="phone" type="tel" autoComplete="tel" className={inputClass} {...register("phone")} />
-                <FieldError msg={errors.phone?.message} />
-              </div>
-            </fieldset>
-
-            <fieldset className="space-y-5">
-              <legend className="font-display text-lg mb-4">Dirección de envío</legend>
-              <div className="grid sm:grid-cols-2 gap-5">
-                <div>
-                  <label className={labelClass} htmlFor="firstName">Nombre</label>
-                  <input id="firstName" autoComplete="given-name" className={inputClass} {...register("firstName")} />
-                  <FieldError msg={errors.firstName?.message} />
-                </div>
-                <div>
-                  <label className={labelClass} htmlFor="lastName">Apellidos</label>
-                  <input id="lastName" autoComplete="family-name" className={inputClass} {...register("lastName")} />
-                  <FieldError msg={errors.lastName?.message} />
-                </div>
-              </div>
-              <div>
-                <label className={labelClass} htmlFor="address1">Dirección (calle y número)</label>
-                <input id="address1" autoComplete="address-line1" className={inputClass} {...register("address1")} />
-                <FieldError msg={errors.address1?.message} />
-              </div>
-              <div>
-                <label className={labelClass} htmlFor="address2">Piso, puerta, otros (opcional)</label>
-                <input id="address2" autoComplete="address-line2" className={inputClass} {...register("address2")} />
-                <FieldError msg={errors.address2?.message} />
-              </div>
-              <div className="grid sm:grid-cols-3 gap-5">
-                <div>
-                  <label className={labelClass} htmlFor="postalCode">Código postal</label>
-                  <input id="postalCode" inputMode="numeric" autoComplete="postal-code" className={inputClass} {...register("postalCode")} />
-                  <FieldError msg={errors.postalCode?.message} />
-                </div>
-                <div>
-                  <label className={labelClass} htmlFor="city">Población</label>
-                  <input id="city" autoComplete="address-level2" className={inputClass} {...register("city")} />
-                  <FieldError msg={errors.city?.message} />
-                </div>
-                <div>
-                  <label className={labelClass} htmlFor="province">Provincia</label>
-                  <select id="province" className={inputClass} {...register("province")}>
-                    <option value="">Selecciona…</option>
-                    {PROVINCES.map((p) => (
-                      <option key={p} value={p}>{p}</option>
-                    ))}
-                  </select>
-                  <FieldError msg={errors.province?.message} />
-                </div>
-              </div>
-              <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                Envíos solo a España peninsular y territorios de Correos.
-              </p>
-            </fieldset>
-
-            <fieldset className="space-y-4">
-              <legend className="font-display text-lg mb-4">Facturación</legend>
-              <label className="flex items-start gap-3 text-sm">
-                <input type="checkbox" className="mt-1" {...register("billingSameAsShipping")} />
-                <span>La dirección de facturación es la misma que la de envío</span>
+        <div className="mt-10 grid lg:grid-cols-[1fr_340px] gap-10 lg:gap-16 items-start">
+          <form onSubmit={onSubmit} noValidate className="space-y-8">
+            <div>
+              <label className="block text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-2" htmlFor="orderNotes">
+                Notas del pedido (opcional)
               </label>
-              {!billingSame && (
-                <p className="text-[11px] text-muted-foreground">
-                  Escríbenos tu dirección de facturación en las notas del pedido y la ajustamos antes de emitir la factura.
-                </p>
+              <textarea id="orderNotes" rows={3} className={inputClass} {...register("orderNotes")} />
+              {errors.orderNotes?.message && (
+                <p className="field-error mt-1.5 text-[11px] text-red-600">{errors.orderNotes.message}</p>
               )}
-              <div>
-                <label className={labelClass} htmlFor="invoiceNif">NIF / CIF para factura (opcional)</label>
-                <input id="invoiceNif" className={inputClass} {...register("invoiceNif")} />
-                <FieldError msg={errors.invoiceNif?.message} />
-              </div>
-            </fieldset>
-
-            <fieldset className="space-y-4">
-              <legend className="font-display text-lg mb-4">Notas del pedido (opcional)</legend>
-              <textarea rows={3} className={inputClass} {...register("orderNotes")} />
-              <FieldError msg={errors.orderNotes?.message} />
-            </fieldset>
+            </div>
 
             <div className="space-y-4 border-t border-border pt-6">
               <label className="flex items-start gap-3 text-sm">
@@ -214,7 +100,9 @@ function CheckoutPage() {
                   <Link to="/legal/privacidad" className="underline underline-offset-4">política de privacidad</Link>.
                 </span>
               </label>
-              <FieldError msg={errors.acceptTerms?.message} />
+              {errors.acceptTerms?.message && (
+                <p className="field-error text-[11px] text-red-600">{errors.acceptTerms.message}</p>
+              )}
               <label className="flex items-start gap-3 text-sm">
                 <input type="checkbox" className="mt-1" {...register("marketingOptIn")} />
                 <span>Quiero recibir novedades y próximos drops por email (opcional).</span>
@@ -230,14 +118,14 @@ function CheckoutPage() {
               disabled={isSubmitting}
               className="w-full rounded-full border border-black bg-black text-white px-10 py-4 font-display text-[11px] uppercase tracking-[0.25em] hover:bg-white hover:text-black transition-colors disabled:opacity-50"
             >
-              {isSubmitting ? "Procesando…" : "Ir a pagar"}
+              {isSubmitting ? "Redirigiendo al pago…" : "Ir a pagar"}
             </button>
             <p className="text-[11px] text-muted-foreground text-center">
-              Pago seguro con tarjeta. El número de tarjeta lo gestiona la pasarela de pago, nunca ECLIPSSE™.
+              Te llevamos a la pasarela segura de Stripe para introducir la dirección de envío y
+              pagar con tarjeta. El número de tarjeta lo gestiona Stripe, nunca ECLIPSSE™.
             </p>
           </form>
 
-          {/* Resumen */}
           <aside className="lg:sticky lg:top-24 border border-border p-5 md:p-6">
             <h2 className="font-display text-lg mb-4">Tu pedido</h2>
             <div className="divide-y divide-border">
