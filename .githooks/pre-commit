@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+#
+# Pre-commit hook: bloquea el commit si gitleaks detecta un secreto
+# en los cambios preparados (staged).
+#
+# Activar en este repo:   git config core.hooksPath .githooks
+# Saltar puntualmente:     git commit --no-verify   (evítalo)
+
+set -euo pipefail
+
+# Localiza gitleaks: PATH primero, luego la instalacion de WinGet en Windows.
+GITLEAKS="$(command -v gitleaks || true)"
+if [ -z "$GITLEAKS" ]; then
+  for c in \
+    "$HOME/AppData/Local/Microsoft/WinGet/Links/gitleaks.exe" \
+    "$HOME"/AppData/Local/Microsoft/WinGet/Packages/Gitleaks.Gitleaks_*/gitleaks.exe \
+    /c/ProgramData/chocolatey/bin/gitleaks.exe; do
+    if [ -x "$c" ]; then GITLEAKS="$c"; break; fi
+  done
+fi
+
+if [ -z "$GITLEAKS" ]; then
+  echo "⚠️  gitleaks no encontrado. Instálalo (winget install Gitleaks.Gitleaks) o usa --no-verify bajo tu responsabilidad." >&2
+  exit 1
+fi
+
+echo "🔍 gitleaks: escaneando cambios staged..."
+if ! "$GITLEAKS" git --staged --redact --no-banner -v; then
+  echo "" >&2
+  echo "⛔ Commit bloqueado: gitleaks ha detectado un posible secreto." >&2
+  echo "   Revisa lo de arriba. Si es un falso positivo, añade una regla en .gitleaks.toml o un allowlist." >&2
+  exit 1
+fi
+
+echo "✅ gitleaks: sin secretos en los cambios."
