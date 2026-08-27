@@ -14,9 +14,14 @@ import gorra from "@/assets/gorra_front.jpeg.asset.json";
 import gorraModel from "@/assets/gorra_model.jpeg.asset.json";
 
 export type Product = {
+  /** Id estable del producto (coincide con el slug). Fuente de verdad para el checkout. */
+  id: string;
   slug: string;
   name: string;
-  price: string;
+  /** Precio unitario en céntimos, IVA incluido. Única fuente de verdad del importe. */
+  priceCents: number;
+  /** Peso aproximado de la prenda con packaging, en gramos. Usado para el cálculo de envío. */
+  weightGrams: number;
   front: string;
   back: string;
   images: string[];
@@ -30,9 +35,11 @@ const camisetaSizes = ["S", "M", "L", "XL"];
 
 export const products: Product[] = [
   {
+    id: "camiseta-azul",
     slug: "camiseta-azul",
     name: "Camiseta Azul",
-    price: "23,97 €",
+    priceCents: 2397,
+    weightGrams: 220,
     front: azulBack.url,
     back: azul.url,
     images: [azulBack.url, azul.url, azulModel.url],
@@ -52,9 +59,11 @@ export const products: Product[] = [
     ],
   },
   {
+    id: "camiseta-orbit",
     slug: "camiseta-orbit",
     name: "Camiseta Blanca Orbit",
-    price: "23,97 €",
+    priceCents: 2397,
+    weightGrams: 220,
     front: orbitBack.url,
     back: orbit.url,
     images: [orbitBack.url, orbit.url, orbitModel.url],
@@ -74,9 +83,11 @@ export const products: Product[] = [
     ],
   },
   {
+    id: "camiseta-sun",
     slug: "camiseta-sun",
     name: "Camiseta Blanca Sun",
-    price: "23,97 €",
+    priceCents: 2397,
+    weightGrams: 220,
     front: sunBack.url,
     back: sun.url,
     images: [sunBack.url, sun.url, sunModel.url],
@@ -96,9 +107,11 @@ export const products: Product[] = [
     ],
   },
   {
+    id: "camiseta-gris",
     slug: "camiseta-gris",
     name: "Camiseta Gris",
-    price: "23,97 €",
+    priceCents: 2397,
+    weightGrams: 220,
     front: grisBack.url,
     back: gris.url,
     images: [grisBack.url, gris.url, grisModel.url],
@@ -118,9 +131,11 @@ export const products: Product[] = [
     ],
   },
   {
+    id: "gorra-verde",
     slug: "gorra-verde",
     name: "Gorra Verde",
-    price: "14,97 €",
+    priceCents: 1497,
+    weightGrams: 120,
     front: gorra.url,
     back: gorraModel.url,
     images: [gorra.url, gorraModel.url],
@@ -143,4 +158,8 @@ export const products: Product[] = [
 
 export function getProduct(slug: string) {
   return products.find((p) => p.slug === slug);
+}
+
+export function getProductById(id: string) {
+  return products.find((p) => p.id === id);
 }

@@ -9,19 +9,26 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as PersonalizaRouteImport } from './routes/personaliza'
-import { Route as EclipssebrandRouteImport } from './routes/eclipssebrand'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as PrendasSlugRouteImport } from './routes/prendas.$slug'
-import { Route as LegalTerminosRouteImport } from './routes/legal.terminos'
-import { Route as LegalPrivacidadRouteImport } from './routes/legal.privacidad'
-import { Route as LegalDevolucionesRouteImport } from './routes/legal.devoluciones'
-import { Route as LegalCookiesRouteImport } from './routes/legal.cookies'
+import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as EclipssebrandRouteImport } from './routes/eclipssebrand'
+import { Route as PersonalizaRouteImport } from './routes/personaliza'
 import { Route as LegalAvisoLegalRouteImport } from './routes/legal.aviso-legal'
+import { Route as LegalCookiesRouteImport } from './routes/legal.cookies'
+import { Route as LegalDevolucionesRouteImport } from './routes/legal.devoluciones'
+import { Route as LegalPrivacidadRouteImport } from './routes/legal.privacidad'
+import { Route as LegalTerminosRouteImport } from './routes/legal.terminos'
+import { Route as PedidoPendienteRouteImport } from './routes/pedido.pendiente'
+import { Route as PrendasSlugRouteImport } from './routes/prendas.$slug'
 
-const PersonalizaRoute = PersonalizaRouteImport.update({
-  id: '/personaliza',
-  path: '/personaliza',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EclipssebrandRoute = EclipssebrandRouteImport.update({
@@ -29,34 +36,9 @@ const EclipssebrandRoute = EclipssebrandRouteImport.update({
   path: '/eclipssebrand',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrendasSlugRoute = PrendasSlugRouteImport.update({
-  id: '/prendas/$slug',
-  path: '/prendas/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LegalTerminosRoute = LegalTerminosRouteImport.update({
-  id: '/legal/terminos',
-  path: '/legal/terminos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LegalPrivacidadRoute = LegalPrivacidadRouteImport.update({
-  id: '/legal/privacidad',
-  path: '/legal/privacidad',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LegalDevolucionesRoute = LegalDevolucionesRouteImport.update({
-  id: '/legal/devoluciones',
-  path: '/legal/devoluciones',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LegalCookiesRoute = LegalCookiesRouteImport.update({
-  id: '/legal/cookies',
-  path: '/legal/cookies',
+const PersonalizaRoute = PersonalizaRouteImport.update({
+  id: '/personaliza',
+  path: '/personaliza',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LegalAvisoLegalRoute = LegalAvisoLegalRouteImport.update({
@@ -64,9 +46,40 @@ const LegalAvisoLegalRoute = LegalAvisoLegalRouteImport.update({
   path: '/legal/aviso-legal',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LegalCookiesRoute = LegalCookiesRouteImport.update({
+  id: '/legal/cookies',
+  path: '/legal/cookies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalDevolucionesRoute = LegalDevolucionesRouteImport.update({
+  id: '/legal/devoluciones',
+  path: '/legal/devoluciones',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalPrivacidadRoute = LegalPrivacidadRouteImport.update({
+  id: '/legal/privacidad',
+  path: '/legal/privacidad',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalTerminosRoute = LegalTerminosRouteImport.update({
+  id: '/legal/terminos',
+  path: '/legal/terminos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PedidoPendienteRoute = PedidoPendienteRouteImport.update({
+  id: '/pedido/pendiente',
+  path: '/pedido/pendiente',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrendasSlugRoute = PrendasSlugRouteImport.update({
+  id: '/prendas/$slug',
+  path: '/prendas/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/checkout': typeof CheckoutRoute
   '/eclipssebrand': typeof EclipssebrandRoute
   '/personaliza': typeof PersonalizaRoute
   '/legal/aviso-legal': typeof LegalAvisoLegalRoute
@@ -74,10 +87,12 @@ export interface FileRoutesByFullPath {
   '/legal/devoluciones': typeof LegalDevolucionesRoute
   '/legal/privacidad': typeof LegalPrivacidadRoute
   '/legal/terminos': typeof LegalTerminosRoute
+  '/pedido/pendiente': typeof PedidoPendienteRoute
   '/prendas/$slug': typeof PrendasSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/checkout': typeof CheckoutRoute
   '/eclipssebrand': typeof EclipssebrandRoute
   '/personaliza': typeof PersonalizaRoute
   '/legal/aviso-legal': typeof LegalAvisoLegalRoute
@@ -85,11 +100,13 @@ export interface FileRoutesByTo {
   '/legal/devoluciones': typeof LegalDevolucionesRoute
   '/legal/privacidad': typeof LegalPrivacidadRoute
   '/legal/terminos': typeof LegalTerminosRoute
+  '/pedido/pendiente': typeof PedidoPendienteRoute
   '/prendas/$slug': typeof PrendasSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/checkout': typeof CheckoutRoute
   '/eclipssebrand': typeof EclipssebrandRoute
   '/personaliza': typeof PersonalizaRoute
   '/legal/aviso-legal': typeof LegalAvisoLegalRoute
@@ -97,12 +114,14 @@ export interface FileRoutesById {
   '/legal/devoluciones': typeof LegalDevolucionesRoute
   '/legal/privacidad': typeof LegalPrivacidadRoute
   '/legal/terminos': typeof LegalTerminosRoute
+  '/pedido/pendiente': typeof PedidoPendienteRoute
   '/prendas/$slug': typeof PrendasSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/checkout'
     | '/eclipssebrand'
     | '/personaliza'
     | '/legal/aviso-legal'
@@ -110,10 +129,12 @@ export interface FileRouteTypes {
     | '/legal/devoluciones'
     | '/legal/privacidad'
     | '/legal/terminos'
+    | '/pedido/pendiente'
     | '/prendas/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/checkout'
     | '/eclipssebrand'
     | '/personaliza'
     | '/legal/aviso-legal'
@@ -121,10 +142,12 @@ export interface FileRouteTypes {
     | '/legal/devoluciones'
     | '/legal/privacidad'
     | '/legal/terminos'
+    | '/pedido/pendiente'
     | '/prendas/$slug'
   id:
     | '__root__'
     | '/'
+    | '/checkout'
     | '/eclipssebrand'
     | '/personaliza'
     | '/legal/aviso-legal'
@@ -132,11 +155,13 @@ export interface FileRouteTypes {
     | '/legal/devoluciones'
     | '/legal/privacidad'
     | '/legal/terminos'
+    | '/pedido/pendiente'
     | '/prendas/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CheckoutRoute: typeof CheckoutRoute
   EclipssebrandRoute: typeof EclipssebrandRoute
   PersonalizaRoute: typeof PersonalizaRoute
   LegalAvisoLegalRoute: typeof LegalAvisoLegalRoute
@@ -144,16 +169,24 @@ export interface RootRouteChildren {
   LegalDevolucionesRoute: typeof LegalDevolucionesRoute
   LegalPrivacidadRoute: typeof LegalPrivacidadRoute
   LegalTerminosRoute: typeof LegalTerminosRoute
+  PedidoPendienteRoute: typeof PedidoPendienteRoute
   PrendasSlugRoute: typeof PrendasSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/personaliza': {
-      id: '/personaliza'
-      path: '/personaliza'
-      fullPath: '/personaliza'
-      preLoaderRoute: typeof PersonalizaRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/eclipssebrand': {
@@ -163,46 +196,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EclipssebrandRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/prendas/$slug': {
-      id: '/prendas/$slug'
-      path: '/prendas/$slug'
-      fullPath: '/prendas/$slug'
-      preLoaderRoute: typeof PrendasSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/legal/terminos': {
-      id: '/legal/terminos'
-      path: '/legal/terminos'
-      fullPath: '/legal/terminos'
-      preLoaderRoute: typeof LegalTerminosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/legal/privacidad': {
-      id: '/legal/privacidad'
-      path: '/legal/privacidad'
-      fullPath: '/legal/privacidad'
-      preLoaderRoute: typeof LegalPrivacidadRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/legal/devoluciones': {
-      id: '/legal/devoluciones'
-      path: '/legal/devoluciones'
-      fullPath: '/legal/devoluciones'
-      preLoaderRoute: typeof LegalDevolucionesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/legal/cookies': {
-      id: '/legal/cookies'
-      path: '/legal/cookies'
-      fullPath: '/legal/cookies'
-      preLoaderRoute: typeof LegalCookiesRouteImport
+    '/personaliza': {
+      id: '/personaliza'
+      path: '/personaliza'
+      fullPath: '/personaliza'
+      preLoaderRoute: typeof PersonalizaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/legal/aviso-legal': {
@@ -212,11 +210,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalAvisoLegalRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/legal/cookies': {
+      id: '/legal/cookies'
+      path: '/legal/cookies'
+      fullPath: '/legal/cookies'
+      preLoaderRoute: typeof LegalCookiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/devoluciones': {
+      id: '/legal/devoluciones'
+      path: '/legal/devoluciones'
+      fullPath: '/legal/devoluciones'
+      preLoaderRoute: typeof LegalDevolucionesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/privacidad': {
+      id: '/legal/privacidad'
+      path: '/legal/privacidad'
+      fullPath: '/legal/privacidad'
+      preLoaderRoute: typeof LegalPrivacidadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/terminos': {
+      id: '/legal/terminos'
+      path: '/legal/terminos'
+      fullPath: '/legal/terminos'
+      preLoaderRoute: typeof LegalTerminosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pedido/pendiente': {
+      id: '/pedido/pendiente'
+      path: '/pedido/pendiente'
+      fullPath: '/pedido/pendiente'
+      preLoaderRoute: typeof PedidoPendienteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prendas/$slug': {
+      id: '/prendas/$slug'
+      path: '/prendas/$slug'
+      fullPath: '/prendas/$slug'
+      preLoaderRoute: typeof PrendasSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CheckoutRoute: CheckoutRoute,
   EclipssebrandRoute: EclipssebrandRoute,
   PersonalizaRoute: PersonalizaRoute,
   LegalAvisoLegalRoute: LegalAvisoLegalRoute,
@@ -224,6 +265,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalDevolucionesRoute: LegalDevolucionesRoute,
   LegalPrivacidadRoute: LegalPrivacidadRoute,
   LegalTerminosRoute: LegalTerminosRoute,
+  PedidoPendienteRoute: PedidoPendienteRoute,
   PrendasSlugRoute: PrendasSlugRoute,
 }
 export const routeTree = rootRouteImport

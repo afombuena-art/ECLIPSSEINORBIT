@@ -1,6 +1,8 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { ShoppingBag } from "lucide-react";
 import { Logo } from "./Logo";
+import { useCart } from "@/lib/cart";
 
 export function SiteHeader({ current }: { current: "brand" | "custom" }) {
   const other = current === "brand" ? "custom" : "brand";
@@ -9,6 +11,7 @@ export function SiteHeader({ current }: { current: "brand" | "custom" }) {
   const homeTo = current === "brand" ? "/eclipssebrand" : "/personaliza";
   const navigate = useNavigate();
   const location = useRouterState({ select: (s) => s.location.pathname });
+  const { count, open } = useCart();
 
   const handleInicio = () => {
     if (location === homeTo) {
@@ -47,6 +50,19 @@ export function SiteHeader({ current }: { current: "brand" | "custom" }) {
           >
             ↔ {otherLabel}
           </Link>
+          <button
+            type="button"
+            onClick={open}
+            aria-label={count > 0 ? `Abrir carrito (${count})` : "Abrir carrito"}
+            className="relative flex h-9 w-9 items-center justify-center rounded-full border border-black hover:bg-black hover:text-white transition-colors"
+          >
+            <ShoppingBag className="h-4 w-4" aria-hidden="true" />
+            {count > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-black px-1 text-[10px] font-display leading-none text-white tabular-nums">
+                {count}
+              </span>
+            )}
+          </button>
         </nav>
       </div>
     </motion.header>

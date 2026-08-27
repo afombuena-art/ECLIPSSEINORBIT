@@ -5,8 +5,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Marquee } from "@/components/Marquee";
 import { ContactCTA } from "@/components/ContactCTA";
 import { SiteFooter } from "@/components/SiteFooter";
-import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { products } from "@/data/products";
+import { formatEuros } from "@/lib/money";
 import { DropCountdown } from "@/components/DropCountdown";
 import hero from "@/assets/hero_drop.jpeg.asset.json";
 
@@ -248,7 +248,6 @@ function BrandPage() {
       <ContactCTA />
       <DropCountdown />
       <SiteFooter />
-      <WhatsAppButton />
     </div>
   );
 }
@@ -297,7 +296,7 @@ function FaqItem({ q, a, historia }: { q: string; a: string; historia?: { t: str
   );
 }
 
-function ProductCard({ slug, name, price, front, back, index }: { slug: string; name: string; price: string; front: string; back: string; index: number }) {
+function ProductCard({ slug, name, priceCents, front, back, index }: { slug: string; name: string; priceCents: number; front: string; back: string; index: number }) {
   const [hover, setHover] = useState(false);
   return (
     <motion.div
@@ -332,7 +331,7 @@ function ProductCard({ slug, name, price, front, back, index }: { slug: string; 
         </div>
         <div className="mt-4 flex flex-col items-center gap-1">
           <h3 className="font-display text-sm md:text-base tracking-tight text-center px-1">{name}</h3>
-          <span className="text-xs md:text-sm tabular-nums text-muted-foreground">{price}</span>
+          <span className="text-xs md:text-sm tabular-nums text-muted-foreground">{formatEuros(priceCents)}</span>
         </div>
       </Link>
     </motion.div>

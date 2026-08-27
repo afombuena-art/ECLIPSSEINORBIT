@@ -6,6 +6,8 @@ import { Marquee } from "@/components/Marquee";
 import { ContactCTA } from "@/components/ContactCTA";
 import { SiteFooter } from "@/components/SiteFooter";
 import { getProduct, products } from "@/data/products";
+import { formatEuros } from "@/lib/money";
+import { useCart } from "@/lib/cart";
 
 const WHATSAPP_URL = "https://wa.me/message/P5FFTHYMWKNRA1";
 
@@ -14,6 +16,14 @@ const SIZE_GUIDE = [
   { talla: "M", pecho: 57, largo: 73, manga: 25 },
   { talla: "L", pecho: 60, largo: 75, manga: 26 },
   { talla: "XL", pecho: 64, largo: 77, manga: 27 },
+];
+
+const CARE_GUIDE = [
+  "No usar secadora",
+  "No limpieza en seco",
+  "Planchar máximo 110º",
+  "No usar lejía / blanqueador",
+  "Lavar a máquina max. 20ºC. Centrifugado corto",
 ];
 
 export const Route = createFileRoute("/prendas/$slug")({
@@ -47,15 +57,20 @@ function ProductPage() {
   const [active, setActive] = useState(0);
   const [direction, setDirection] = useState(0);
   const [size, setSize] = useState(product.sizes[0]);
+  const [qty, setQty] = useState(1);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+  const [careOpen, setCareOpen] = useState(false);
   const sizeGuideRef = useRef<HTMLDivElement>(null);
+  const cart = useCart();
   const images = product.images;
   const isCamiseta = product.category === "Camiseta";
 
   useEffect(() => {
     setActive(0);
     setDirection(0);
-  }, [product.slug]);
+    setQty(1);
+    setSize(product.sizes[0]);
+  }, [product.slug, product.sizes]);
 
   const goTo = (index: number) => {
     setDirection(index > active ? 1 : -1);
@@ -136,7 +151,7 @@ function ProductPage() {
           <div className="flex items-start gap-4 mt-2">
             <div className="flex-1">
               <h1 className="font-display text-4xl md:text-6xl leading-tight">{product.name}</h1>
-              <p className="mt-4 text-2xl">{product.price}</p>
+              <p className="mt-4 text-2xl">{formatEuros(product.priceCents)}</p>
             </div>
             <div className="shrink-0 mt-1">
               <span
@@ -175,16 +190,47 @@ function ProductPage() {
             )}
           </div>
 
-          <a
-            href={WHATSAPP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-10 inline-block w-full md:w-auto text-center rounded-full border border-black bg-black text-white px-10 py-4 font-display text-[11px] uppercase tracking-[0.25em] hover:bg-white hover:text-black transition-colors"
-          >
-            Compra por WhatsApp
-          </a>
+          <div className="mt-10 flex flex-col sm:flex-row gap-3">
+            <div className="flex items-center border border-black self-start">
+              <button
+                type="button"
+                onClick={() => setQty((q) => Math.max(1, q - 1))}
+                aria-label="Quitar una unidad"
+                className="cursor-pointer h-12 w-12 text-lg leading-none hover:bg-black hover:text-white transition-colors"
+              >
+                −
+              </button>
+              <span className="w-10 text-center tabular-nums">{qty}</span>
+              <button
+                type="button"
+                onClick={() => setQty((q) => Math.min(99, q + 1))}
+                aria-label="Añadir una unidad"
+                className="cursor-pointer h-12 w-12 text-lg leading-none hover:bg-black hover:text-white transition-colors"
+              >
+                +
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                cart.add(product.id, size, qty);
+                cart.open();
+              }}
+              className="cursor-pointer flex-1 text-center rounded-full border border-black bg-black text-white px-10 py-4 font-display text-[11px] uppercase tracking-[0.25em] hover:bg-white hover:text-black transition-colors"
+            >
+              Añadir al carrito
+            </button>
+          </div>
           <p className="mt-4 text-xs uppercase tracking-[0.25em] text-muted-foreground">
-            Te atendemos directamente por WhatsApp
+            ¿Dudas con tu pedido?{" "}
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-4 hover:text-black transition-colors"
+            >
+              Escríbenos por WhatsApp
+            </a>
           </p>
 
           <div className="mt-12 border-t border-border pt-8">
@@ -255,6 +301,30 @@ function ProductPage() {
               </motion.div>
             </div>
           )}
+
+          <div className="mt-8 border-t border-border pt-8">
+            <button
+              onClick={() => setCareOpen((v) => !v)}
+              className="cursor-pointer w-full flex items-center justify-between gap-4 text-left"
+              aria-expanded={careOpen}
+            >
+              <h2 className="font-display text-lg">Guía de cuidado de ropa</h2>
+              <span className={`text-xl transition-transform duration-300 ${careOpen ? "rotate-45" : ""}`} aria-hidden="true">+</span>
+            </button>
+
+            <motion.div
+              initial={false}
+              animate={{ height: careOpen ? "auto" : 0, opacity: careOpen ? 1 : 0 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="overflow-hidden"
+            >
+              <ul className="pt-5 text-sm text-muted-foreground leading-relaxed space-y-1">
+                {CARE_GUIDE.map((c) => (
+                  <li key={c}>— {c}</li>
+                ))}
+              </ul>
+            </motion.div>
+          </div>
         </div>
       </section>
 
@@ -278,7 +348,7 @@ function ProductPage() {
                   </div>
                   <div className="mt-3 flex flex-col items-center gap-0.5">
                     <span className="font-display text-sm">{p.name}</span>
-                    <span className="text-xs text-muted-foreground">{p.price}</span>
+                    <span className="text-xs text-muted-foreground">{formatEuros(p.priceCents)}</span>
                   </div>
                 </Link>
               ))}

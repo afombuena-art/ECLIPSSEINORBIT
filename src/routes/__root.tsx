@@ -12,6 +12,8 @@ import { type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { Logo } from "@/components/Logo";
 import { CookieBanner } from "@/components/CookieBanner";
+import { CartProvider } from "@/lib/cart";
+import { CartSheet } from "@/components/CartSheet";
 
 function NotFoundComponent() {
   return (
@@ -145,8 +147,11 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <CookieBanner />
+      <CartProvider>
+        <Outlet />
+        <CartSheet />
+        <CookieBanner />
+      </CartProvider>
     </QueryClientProvider>
   );
 }
