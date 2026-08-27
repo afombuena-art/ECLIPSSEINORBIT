@@ -13,9 +13,9 @@ export const Route = createFileRoute("/legal/cookies")({
   component: () => (
     <LegalLayout title="Política de cookies">
       <p>
-        Este sitio web es informativo y <strong>no utiliza cookies de seguimiento, analítica ni publicidad de
-        terceros</strong>. Únicamente pueden emplearse cookies técnicas estrictamente necesarias para el funcionamiento
-        básico del sitio, exentas del deber de consentimiento.
+        Este sitio <strong>no utiliza cookies de analítica ni de publicidad de terceros</strong>. Únicamente se emplean
+        cookies técnicas estrictamente necesarias para el funcionamiento del sitio y para el proceso de compra, exentas
+        del deber de consentimiento.
       </p>
       <h2>¿Qué es una cookie?</h2>
       <p>
@@ -24,8 +24,10 @@ export const Route = createFileRoute("/legal/cookies")({
       </p>
       <h2>Cookies utilizadas</h2>
       <p>
-        Solo cookies técnicas necesarias para servir el sitio. Si en el futuro incorporáramos cookies analíticas o de
-        terceros, se solicitaría tu consentimiento previo y se actualizaría esta política.
+        Cookies técnicas propias necesarias para servir el sitio y recordar el contenido de tu carrito. Durante el pago,
+        <strong> Stripe</strong> puede instalar cookies propias necesarias para procesar la transacción y prevenir el
+        fraude; son imprescindibles para poder pagar de forma segura. Si en el futuro incorporáramos cookies analíticas
+        o de terceros con otra finalidad, se solicitaría tu consentimiento previo y se actualizaría esta política.
       </p>
       <h2>Cómo gestionar las cookies</h2>
       <p>

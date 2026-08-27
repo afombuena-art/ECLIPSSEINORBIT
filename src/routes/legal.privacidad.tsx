@@ -17,32 +17,40 @@ export const Route = createFileRoute("/legal/privacidad")({
         (RGPD) y a la Ley Orgánica 3/2018 de Protección de Datos.
       </p>
       <h2>Responsable</h2>
-      <p>ECLIPSSE™ UNIVERSE — Sevilla, España · <a href="mailto:eclipssebrand@gmail.com">eclipssebrand@gmail.com</a></p>
+      <p>
+        <strong>[RAZÓN SOCIAL]</strong> — NIF <strong>[NIF/CIF]</strong> — <strong>[DOMICILIO FISCAL]</strong>, Sevilla,
+        España · <a href="mailto:eclipssebrand@gmail.com">eclipssebrand@gmail.com</a>
+      </p>
       <h2>Datos que recogemos</h2>
       <p>
-        Únicamente recogemos los datos que tú nos facilitas cuando contactas con nosotros vía WhatsApp, Instagram o
-        email: nombre, datos de contacto y la información necesaria para gestionar tu pedido (talla, dirección de envío,
-        forma de pago acordada).
+        Cuando compras en la web, recogemos los datos que introduces en el proceso de compra: nombre y apellidos, email,
+        teléfono, dirección de envío y facturación, y —si lo solicitas— NIF para factura. Los datos de tu tarjeta los
+        recoge y trata directamente Stripe; nosotros no los vemos ni los almacenamos. Si nos contactas por WhatsApp,
+        Instagram o email, tratamos los datos que nos facilites en esa comunicación.
       </p>
       <h2>Finalidad</h2>
       <p>
-        Gestionar tu pedido o consulta, mantener la comunicación contigo y cumplir las obligaciones legales asociadas a
-        la venta.
+        Tramitar y enviar tu pedido, gestionar el cobro y las devoluciones, emitir factura cuando proceda, atender tus
+        consultas y cumplir las obligaciones legales asociadas a la venta. Si marcas la casilla correspondiente,
+        también para enviarte novedades por email (puedes darte de baja en cualquier momento).
       </p>
       <h2>Base legal</h2>
       <p>
-        Tu consentimiento al iniciar la conversación y la ejecución del contrato de compraventa o prestación del
-        servicio de personalización.
+        La ejecución del contrato de compraventa (art. 6.1.b RGPD), el cumplimiento de obligaciones legales (art. 6.1.c)
+        y, para el envío de comunicaciones comerciales, tu consentimiento (art. 6.1.a).
       </p>
       <h2>Conservación</h2>
       <p>
-        Conservamos los datos el tiempo necesario para gestionar el pedido y, en su caso, durante los plazos legales
-        (facturación, garantías).
+        Conservamos los datos el tiempo necesario para gestionar el pedido y, después, durante los plazos legales de
+        prescripción (facturación, garantías, obligaciones fiscales y contables).
       </p>
-      <h2>Destinatarios</h2>
+      <h2>Destinatarios y encargados del tratamiento</h2>
       <p>
-        No cedemos tus datos a terceros salvo a la empresa de mensajería para realizar el envío y a las obligaciones
-        legales que correspondan.
+        No cedemos tus datos a terceros salvo obligación legal. Para prestar el servicio trabajamos con proveedores que
+        actúan como encargados del tratamiento: <strong>Stripe</strong> (procesamiento de pagos),
+        <strong> Correos</strong> y la plataforma logística de envíos (entrega del pedido) y <strong>Vercel</strong>
+        (alojamiento de la web). Alguno de estos proveedores puede tratar datos fuera del Espacio Económico Europeo con
+        las garantías previstas en el RGPD (cláusulas contractuales tipo).
       </p>
       <h2>Derechos</h2>
       <p>

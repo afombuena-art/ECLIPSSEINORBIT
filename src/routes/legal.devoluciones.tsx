@@ -14,9 +14,10 @@ export const Route = createFileRoute("/legal/devoluciones")({
     <LegalLayout title="Envíos y devoluciones">
       <h2>Envíos</h2>
       <p>
-        Realizamos envíos a toda España. El coste y el plazo se confirman antes de cerrar el pedido. El plazo estimado
-        es de 3 a 10 días laborables desde la confirmación del pago. En pedidos personalizados o de gran cantidad, el
-        plazo puede ampliarse hasta 14 días laborables.
+        Realizamos envíos mediante Correos a España. El coste se calcula automáticamente en el proceso de compra según el
+        peso del pedido y se muestra antes de pagar; el envío es <strong>gratuito a partir de 75 €</strong> de compra. El
+        plazo estimado es de 3 a 10 días laborables desde la confirmación del pago. En pedidos personalizados o de gran
+        cantidad, el plazo puede ampliarse hasta 14 días laborables.
       </p>
       <h2>Derecho de desistimiento</h2>
       <p>
@@ -37,8 +38,9 @@ export const Route = createFileRoute("/legal/devoluciones")({
       </p>
       <h2>Reembolsos</h2>
       <p>
-        Una vez recibida y verificada la devolución, se realizará el reembolso por el mismo medio de pago utilizado en
-        un plazo máximo de 14 días.
+        Una vez recibida y verificada la devolución, se realizará el reembolso a través de Stripe al mismo medio de pago
+        utilizado en la compra, en un plazo máximo de 14 días naturales. El reembolso incluye el importe del producto y,
+        cuando proceda por desistimiento total, los gastos de envío estándar iniciales.
       </p>
       <h2>Productos defectuosos</h2>
       <p>

@@ -14,34 +14,50 @@ export const Route = createFileRoute("/legal/terminos")({
     <LegalLayout title="Términos y condiciones">
       <h2>Información general</h2>
       <p>
-        Las presentes condiciones regulan la venta y prestación de servicios de ECLIPSSE™ UNIVERSE, marca con domicilio
-        en Sevilla (España). Realizar un pedido implica la aceptación de estas condiciones.
+        Las presentes condiciones regulan la venta de productos a través de la tienda online de ECLIPSSE™ UNIVERSE,
+        titularidad de <strong>[RAZÓN SOCIAL]</strong>, con NIF <strong>[NIF/CIF]</strong> y domicilio en
+        <strong> [DOMICILIO FISCAL]</strong>, Sevilla (España). Realizar un pedido implica la aceptación expresa de estas
+        condiciones.
       </p>
       <h2>Productos y precios</h2>
       <p>
-        Los precios indicados están expresados en euros (€) e incluyen los impuestos aplicables. Los gastos de envío se
-        comunican antes de confirmar el pedido. ECLIPSSE™ UNIVERSE se reserva el derecho a modificar precios sin previo
-        aviso, respetando siempre los pedidos ya confirmados.
+        Los precios se expresan en euros (€) e incluyen el IVA aplicable. Los gastos de envío se calculan y se muestran
+        durante el proceso de compra (checkout), antes de que confirmes y pagues el pedido. ECLIPSSE™ UNIVERSE se reserva
+        el derecho a modificar precios sin previo aviso, respetando siempre los pedidos ya confirmados y pagados.
       </p>
-      <h2>Pedidos y pago</h2>
+      <h2>Proceso de compra y pago</h2>
       <p>
-        Los pedidos se formalizan a través de WhatsApp o Instagram. El pago se acuerda con el cliente (transferencia,
-        Bizum u otros medios) y se confirma antes de la producción o envío.
+        La compra se realiza en la web: añades los productos al carrito, completas tus datos de envío en el checkout y
+        pagas con tarjeta. El pago se procesa de forma segura a través de <strong>Stripe</strong> como proveedor de
+        servicios de pago; los datos de tu tarjeta se introducen y se tratan directamente en el entorno seguro de Stripe
+        y en ningún momento son almacenados por ECLIPSSE™ UNIVERSE.
+      </p>
+      <p>
+        El pedido se considera perfeccionado cuando el pago queda confirmado. Recibirás la confirmación por email. Si el
+        pago no puede verificarse, el pedido no se tramita.
       </p>
       <h2>Disponibilidad</h2>
       <p>
-        Trabajamos por <strong>DROPS</strong> con unidades limitadas. Una vez agotado el stock de un DROP, el producto
-        no vuelve a estar disponible.
+        Trabajamos por <strong>DROPS</strong> con unidades limitadas. Si un producto se agota tras tu pago por un error
+        de stock, te informaremos y te reembolsaremos el importe correspondiente. Una vez agotado el stock de un DROP,
+        el producto no vuelve a estar disponible.
       </p>
       <h2>Envíos</h2>
       <p>
-        Los envíos se realizan a toda España. El plazo estimado de entrega es de 3 a 10 días laborables tras la
-        confirmación del pago, salvo en pedidos personalizados (ver sección correspondiente).
+        Los envíos se realizan mediante Correos a España. El coste se calcula en el checkout según el peso del pedido, con
+        <strong> envío gratuito a partir de 75 €</strong> de compra. El plazo estimado de entrega es de 3 a 10 días
+        laborables tras la confirmación del pago, salvo en pedidos personalizados (ver sección correspondiente).
       </p>
       <h2>Productos personalizados</h2>
       <p>
-        Los productos personalizados se fabrican bajo pedido. No se admiten devoluciones salvo defecto de fabricación,
-        de acuerdo con la legislación vigente.
+        Los productos personalizados se gestionan a través de la sección <em>Personaliza</em> y se fabrican bajo pedido.
+        No se admiten devoluciones salvo defecto de fabricación, de acuerdo con el artículo 103.c del texto refundido de
+        la Ley General para la Defensa de los Consumidores y Usuarios.
+      </p>
+      <h2>Desistimiento y devoluciones</h2>
+      <p>
+        Dispones de 14 días naturales desde la recepción para desistir de la compra. Consulta las condiciones y el
+        procedimiento en <a href="/legal/devoluciones">Envíos y devoluciones</a>.
       </p>
       <h2>Atención al cliente</h2>
       <p>

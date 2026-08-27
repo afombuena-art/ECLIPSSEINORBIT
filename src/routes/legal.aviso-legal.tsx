@@ -18,7 +18,13 @@ export const Route = createFileRoute("/legal/aviso-legal")({
       </p>
       <h2>Titular</h2>
       <p>
-        <strong>ECLIPSSE™ UNIVERSE</strong> — Marca de ropa con domicilio en Sevilla (España).
+        <strong>[RAZÓN SOCIAL]</strong> (marca comercial «ECLIPSSE™ UNIVERSE» / «ECLIPSSEBRAND»).
+        <br />
+        NIF / CIF: <strong>[NIF/CIF]</strong>
+        <br />
+        Domicilio: <strong>[DOMICILIO FISCAL]</strong>, Sevilla (España)
+        <br />
+        Datos registrales: <strong>[DATOS REGISTRALES SI APLICA]</strong>
         <br />
         Contacto: <a href="mailto:eclipssebrand@gmail.com">eclipssebrand@gmail.com</a>
         <br />
@@ -26,9 +32,10 @@ export const Route = createFileRoute("/legal/aviso-legal")({
       </p>
       <h2>Objeto</h2>
       <p>
-        El presente sitio web tiene por objeto presentar la marca, sus colecciones (DROPS) y los servicios de
-        personalización ofrecidos. La compraventa se gestiona directamente con el cliente a través de canales privados
-        (WhatsApp e Instagram).
+        El presente sitio web tiene por objeto presentar la marca y sus colecciones (DROPS), ofrecer los servicios de
+        personalización y permitir la <strong>compraventa online</strong> de productos, con pago con tarjeta a través de
+        la pasarela de pago Stripe. Las condiciones de venta se detallan en los{" "}
+        <a href="/legal/terminos">términos y condiciones</a>.
       </p>
       <h2>Propiedad intelectual e industrial</h2>
       <p>
