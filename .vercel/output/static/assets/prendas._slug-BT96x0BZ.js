@@ -1,1 +1,0 @@
-import{t as e}from"./jsx-runtime-CZcjcDnw.js";var t=e(),n=()=>(0,t.jsx)(`div`,{className:`min-h-screen flex items-center justify-center bg-white`,children:(0,t.jsx)(`p`,{className:`text-sm uppercase tracking-[0.3em]`,children:`Prenda no encontrada`})});export{n as notFoundComponent};
