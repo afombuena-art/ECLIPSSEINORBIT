@@ -154,10 +154,9 @@ function CustomPage() {
 
             <h3 className="font-display text-2xl pt-6">¿Cómo funciona?</h3>
             <ol className="list-decimal list-inside space-y-1">
-              <li>Elige el producto que quieras personalizar.</li>
-              <li>Prepara tu diseño.</li>
-              <li>Finaliza tu pedido normalmente.</li>
-              <li>Mándanos tus diseños contactando con nosotros.</li>
+              <li>Piensa el producto que quieras personalizar.</li>
+              <li>Idea tu diseño.</li>
+              <li>Mándanos tus ideas contactando con nosotros.</li>
             </ol>
             <p>Nosotros nos encargamos de ajustar el diseño, producir el producto y enviarlo a tu casa.</p>
 
@@ -291,7 +290,7 @@ function CustomPage() {
         </div>
       </section>
 
-      <ContactCTA />
+      <ContactCTA variant="contact" />
       <SiteFooter />
       <WhatsAppButton />
     </div>
