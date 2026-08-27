@@ -161,3 +161,18 @@ Claude Code debe detenerse y pedir confirmación explícita antes de:
 - Tocar cualquier archivo de autenticación, sesiones de usuario, o
   datos sensibles ya existentes en el proyecto, aunque no tenga
   relación directa con Stripe.
+
+## 12. Mantenimiento del hook de gitleaks
+
+El hook de pre-commit (`.githooks/pre-commit`) busca el binario de
+gitleaks en el PATH y, si no lo encuentra, en rutas conocidas de
+WinGet/Chocolatey. Si se cambia de máquina, se reinstala gitleaks en
+otra ubicación, o pasan un par de semanas de desarrollo activo,
+conviene verificar que el hook sigue bloqueando commits con secretos:
+
+1. Crear un archivo de prueba con una clave falsa `sk_live_` de
+   formato válido (prefijo `sk_live_` seguido de ~24-30 caracteres
+   alfanuméricos).
+2. Hacer `git add` de ese archivo e intentar un commit: debe fallar.
+3. Borrar el archivo de prueba sin dejar rastro — que no quede ni en
+   el index, ni en el disco, ni en ningún commit del historial.
