@@ -1,6 +1,6 @@
 # Estado actual — Integración Stripe + n8n
 
-_Última actualización: 2026-08-28_
+_Última actualización: 2026-08-29_
 _Branch: `feature/stripe-integration`_
 
 ## Qué está hecho
@@ -13,20 +13,32 @@ _Branch: `feature/stripe-integration`_
   validada sobre el body bruto con `constructEventAsync`. Solo responde 200 a
   Stripe cuando n8n confirma (2xx) que recibió el pedido; si n8n falla, responde
   5xx para que Stripe reintente.
-- **Workflow de n8n montado y probado con la URL de Test.** Recibe el payload de
-  pedido pagado, valida la cabecera `X-Webhook-Secret` y registra el pedido.
-  Probado end-to-end en modo test de Stripe.
+- **Workflow de n8n funcionando en producción** (ya no en modo Test). Recibe el
+  payload de pedido pagado, valida la cabecera `X-Webhook-Secret` y registra el
+  pedido en Airtable.
+- **Venta solo en España — confirmado.** No se toca el código de envío ni de
+  países.
 
-## Qué falta para mañana (exacto)
+## Bug abierto — deduplicación por `eventId`
 
-1. **Activar el workflow de n8n en producción** (pasar de Test a Production /
-   "Active").
-2. **Actualizar `N8N_ORDER_WEBHOOK_URL`** con la URL de producción del workflow
-   (en `.env.local` y en las variables de entorno de Vercel).
-3. **Volver a probar el flujo completo** con la URL de producción (pago test →
-   webhook → n8n → pedido registrado).
-4. **Verificar la deduplicación por `eventId`**: reenviar el mismo evento de
-   Stripe dos veces y confirmar que n8n no duplica el pedido.
+- **Síntoma:** al reenviar el evento `evt_1U9q0m3pSwZ8rGo9SvI6bh3A` con
+  `stripe events resend`, se creó un **registro duplicado en Airtable con el
+  mismo `eventId`**. La tabla estaba vacía antes de la prueba.
+- **Impacto:** la deduplicación no está protegiendo contra los reintentos
+  legítimos de Stripe. Riesgo de pedidos duplicados en producción.
+
+### Pendiente para mañana (diagnóstico)
+
+1. Abrir el historial de **Executions** de n8n y localizar la ejecución de ese
+   reenvío (`evt_1U9q0m3pSwZ8rGo9SvI6bh3A`).
+2. Ver **qué devolvió el nodo "Buscar duplicado"** en esa ejecución concreta.
+3. Determinar dónde está el fallo:
+   - **En la búsqueda** → no encontró el registro ya existente (filtro mal,
+     campo equivocado, timing/carrera entre las dos ejecuciones...).
+   - **En el nodo "¿Ya existe?"** → sí encontró el registro pero tomó la rama
+     equivocada (condición invertida o mal evaluada).
+4. Corregir el nodo que corresponda y volver a probar el reenvío del mismo
+   evento → no debe duplicar.
 
 ## Bloqueado por el cliente
 
