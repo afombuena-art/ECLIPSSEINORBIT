@@ -132,11 +132,30 @@ Si volviera a fallar la escritura en `Documentos` desde Node (`ENOENT` o `EPERM`
 
 ## Próxima acción
 
-**Tres cosas, en este orden:**
+**Dos cosas, en este orden:**
 
-1. **Escribir al cliente** pidiéndole los cinco datos: razón social, NIF/CIF, domicilio fiscal, datos registrales (si es sociedad) y tarifa real de Correos por tramos de peso. Es lo único que no depende de Ana, y por eso va primero. *(No se hizo el 2026-09-20; el correo no está redactado ni enviado.)*
-2. ✅ **Entorno local funcionando** — comprobado el 2026-09-20. `npm run dev` arranca en el puerto **5000**.
-3. **Hacer el pedido de prueba** con la deduplicación nueva y comprobar que `stripe events resend` no duplica la fila en Airtable. Requisitos: `stripe login` (la CLI no estaba conectada el 2026-09-20) y meter en el `.env` el `whsec_` que devuelve `stripe listen`, reiniciando el servidor después. Sin eso, el webhook rechaza todo por firma inválida.
+**1 · Escribir al cliente** pidiéndole los cinco datos: razón social, NIF/CIF, domicilio fiscal, datos registrales (si es sociedad) y tarifa real de Correos por tramos de peso. Es lo único que no depende de Ana, y por eso va primero. *(No se hizo el 2026-09-20; el correo no está redactado ni enviado.)*
+
+**2 · Hacer el pedido de prueba** de la deduplicación. El entorno ya funciona, así que se retoma directamente aquí:
+
+```
+# Terminal 1 — servidor (arranca en el puerto 5000)
+cd 01_PROYECTOS_ACTIVOS\04_ECLIPSSEINORBIT
+npm run dev
+
+# Terminal 2 — Stripe
+stripe login          # la CLI NO estaba conectada el 2026-09-20; elegir la cuenta de ECLIPSSE
+stripe listen --forward-to localhost:5000/api/stripe-webhook
+```
+
+⚠️ **El paso que rompe todo si se salta:** `stripe listen` devuelve un `whsec_...`. Ese valor debe ir al `.env` en `STRIPE_WEBHOOK_SECRET` **y hay que reiniciar el servidor**. Si no, el webhook rechaza todo con «firma no válida» y parece que el código está roto cuando no lo está.
+
+Luego, en `http://localhost:5000`, comprar con la tarjeta `4242 4242 4242 4242` (fecha futura, CVC y CP cualquiera).
+
+**Qué debe pasar, y es la prueba que importa:**
+- Compra normal → 1 fila en Airtable.
+- `stripe events resend evt_XXXX` → el servidor responde `duplicado` y registra `evento evt_... ya procesado`. **En Airtable sigue habiendo 1 sola fila.**
+- Si aparecen 2 filas, la deduplicación no funciona y hay que mirar el código antes que n8n.
 
 ## Reglas y límites del proyecto
 
