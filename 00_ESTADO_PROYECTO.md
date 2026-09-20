@@ -116,11 +116,23 @@ Si volviera a fallar la escritura en `Documentos` desde Node (`ENOENT` o `EPERM`
 
 ### C · Legal y protección de datos — sin revisar
 
-9. ⚠️ **La política de privacidad no declara a dónde van de verdad los datos.**
-   - `src/routes/legal.privacidad.tsx` línea 47 solo nombra **Stripe, Correos y Vercel** como encargados del tratamiento.
-   - Pero el webhook envía **nombre, email, teléfono y dirección postal** del comprador a **n8n** (instancia en EasyPanel) y de ahí a **Airtable**. Ninguno de los dos está declarado.
-   - Qué falta: (a) añadirlos al texto, (b) contrato de encargado del tratamiento con Airtable — **empresa de EEUU**, verificar que su DPA incluye cláusulas contractuales tipo, (c) decidir plazo de borrado, porque **hoy nada borra nada en Airtable**.
-   - Aclaración: para gestionar el pedido **no hace falta consentimiento** (base legal: ejecución de contrato). El consentimiento solo aplica a marketing, y esa casilla (`marketingOptIn`) ya está separada y desmarcada por defecto. Correcto.
+9. ✅ **Política de privacidad corregida el 2026-09-20.** Antes solo nombraba Stripe, Correos y Vercel; ahora declara los seis destinatarios reales: **Stripe, Correos y Packlink PRO, Vercel, iActivaPráctica, Hostinger y Airtable**. Se añadió además un párrafo que dice expresamente que Airtable es estadounidense y que los datos salen del EEE.
+
+   ⚠️ **Contexto que manda sobre cualquier suposición: Jacobo es el marido de Ana.** Por eso no hay contrato de servicios ni de encargado del tratamiento entre ellos, y no hay que proponerlo. La base de datos de pedidos vive en la **cuenta de Airtable de iActivaPráctica (de Ana)**, decisión consciente del 2026-09-20; se revisará solo si la tienda crece.
+
+   ⚠️ **PENDIENTE y es el único trámite previo a abrir: firmar el DPA de Airtable a nombre de iActivaPráctica.**
+   - Formulario: `https://airtable.com/shrxzlIweOYYaBBuv` → llega por DocuSign → firmar y **guardar el PDF**.
+   - **No es automático al registrarse**, hay que pedirlo (verificado el 2026-09-20 en la documentación de Airtable).
+   - Lo firma **Ana con los datos de iActivaPráctica**, no Jacobo: la cuenta es de ella.
+   - Al leerlo, comprobar que **incluye las cláusulas contractuales tipo**. La web ya las promete, así que hasta que se firme el texto publicado afirma algo sin respaldo.
+
+   ⚠️ **PENDIENTE: el borrado.** La política promete conservar los datos «el tiempo necesario» y **en Airtable no borra nada nadie**. Hay que decidir plazos (orientación: facturación 6 años por obligación fiscal, datos de envío 3 años), escribirlos en el texto en vez del «tiempo necesario», y que alguien los aplique —a mano una vez al año o con un workflow de n8n—. No es urgente mientras no haya pedidos reales, pero conviene decidirlo antes de abrir.
+
+   🔹 Detectado y **no tocado**: la política dice que también se tratan datos de quien escriba por **WhatsApp o Instagram**, lo que convierte a **Meta** en otro encargado no declarado.
+
+   🔹 Aclaración: para gestionar el pedido **no hace falta consentimiento** (base legal: ejecución de contrato). El consentimiento solo aplica a marketing, y esa casilla (`marketingOptIn`) ya está separada y desmarcada por defecto. Correcto.
+
+   ⚠️ Todo lo anterior es criterio técnico, **no dictamen jurídico**. No lo ha revisado un abogado ni el especialista Legal de la oficina.
 
 ## Bug abierto en n8n — sigue sin diagnosticar
 

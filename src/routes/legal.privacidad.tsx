@@ -47,10 +47,17 @@ export const Route = createFileRoute("/legal/privacidad")({
       <h2>Destinatarios y encargados del tratamiento</h2>
       <p>
         No cedemos tus datos a terceros salvo obligación legal. Para prestar el servicio trabajamos con proveedores que
-        actúan como encargados del tratamiento: <strong>Stripe</strong> (procesamiento de pagos),
-        <strong> Correos</strong> y la plataforma logística de envíos (entrega del pedido) y <strong>Vercel</strong>
-        (alojamiento de la web). Alguno de estos proveedores puede tratar datos fuera del Espacio Económico Europeo con
-        las garantías previstas en el RGPD (cláusulas contractuales tipo).
+        actúan como encargados del tratamiento: <strong>Stripe</strong> (procesamiento del pago),
+        <strong> Correos</strong> y <strong>Packlink PRO</strong> (preparación y entrega del envío),
+        <strong> Vercel</strong> (alojamiento de la web), <strong>iActivaPráctica</strong> (soporte técnico de la
+        tienda: mantiene la web, la automatización de pedidos y la base de datos donde quedan registrados),
+        <strong> Hostinger</strong> (servidor donde se ejecuta la herramienta que registra tu pedido de forma automática
+        una vez confirmado el pago) y <strong>Airtable</strong> (registro y gestión de los pedidos).
+      </p>
+      <p>
+        <strong>Airtable</strong> es una empresa estadounidense, por lo que los datos de tu pedido se tratan fuera del
+        Espacio Económico Europeo. Esa transferencia se ampara en las cláusulas contractuales tipo aprobadas por la
+        Comisión Europea. Otros proveedores pueden tratar datos fuera del EEE con esas mismas garantías.
       </p>
       <h2>Derechos</h2>
       <p>
