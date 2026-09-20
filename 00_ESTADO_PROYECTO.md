@@ -53,10 +53,24 @@ Criterios aplicados, por si hay que revisarlos:
 - Si falla la escritura de la marca en Stripe, **no** se devuelve error: el pedido ya llegó a n8n y un error provocaría un reintento y un duplicado. Se registra en el log.
 - La lista de eventos se autorrecorta al acercarse al límite de 500 caracteres de metadata de Stripe.
 
-## Estado de esos cambios — ⚠️ leer antes de seguir
+## Estado de esos cambios — ✅ PROBADO DE PUNTA A PUNTA
 
-- ✅ **Commiteado** el 2026-09-20: `0e30596`, en la rama `feature/stripe-integration`. El repo del proyecto está limpio.
-- ⚠️ **Sin probar en ejecución.** No se ha hecho ni un pedido de prueba con este código. Compila, pero nadie lo ha visto funcionar.
+- ✅ **Commiteado** el 2026-09-20: `0e30596`, en la rama `feature/stripe-integration`.
+- ✅ **Probado con una compra real en modo test el 2026-09-20.** El bug del 2026-08-29 está cerrado.
+
+**Cómo se verificó** (evento `evt_1UHp4B3pSwZ8rGo9lkJq48Tz`, sesión `cs_test_a1KtiApw…`):
+
+| Prueba | Resultado |
+|---|---|
+| Compra normal | 200 en **7 s** (releer sesión + n8n + marcar). **1 fila en Airtable** |
+| `stripe events resend` con el servidor vivo | 200 **instantáneo**, log `ya procesado (memoria)`. **Sigue 1 fila** |
+| `stripe events resend` tras **reiniciar el servidor** | log `ya entregado a n8n, se descarta`. **Sigue 1 fila** |
+
+La tercera prueba es la importante: con el servidor recién arrancado la caché en memoria está vacía, igual que en Vercel, donde cada petición puede caer en una instancia nueva. **Se confirmó que el cerrojo persistente (la marca en la metadata del PaymentIntent) funciona por sí solo.** Si alguien toca este código, repetir esa prueba concreta, no solo la fácil.
+
+⚠️ **Pendiente de revisar, no bloquea: los 7 segundos.** La entrega buena tardó 7 s en responder a Stripe (20:03:51 → 20:03:58). Dentro de ese tiempo caben: releer la sesión expandida, el POST a n8n (timeout propio de 12 s), la escritura en Airtable y el `paymentIntents.update` de la marca. Stripe corta los webhooks lentos, así que **hoy va sobrado pero sin mucho margen**: si n8n o Airtable se ralentizan, Stripe reintentará. No es grave —para eso está la deduplicación— pero conviene medir de dónde vienen esos segundos y, si hace falta, bajar `N8N_TIMEOUT_MS` o aligerar el workflow de n8n. **Verificar antes el límite real de Stripe, que no está confirmado.**
+
+⚠️ **Pendiente de mirar: `pending_webhooks: 2`.** El evento reenviado indicaba **dos** destinos pendientes, no uno. Uno es el `stripe listen` local. **Hay que mirar en el panel de Stripe → Desarrolladores → Webhooks qué otro endpoint está dado de alta.** Si hubiera uno apuntando directamente a n8n, existiría un camino paralelo hacia Airtable que la deduplicación de este código **no cubre**.
 - ✅ `npx tsc --noEmit` pasa limpio en los dos archivos.
 - Los errores de tipos que aparecen en `src/components/ContactCTA.tsx` y `src/routes/prendas.$slug.tsx` son **preexistentes** (framer-motion), no los introdujo este cambio.
 
@@ -108,11 +122,26 @@ Si volviera a fallar la escritura en `Documentos` desde Node (`ENOENT` o `EPERM`
    - El domicilio se publica **sin piso ni puerta**, a petición del cliente. Comprobado que `legal.devoluciones.tsx` no publica dirección postal, así que acortarlo no afecta a las devoluciones.
    - ⚠️ **Criterio, no dictamen jurídico:** se valoró que calle + número + CP + ciudad cumple el art. 10 de la LSSI-CE. No lo ha revisado un abogado ni el especialista legal de la oficina.
    - ⚠️ El único contacto en las tres páginas es `eclipssebrand@gmail.com`. Legal, pero da mala imagen en una tienda. Pendiente de comentárselo.
-8. **Tarifas de envío reales — SIGUE PENDIENTE.** `src/lib/shipping.ts` línea 12 lleva `TODO Ana`. Los tramos actuales (3,95 € – 12,90 €, por peso, en céntimos) **son inventados**.
-   - El cliente confirmó el 2026-09-20 que envía por **Packlink PRO** y dijo «sacar tarifas de ahí», pero **esas tarifas están dentro de su cuenta y no son públicas**: dependen del volumen de cada cuenta. ⛔ **No usar precios genéricos de internet**: cada céntimo de desviación lo pierde él en cada envío.
-   - Lo que hay que pedirle: captura de su simulador de Packlink PRO con el **precio por tramo de peso**. Si sus tramos no coinciden con los del código, se adapta el código a los suyos.
-   - Además, `FREE_SHIPPING_THRESHOLD_CENTS = 7500` (envío gratis desde 75 €) **es una decisión suya, no una tarifa**: cada pedido por encima le cuesta el envío de su bolsillo. Que lo confirme.
-   - Estado: el 2026-09-20 se le preparó a Ana el mensaje para pedírselo. **No consta enviado.**
+8. ✅ **Tarifas de envío — COMPLETADO Y PROBADO el 2026-09-20** (commits `aeebf88` y `fd71f79`).
+
+   El cliente pasó su tabla real de Correos vía **Packlink PRO**, enviando desde **41001**. El precio depende de **peso y zona**, no solo del peso como antes.
+
+   **Cuatro zonas**, deducidas de los dos primeros dígitos del código postal:
+   - `41` → **Sevilla** · `11, 21, 14, 29` (Cádiz, Huelva, Córdoba, Málaga) → **limítrofes** · `07` → **Baleares** · resto → **península**.
+   - Jacobo dijo «aproximadamente» sobre las limítrofes. **Se dejaron exactamente las cuatro que nombró**: entre limítrofe y península hay 9 céntimos, y cobrar de menos sí le costaría dinero. Badajoz linda con Sevilla y **no** está incluida, a propósito.
+
+   **Siete tramos de peso** hasta 15 kg, en `SHIPPING_TABLE`. Por encima no hay tarifa y el pedido se rechaza en vez de inventar un precio. Referencia: camiseta 220 g, gorra 120 g → **casi todos los pedidos caen en el primer tramo**.
+
+   **Dónde se pide el código postal:** en **nuestro** checkout, no en Stripe. Stripe recoge la dirección cuando el importe ya está fijado, así que no sirve para calcular.
+   - ⛔ **No migrar al checkout incrustado de Stripe para esto.** Stripe sí tiene esa función (`permissions.update_shipping_details=server_only`), pero **desactiva automáticamente Apple Pay y Google Pay**, y obliga a rehacer el checkout entero. Se descartó el 2026-09-20 tras comprobarlo en su documentación.
+
+   **Destinos:** solo península y Baleares. **Canarias (35, 38), Ceuta (51) y Melilla (52) quedan fuera** —además están fuera del IVA peninsular— y el checkout ofrece contactar por WhatsApp. El extranjero ya estaba excluido por `allowed_countries: ["ES"]`.
+
+   **Envío gratis: retirado** por decisión de Ana el 2026-09-20. `FREE_SHIPPING_THRESHOLD_CENTS = null`. El umbral anterior de 75 € no lo había decidido nadie y le costaba el envío de su bolsillo. Se quitó también de los textos de **términos** y **devoluciones**, donde estaba prometido al comprador. Para reactivarlo basta con poner el subtotal en céntimos; el aviso del carrito reaparece solo.
+
+   **Tres validaciones, no una:** el navegador calcula para mostrar, `checkout.server.ts` **recalcula la zona en el servidor** (el cliente se puede manipular) y el webhook compara la zona cobrada con el CP que acabó recogiendo Stripe. Si no coinciden, el pedido llega a n8n con `envio.revisar: true` y se avisa en el log. No bloquea —el pago ya se hizo— pero se ve antes de enviar.
+
+   ✅ **Probado el 2026-09-20:** 41001→4,50 €, 14001→4,90 €, 28001→4,99 €, 07001→6,50 €, 35001→bloqueado con aviso de WhatsApp. Compra completa a Sevilla: 23,97 + 4,50 = **28,47 €** cobrados correctamente, con `shippingZone: "sevilla"` en la metadata.
 
 ### C · Legal y protección de datos — sin revisar
 
@@ -125,6 +154,7 @@ Si volviera a fallar la escritura en `Documentos` desde Node (`ENOENT` o `EPERM`
    - **No es automático al registrarse**, hay que pedirlo (verificado el 2026-09-20 en la documentación de Airtable).
    - Lo firma **Ana con los datos de iActivaPráctica**, no Jacobo: la cuenta es de ella.
    - Al leerlo, comprobar que **incluye las cláusulas contractuales tipo**. La web ya las promete, así que hasta que se firme el texto publicado afirma algo sin respaldo.
+   - **Estado el 2026-09-20: formulario enviado, esperando el correo de DocuSign.** Sin firmar todavía.
 
    ⚠️ **PENDIENTE: el borrado.** La política promete conservar los datos «el tiempo necesario» y **en Airtable no borra nada nadie**. Hay que decidir plazos (orientación: facturación 6 años por obligación fiscal, datos de envío 3 años), escribirlos en el texto en vez del «tiempo necesario», y que alguien los aplique —a mano una vez al año o con un workflow de n8n—. No es urgente mientras no haya pedidos reales, pero conviene decidirlo antes de abrir.
 
@@ -142,35 +172,41 @@ Si volviera a fallar la escritura en `Documentos` desde Node (`ENOENT` o `EPERM`
 
 ## Bloqueado por el cliente
 
-- Datos fiscales (punto 7).
-- Tarifas de envío reales (punto 8).
+Nada. Los datos fiscales y las tarifas de envío llegaron el 2026-09-20 y ya están aplicados.
 
 ## Próxima acción
 
-**Dos cosas, en este orden:**
+**El código está terminado y probado. Lo que queda son trámites y decisiones, no programación.**
 
-**1 · Enviar al cliente la petición de tarifas de envío.** Los datos fiscales ya los dio y están puestos (punto 7). Falta su tabla de Packlink PRO por tramos de peso y que confirme el umbral de envío gratis. El mensaje se le redactó a Ana el 2026-09-20 pero **no consta enviado**. Es lo único que no depende de Ana, y por eso va primero.
+**1 · Firmar el DPA de Airtable** — `https://airtable.com/shrxzlIweOYYaBBuv`, a nombre de **iActivaPráctica**. Cinco minutos. Es el único trámite que debería estar hecho **antes de abrir**, porque la política de privacidad ya promete esas garantías. Enviado el formulario el 2026-09-20; **pendiente de que llegue el DocuSign y de firmarlo**.
 
-**2 · Hacer el pedido de prueba** de la deduplicación. El entorno ya funciona, así que se retoma directamente aquí:
+**2 · Mirar los webhooks dados de alta en Stripe** (panel → Desarrolladores → Webhooks). El `pending_webhooks: 2` sugiere que hay otro endpoint además del local. Si apunta a n8n, hay un camino paralelo sin deduplicar.
+
+**3 · Decidir los plazos de conservación** y sustituir el «tiempo necesario» de la política de privacidad por plazos concretos. Orientación: facturas 6 años (obligación fiscal), datos de envío 3 años. Y que alguien los aplique de verdad: hoy **nada borra nada en Airtable**.
+
+**4 · Confirmar con Jacobo dos cosas de la tabla de envíos:** que las limítrofes son solo Cádiz, Huelva, Córdoba y Málaga (dijo «aproximadamente», y Badajoz no está), y que está de acuerdo con que no haya envío gratis.
+
+**5 · Revisar los 7 segundos del webhook** (ver arriba). No bloquea.
+
+**6 · Puesta en producción**, cuando lo anterior esté: mergear `feature/stripe-integration` → `main`, pasar a claves **live**, dar de alta el endpoint del webhook en modo live (el signing secret es **distinto**), cargar las variables de entorno en Vercel (`.vercel` está vacío) y hacer una compra real de importe pequeño.
+
+⚠️ **Sigue sin haber ni un test automático.** Todo lo verificado el 2026-09-20 fue a mano. Si se toca el webhook o el cálculo de envío, hay que repetir las pruebas a mano. Añadir tests requiere una dependencia nueva (vitest) → `CLAUDE.md` §11 obliga a preguntar a Ana.
+
+### Cómo repetir las pruebas manuales
 
 ```
-# Terminal 1 — servidor (arranca en el puerto 5000)
-cd 01_PROYECTOS_ACTIVOS\04_ECLIPSSEINORBIT
+# Terminal 1 — servidor, puerto 5000
+cd C:\Users\JACOBO\Documents\OFICINA_IACTIVAPRACTICA\01_PROYECTOS_ACTIVOS\04_ECLIPSSEINORBIT
 npm run dev
 
-# Terminal 2 — Stripe
-stripe login          # la CLI NO estaba conectada el 2026-09-20; elegir la cuenta de ECLIPSSE
+# Terminal 2 — Stripe (cuenta: "Entorno de prueba de eclipssebrand", acct_1U92kk3pSwZ8rGo9)
 stripe listen --forward-to localhost:5000/api/stripe-webhook
 ```
 
-⚠️ **El paso que rompe todo si se salta:** `stripe listen` devuelve un `whsec_...`. Ese valor debe ir al `.env` en `STRIPE_WEBHOOK_SECRET` **y hay que reiniciar el servidor**. Si no, el webhook rechaza todo con «firma no válida» y parece que el código está roto cuando no lo está.
+⚠️ **El paso que rompe todo si se salta:** `stripe listen` devuelve un `whsec_...` **nuevo cada vez**. Debe ir al `.env` en `STRIPE_WEBHOOK_SECRET` **y hay que reiniciar el servidor**. Si no, el webhook rechaza todo con «firma no válida» y parece que el código está roto cuando no lo está.
 
-Luego, en `http://localhost:5000`, comprar con la tarjeta `4242 4242 4242 4242` (fecha futura, CVC y CP cualquiera).
-
-**Qué debe pasar, y es la prueba que importa:**
-- Compra normal → 1 fila en Airtable.
-- `stripe events resend evt_XXXX` → el servidor responde `duplicado` y registra `evento evt_... ya procesado`. **En Airtable sigue habiendo 1 sola fila.**
-- Si aparecen 2 filas, la deduplicación no funciona y hay que mirar el código antes que n8n.
+Tarjeta de prueba: `4242 4242 4242 4242`, fecha futura, CVC cualquiera.
+Para la deduplicación: `stripe events resend <evt_ de checkout.session.completed>` — **no** los `evt_3U…`, que son eventos que el webhook ignora a propósito.
 
 ## Reglas y límites del proyecto
 
