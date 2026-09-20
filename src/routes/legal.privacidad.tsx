@@ -18,7 +18,7 @@ export const Route = createFileRoute("/legal/privacidad")({
       </p>
       <h2>Responsable</h2>
       <p>
-        <strong>[RAZÓN SOCIAL]</strong> — NIF <strong>[NIF/CIF]</strong> — <strong>[DOMICILIO FISCAL]</strong>, Sevilla,
+        <strong>Jacobo Otero Campos</strong> — NIF <strong>48806552T</strong> — <strong>Plaza del Cabildo 12, 41001</strong>, Sevilla,
         España · <a href="mailto:eclipssebrand@gmail.com">eclipssebrand@gmail.com</a>
       </p>
       <h2>Datos que recogemos</h2>

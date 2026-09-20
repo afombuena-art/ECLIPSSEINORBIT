@@ -18,13 +18,11 @@ export const Route = createFileRoute("/legal/aviso-legal")({
       </p>
       <h2>Titular</h2>
       <p>
-        <strong>[RAZÓN SOCIAL]</strong> (marca comercial «ECLIPSSE™ UNIVERSE» / «ECLIPSSEBRAND»).
+        <strong>Jacobo Otero Campos</strong> (marca comercial «ECLIPSSE™ UNIVERSE» / «ECLIPSSEBRAND»).
         <br />
-        NIF / CIF: <strong>[NIF/CIF]</strong>
+        NIF / CIF: <strong>48806552T</strong>
         <br />
-        Domicilio: <strong>[DOMICILIO FISCAL]</strong>, Sevilla (España)
-        <br />
-        Datos registrales: <strong>[DATOS REGISTRALES SI APLICA]</strong>
+        Domicilio: <strong>Plaza del Cabildo 12, 41001</strong>, Sevilla (España)
         <br />
         Contacto: <a href="mailto:eclipssebrand@gmail.com">eclipssebrand@gmail.com</a>
         <br />
