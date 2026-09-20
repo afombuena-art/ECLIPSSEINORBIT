@@ -55,8 +55,8 @@ Criterios aplicados, por si hay que revisarlos:
 
 ## Estado de esos cambios — ⚠️ leer antes de seguir
 
-- **Sin commit.** `git status` muestra `M src/routes/api.stripe-webhook.ts` y `?? src/lib/webhook-dedup.server.ts`.
-- **Sin probar en ejecución.** No se ha hecho ni un pedido de prueba con este código.
+- ✅ **Commiteado** el 2026-09-20: `0e30596`, en la rama `feature/stripe-integration`. El repo del proyecto está limpio.
+- ⚠️ **Sin probar en ejecución.** No se ha hecho ni un pedido de prueba con este código. Compila, pero nadie lo ha visto funcionar.
 - ✅ `npx tsc --noEmit` pasa limpio en los dos archivos.
 - Los errores de tipos que aparecen en `src/components/ContactCTA.tsx` y `src/routes/prendas.$slug.tsx` son **preexistentes** (framer-motion), no los introdujo este cambio.
 
