@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe.server";
+import { alreadyForwarded, markForwarded, seenInMemory } from "@/lib/webhook-dedup.server";
 
 const N8N_TIMEOUT_MS = 12_000;
 
@@ -21,8 +22,10 @@ const RELEVANT_EVENTS = new Set<Stripe.Event["type"]>([
  *   - Firma inválida → 400 (no se procesa, no se reintenta).
  *   - Evento no relevante → 200 (para que Stripe deje de reenviarlo).
  *
- * Deduplicación: n8n debe descartar eventos repetidos por `eventId` (Stripe
- * puede entregar el mismo evento más de una vez y en cualquier orden).
+ * Deduplicación (doble cerrojo): aquí se descartan los eventos ya entregados,
+ * apuntados en la metadata de Stripe (ver `webhook-dedup.server.ts`), y n8n
+ * vuelve a descartarlos por `eventId`. Stripe puede entregar el mismo evento
+ * más de una vez y en cualquier orden.
  */
 export const Route = createFileRoute("/api/stripe-webhook")({
   server: {
@@ -58,6 +61,12 @@ export const Route = createFileRoute("/api/stripe-webhook")({
           return new Response("ignored", { status: 200 });
         }
 
+        // Primera barrera, sin llamar a Stripe: ya procesado en esta instancia.
+        if (seenInMemory(event.id)) {
+          console.info(`stripe-webhook: evento ${event.id} ya procesado (memoria), se descarta`);
+          return new Response("duplicado", { status: 200 });
+        }
+
         const sessionRef = event.data.object as Stripe.Checkout.Session;
 
         // Pago asíncrono todavía pendiente: esperamos al async_payment_succeeded.
@@ -72,11 +81,19 @@ export const Route = createFileRoute("/api/stripe-webhook")({
         let session: Stripe.Checkout.Session;
         try {
           session = await stripe.checkout.sessions.retrieve(sessionRef.id, {
-            expand: ["line_items", "line_items.data.price.product"],
+            // `payment_intent` se expande para leer de su metadata los eventos
+            // ya entregados a n8n, sin una llamada extra a la API.
+            expand: ["line_items", "line_items.data.price.product", "payment_intent"],
           });
         } catch (err) {
           console.error("stripe-webhook: no se pudo releer la sesión", err);
           return new Response("retry", { status: 500 });
+        }
+
+        // Segunda barrera: este evento ya se entregó a n8n en una entrega anterior.
+        if (alreadyForwarded(session, event.id)) {
+          console.info(`stripe-webhook: evento ${event.id} ya entregado a n8n, se descarta`);
+          return new Response("duplicado", { status: 200 });
         }
 
         const paymentIntentId =
@@ -151,6 +168,9 @@ export const Route = createFileRoute("/api/stripe-webhook")({
         } finally {
           clearTimeout(timeout);
         }
+
+        // n8n ha confirmado: se apunta el evento para no volver a entregarlo.
+        await markForwarded(stripe, session, event.id);
 
         return new Response("ok", { status: 200 });
       },
