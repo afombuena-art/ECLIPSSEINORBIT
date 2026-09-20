@@ -240,20 +240,33 @@ function CheckoutPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
-                  Envío{zone ? ` · ${ZONE_LABELS[zone]}` : " (estimado)"}
+                  {noSePuedeEnviar ? "Envío" : `Envío${zone ? ` · ${ZONE_LABELS[zone]}` : " (estimado)"}`}
                 </span>
                 <span className="tabular-nums">
-                  {envioEsGratis ? "Gratis" : formatEuros(envioCents)}
+                  {noSePuedeEnviar
+                    ? "No disponible"
+                    : envioEsGratis
+                      ? "Gratis"
+                      : formatEuros(envioCents)}
                 </span>
               </div>
               <div className="flex justify-between border-t border-border pt-2 font-display text-base">
                 <span>Total</span>
-                <span className="tabular-nums">{formatEuros(totalConEnvio)}</span>
+                <span className="tabular-nums">
+                  {noSePuedeEnviar ? "—" : formatEuros(totalConEnvio)}
+                </span>
               </div>
-              {!zone && (
+              {noSePuedeEnviar ? (
                 <p className="text-[11px] text-muted-foreground">
-                  Escribe tu código postal para ver el envío exacto.
+                  No podemos enviar este pedido por la vía habitual. Escríbenos por WhatsApp y lo
+                  gestionamos de otra manera.
                 </p>
+              ) : (
+                !zone && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Escribe tu código postal para ver el envío exacto.
+                  </p>
+                )
               )}
               <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">IVA incluido</p>
             </div>

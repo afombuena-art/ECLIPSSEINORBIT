@@ -103,12 +103,17 @@ export function CartSheet() {
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="tabular-nums">{formatEuros(subtotalCents)}</span>
               </div>
+              {/* Estimación de península: la zona real no se sabe hasta que el
+                  cliente escribe su código postal en el checkout. */}
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Envío</span>
+                <span className="text-muted-foreground">Envío (estimado)</span>
                 <span className="tabular-nums">
                   {shippingCents === 0 ? "Gratis" : formatEuros(shippingCents)}
                 </span>
               </div>
+              <p className="text-[11px] text-muted-foreground">
+                El envío definitivo se calcula con tu código postal en el siguiente paso.
+              </p>
 
               {remainingForFree !== null &&
                 (remainingForFree > 0 ? (
