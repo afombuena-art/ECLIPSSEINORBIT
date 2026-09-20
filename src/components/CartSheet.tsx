@@ -8,7 +8,9 @@ export function CartSheet() {
   const cart = useCart();
   const { detailedLines, subtotalCents, shippingCents, totalCents, isOpen, setOpen } = cart;
 
-  const remainingForFree = FREE_SHIPPING_THRESHOLD_CENTS - subtotalCents;
+  // `null` si el envío gratis está desactivado: entonces no se menciona.
+  const remainingForFree =
+    FREE_SHIPPING_THRESHOLD_CENTS === null ? null : FREE_SHIPPING_THRESHOLD_CENTS - subtotalCents;
 
   return (
     <Sheet open={isOpen} onOpenChange={setOpen}>
@@ -108,14 +110,15 @@ export function CartSheet() {
                 </span>
               </div>
 
-              {remainingForFree > 0 ? (
-                <p className="text-[11px] text-muted-foreground">
-                  Te faltan <strong className="text-black">{formatEuros(remainingForFree)}</strong>{" "}
-                  para el envío gratis.
-                </p>
-              ) : (
-                <p className="text-[11px] text-muted-foreground">Envío gratis conseguido.</p>
-              )}
+              {remainingForFree !== null &&
+                (remainingForFree > 0 ? (
+                  <p className="text-[11px] text-muted-foreground">
+                    Te faltan <strong className="text-black">{formatEuros(remainingForFree)}</strong>{" "}
+                    para el envío gratis.
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground">Envío gratis conseguido.</p>
+                ))}
 
               <div className="flex justify-between border-t border-border pt-3 font-display text-base">
                 <span>Total</span>

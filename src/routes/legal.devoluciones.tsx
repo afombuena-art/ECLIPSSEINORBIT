@@ -14,10 +14,15 @@ export const Route = createFileRoute("/legal/devoluciones")({
     <LegalLayout title="Envíos y devoluciones">
       <h2>Envíos</h2>
       <p>
-        Realizamos envíos mediante Correos a España. El coste se calcula automáticamente en el proceso de compra según el
-        peso del pedido y se muestra antes de pagar; el envío es <strong>gratuito a partir de 75 €</strong> de compra. El
-        plazo estimado es de 3 a 10 días laborables desde la confirmación del pago. En pedidos personalizados o de gran
-        cantidad, el plazo puede ampliarse hasta 14 días laborables.
+        Realizamos envíos mediante Correos a la <strong>península y Baleares</strong>. El coste se calcula
+        automáticamente en el proceso de compra según el peso del pedido y la zona de destino, y se muestra antes de
+        pagar. El plazo estimado es de 3 a 10 días laborables desde la confirmación del pago. En pedidos personalizados
+        o de gran cantidad, el plazo puede ampliarse hasta 14 días laborables.
+      </p>
+      <p>
+        <strong>No realizamos envíos a Canarias, Ceuta, Melilla ni fuera de España</strong> por el procedimiento
+        habitual. Si quieres un pedido para alguno de esos destinos, escríbenos por WhatsApp y lo gestionamos de otra
+        manera.
       </p>
       <h2>Derecho de desistimiento</h2>
       <p>

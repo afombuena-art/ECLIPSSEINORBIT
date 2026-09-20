@@ -7,10 +7,18 @@ export const cartItemSchema = z.object({
 });
 
 /**
- * Datos que aporta nuestro checkout. La dirección de envío, el email y el
+ * Datos que aporta nuestro checkout. La dirección completa, el email y el
  * teléfono los recoge Stripe Checkout, no este formulario.
+ *
+ * El código postal es la excepción: hace falta AQUÍ para saber la zona y
+ * calcular el envío, porque Stripe recoge la dirección cuando el importe ya
+ * está fijado.
  */
 export const checkoutSchema = z.object({
+  shippingPostalCode: z
+    .string()
+    .trim()
+    .regex(/^\d{5}$/, "Escribe un código postal español de 5 cifras"),
   orderNotes: z.string().trim().max(500, "Máximo 500 caracteres").optional(),
   acceptTerms: z.boolean().refine((v) => v === true, {
     message: "Debes aceptar los términos y la política de privacidad",

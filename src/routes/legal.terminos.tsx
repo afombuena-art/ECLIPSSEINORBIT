@@ -44,9 +44,14 @@ export const Route = createFileRoute("/legal/terminos")({
       </p>
       <h2>Envíos</h2>
       <p>
-        Los envíos se realizan mediante Correos a España. El coste se calcula en el checkout según el peso del pedido, con
-        <strong> envío gratuito a partir de 75 €</strong> de compra. El plazo estimado de entrega es de 3 a 10 días
+        Los envíos se realizan mediante Correos a la <strong>península y Baleares</strong>. El coste se calcula en el
+        checkout según el peso del pedido y la zona de destino. El plazo estimado de entrega es de 3 a 10 días
         laborables tras la confirmación del pago, salvo en pedidos personalizados (ver sección correspondiente).
+      </p>
+      <p>
+        <strong>No se realizan envíos a Canarias, Ceuta, Melilla ni fuera de España</strong> por el procedimiento
+        habitual. Para esos destinos es necesario contactar previamente con nosotros por WhatsApp, y el pedido se
+        gestionará de forma separada a esta tienda.
       </p>
       <h2>Productos personalizados</h2>
       <p>

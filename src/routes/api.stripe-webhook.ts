@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe.server";
 import { alreadyForwarded, markForwarded, seenInMemory } from "@/lib/webhook-dedup.server";
+import { zoneFromPostalCode } from "@/lib/shipping";
 
 const N8N_TIMEOUT_MS = 12_000;
 
@@ -101,6 +102,25 @@ export const Route = createFileRoute("/api/stripe-webhook")({
             ? session.payment_intent
             : (session.payment_intent?.id ?? null);
 
+        // El envío se cobró según el código postal que el cliente escribió en
+        // nuestro checkout, antes de que Stripe recogiera la dirección real.
+        // Si no coinciden, el pedido se marca para que se revise a mano: puede
+        // ser un error del comprador o un intento de pagar de menos.
+        const cobradoPor = session.metadata?.shippingPostalCode ?? null;
+        const cobradoZona = session.metadata?.shippingZone ?? null;
+        const entregaEn = session.collected_information?.shipping_details?.address?.postal_code ?? null;
+        const zonaEntrega = entregaEn ? zoneFromPostalCode(entregaEn) : null;
+        const zonaRealEntrega = zonaEntrega?.ok ? zonaEntrega.zone : null;
+        const revisarEnvio =
+          entregaEn !== null && cobradoZona !== null && zonaRealEntrega !== cobradoZona;
+
+        if (revisarEnvio) {
+          console.warn(
+            `stripe-webhook: el pedido ${session.id} se cobró como zona "${cobradoZona}" (CP ${cobradoPor}) ` +
+              `pero se entrega en el CP ${entregaEn} (zona "${zonaRealEntrega ?? "fuera de cobertura"}"). Revisar antes de enviar.`,
+          );
+        }
+
         const orderPayload = {
           eventId: event.id,
           eventType: event.type,
@@ -133,6 +153,14 @@ export const Route = createFileRoute("/api/stripe-webhook")({
             : null,
           notes: session.metadata?.notes ?? "",
           marketingOptIn: session.metadata?.marketingOptIn === "true",
+          envio: {
+            zonaCobrada: cobradoZona,
+            codigoPostalCobrado: cobradoPor,
+            codigoPostalEntrega: entregaEn,
+            zonaEntrega: zonaRealEntrega,
+            /** `true` si la zona de entrega no coincide con la cobrada: revisar antes de enviar. */
+            revisar: revisarEnvio,
+          },
           items: (session.line_items?.data ?? []).map((li) => ({
             description: li.description,
             quantity: li.quantity,

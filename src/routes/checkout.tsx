@@ -9,6 +9,9 @@ import { useCart } from "@/lib/cart";
 import { formatEuros } from "@/lib/money";
 import { checkoutFormSchema, type CheckoutFormInput } from "@/lib/checkout-schema";
 import { createCheckoutSession } from "@/lib/checkout.server";
+import { quoteShipping, zoneFromPostalCode, ZONE_LABELS } from "@/lib/shipping";
+
+const WHATSAPP_URL = "https://wa.me/message/P5FFTHYMWKNRA1";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -37,11 +40,34 @@ function CheckoutPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<CheckoutFormInput>({
     resolver: zodResolver(checkoutFormSchema),
-    defaultValues: { orderNotes: "", acceptTerms: false, marketingOptIn: false },
+    defaultValues: {
+      shippingPostalCode: "",
+      orderNotes: "",
+      acceptTerms: false,
+      marketingOptIn: false,
+    },
   });
+
+  // El envío depende de la zona, así que se recalcula según escribe el código
+  // postal. El servidor lo vuelve a calcular: esto es solo para que lo vea.
+  const postalCode = watch("shippingPostalCode") ?? "";
+  const lookup = /^\d{5}$/.test(postalCode.trim()) ? zoneFromPostalCode(postalCode) : null;
+  const zone = lookup?.ok ? lookup.zone : null;
+  const sinCobertura = lookup !== null && !lookup.ok && lookup.reason === "fuera-de-cobertura";
+
+  const items = detailedLines.map((l) => ({ id: l.id, qty: l.qty }));
+  const quote = zone ? quoteShipping(items, subtotalCents, zone) : null;
+  const demasiadoPeso = quote !== null && !quote.ok;
+
+  // Mientras no haya código postal se muestra la estimación de península.
+  const envioCents = quote?.ok ? quote.cents : shippingCents;
+  const envioEsGratis = quote?.ok ? quote.free : shippingCents === 0;
+  const totalConEnvio = subtotalCents + (quote?.ok ? quote.cents : shippingCents);
+  const noSePuedeEnviar = sinCobertura || demasiadoPeso;
 
   const onSubmit = handleSubmit(
     async (values) => {
@@ -81,6 +107,65 @@ function CheckoutPage() {
         <div className="mt-10 grid lg:grid-cols-[1fr_340px] gap-10 lg:gap-16 items-start">
           <form onSubmit={onSubmit} noValidate className="space-y-8">
             <div>
+              <label
+                className="block text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-2"
+                htmlFor="shippingPostalCode"
+              >
+                Código postal de envío
+              </label>
+              <input
+                id="shippingPostalCode"
+                inputMode="numeric"
+                autoComplete="postal-code"
+                maxLength={5}
+                placeholder="41001"
+                className={`${inputClass} max-w-[10rem] tabular-nums`}
+                {...register("shippingPostalCode")}
+              />
+              <p className="mt-1.5 text-[11px] text-muted-foreground">
+                Lo necesitamos para calcular el envío. La dirección completa te la pedirá Stripe.
+              </p>
+              {errors.shippingPostalCode?.message && (
+                <p className="field-error mt-1.5 text-[11px] text-red-600">
+                  {errors.shippingPostalCode.message}
+                </p>
+              )}
+
+              {zone && !noSePuedeEnviar && (
+                <p className="mt-2 text-sm">
+                  Envío a <strong>{ZONE_LABELS[zone]}</strong>:{" "}
+                  <span className="tabular-nums">
+                    {envioEsGratis ? "gratis" : formatEuros(envioCents)}
+                  </span>
+                </p>
+              )}
+
+              {noSePuedeEnviar && (
+                <div
+                  role="alert"
+                  className="mt-3 border border-black/20 bg-muted px-4 py-3 text-sm"
+                >
+                  <p className="font-display text-base">
+                    {sinCobertura ? "No enviamos a esa zona" : "Pedido demasiado grande"}
+                  </p>
+                  <p className="mt-1.5 text-muted-foreground">
+                    {sinCobertura
+                      ? "Nuestros envíos habituales solo llegan a la península y Baleares. Para comprar desde Canarias, Ceuta o Melilla, escríbenos por WhatsApp y gestionamos tu pedido de otra manera."
+                      : "Este pedido supera el peso máximo de nuestro envío habitual. Escríbenos por WhatsApp y lo gestionamos de otra manera."}
+                  </p>
+                  <a
+                    href={WHATSAPP_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-block rounded-full border border-black px-6 py-2.5 font-display text-[11px] uppercase tracking-[0.25em] hover:bg-black hover:text-white transition-colors"
+                  >
+                    Escríbenos por WhatsApp
+                  </a>
+                </div>
+              )}
+            </div>
+
+            <div>
               <label className="block text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-2" htmlFor="orderNotes">
                 Notas del pedido (opcional)
               </label>
@@ -115,14 +200,15 @@ function CheckoutPage() {
 
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="w-full rounded-full border border-black bg-black text-white px-10 py-4 font-display text-[11px] uppercase tracking-[0.25em] hover:bg-white hover:text-black transition-colors disabled:opacity-50"
+              disabled={isSubmitting || noSePuedeEnviar}
+              className="w-full rounded-full border border-black bg-black text-white px-10 py-4 font-display text-[11px] uppercase tracking-[0.25em] hover:bg-white hover:text-black transition-colors disabled:opacity-50 disabled:hover:bg-black disabled:hover:text-white"
             >
               {isSubmitting ? "Redirigiendo al pago…" : "Ir a pagar"}
             </button>
             <p className="text-[11px] text-muted-foreground text-center">
-              Te llevamos a la pasarela segura de Stripe para introducir la dirección de envío y
-              pagar con tarjeta. El número de tarjeta lo gestiona Stripe, nunca ECLIPSSE™.
+              Enviamos solo a la península y Baleares. Te llevamos a la pasarela segura de Stripe
+              para introducir la dirección de envío y pagar con tarjeta. El número de tarjeta lo
+              gestiona Stripe, nunca ECLIPSSE™.
             </p>
           </form>
 
@@ -153,13 +239,22 @@ function CheckoutPage() {
                 <span className="tabular-nums">{formatEuros(subtotalCents)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Envío</span>
-                <span className="tabular-nums">{shippingCents === 0 ? "Gratis" : formatEuros(shippingCents)}</span>
+                <span className="text-muted-foreground">
+                  Envío{zone ? ` · ${ZONE_LABELS[zone]}` : " (estimado)"}
+                </span>
+                <span className="tabular-nums">
+                  {envioEsGratis ? "Gratis" : formatEuros(envioCents)}
+                </span>
               </div>
               <div className="flex justify-between border-t border-border pt-2 font-display text-base">
                 <span>Total</span>
-                <span className="tabular-nums">{formatEuros(totalCents)}</span>
+                <span className="tabular-nums">{formatEuros(totalConEnvio)}</span>
               </div>
+              {!zone && (
+                <p className="text-[11px] text-muted-foreground">
+                  Escribe tu código postal para ver el envío exacto.
+                </p>
+              )}
               <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">IVA incluido</p>
             </div>
           </aside>
