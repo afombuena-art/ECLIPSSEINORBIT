@@ -60,21 +60,21 @@ Criterios aplicados, por si hay que revisarlos:
 - ✅ `npx tsc --noEmit` pasa limpio en los dos archivos.
 - Los errores de tipos que aparecen en `src/components/ContactCTA.tsx` y `src/routes/prendas.$slug.tsx` son **preexistentes** (framer-motion), no los introdujo este cambio.
 
-## ⚠️ Bloqueante: el entorno local no arranca — CAUSA CONOCIDA Y SOLUCIÓN CONOCIDA
+## Entorno local — ✅ desbloqueado el 2026-09-20 (sin verificar todavía)
 
-**No se pudo hacer el pedido de prueba del 2026-09-20 porque el servidor de desarrollo no levanta.**
+El 2026-09-20 el servidor de desarrollo no arrancaba y eso impidió hacer el pedido de prueba.
 
-**Causa (confirmada, documentada desde el 2026-09-13):** el **Acceso controlado a carpetas** de Windows Defender protege `Documentos`, y **`node.exe` no está entre los programas autorizados**. Por eso Node no puede escribir en `node_modules`. Afecta a `npm install`, `npm run dev`, `npm run build` y a cualquier prueba de un proyecto Node dentro de `Documentos`.
-
-Cómo se manifiesta (dos caras del mismo problema, no son dos bugs):
+**Causa:** el **Acceso controlado a carpetas** de Windows Defender protege `Documentos` y **`node.exe` no estaba autorizado**, así que Node no podía escribir en `node_modules`. Se manifestaba de dos formas que son el mismo problema, no dos bugs:
 - `ENOENT: no such file or directory` en `node_modules\.vite-temp\vite.config.ts.timestamp-*.mjs`
 - `EPERM: operation not permitted, unlink` en `node_modules\.vite\deps\*`
 
-**Solución, la misma que ya se aplicó a `git.exe` y `bash.exe`:**
-Seguridad de Windows → Protección contra ransomware → Acceso controlado a carpetas → Permitir una aplicación → **autorizar `node.exe`**.
-⛔ **No desactivar la protección entera**: esta oficina maneja datos de clientes y proyectos sanitarios.
+✅ **Ana autorizó `node.exe` el 2026-09-20 y lo deja autorizado de forma permanente.** Ya estaban autorizados `git.exe` y `bash.exe`.
 
-⛔ **No perder tiempo buscando rodeos técnicos.** El 2026-09-20 se probaron `npx vite dev --configLoader runner`, borrar la caché y `dangerouslyDisableSandbox`, y **ninguno vale**: el problema es Windows, no Vite ni el sandbox. Si Node falla al escribir en `Documentos`, la única vía es autorizar `node.exe`.
+⚠️ **Autorizado sí, comprobado no:** después de autorizarlo no se llegó a arrancar el servidor. **Lo primero de la próxima sesión es comprobar que `npm run dev` levanta.**
+
+Si volviera a fallar la escritura en `Documentos` desde Node (`ENOENT` o `EPERM` con el archivo existiendo), es otra vez el Acceso controlado. ⛔ **No buscar rodeos técnicos**: el 2026-09-20 se probaron `npx vite dev --configLoader runner`, borrar la caché de Vite y `dangerouslyDisableSandbox`, y **ninguno sirve**. ⛔ **Nunca desactivar la protección entera**: esta oficina maneja datos de clientes y proyectos sanitarios.
+
+⚠️ Contrapartida asumida por Ana: con Node autorizado, **un paquete malicioso de npm puede escribir en `Documentos` durante un `npm install`**. Mitigación acordada: no instalar dependencias sin su visto bueno (ya está en `CLAUDE.md` §11), usar `npm ci` cuando el `package-lock.json` sirva, y mantener al día la copia en el disco externo.
 
 ⚠️ **ESLint está roto en todo el proyecto**, esto sí es independiente del antivirus: `TypeError: expand is not a function` en `minimatch`. **`npm run lint` no funciona.** Preexistente, sin arreglar.
 
@@ -84,7 +84,7 @@ Seguridad de Windows → Protección contra ransomware → Acceso controlado a c
 
 ### A · Depende de Ana y del equipo técnico
 
-1. **Autorizar `node.exe` en el Acceso controlado a carpetas de Windows Defender** (ver bloqueante arriba). Son dos minutos y sin esto no hay ninguna prueba posible, ni aquí ni en Codex.
+1. ✅ **Autorizar `node.exe`** — hecho el 2026-09-20. Falta comprobar que `npm run dev` arranca de verdad.
 2. **Probar la deduplicación de punta a punta**, en modo test:
    - `stripe listen --forward-to localhost:3000/api/stripe-webhook` → da un `whsec_...` que **debe** estar en `STRIPE_WEBHOOK_SECRET` del `.env`, y hay que reiniciar el servidor. Sin esto, todo falla por firma inválida.
    - Compra con `4242 4242 4242 4242`.
@@ -130,8 +130,8 @@ Seguridad de Windows → Protección contra ransomware → Acceso controlado a c
 **Tres cosas, en este orden:**
 
 1. **Escribir al cliente** pidiéndole los cinco datos: razón social, NIF/CIF, domicilio fiscal, datos registrales (si es sociedad) y tarifa real de Correos por tramos de peso. Es lo único que no depende de Ana, y por eso va primero. *(No se hizo el 2026-09-20; el correo no está redactado ni enviado.)*
-2. **Autorizar `node.exe`** en Windows Defender (dos minutos, instrucciones en el bloqueante de arriba).
-3. **Hacer el pedido de prueba** con la deduplicación nueva y comprobar que `stripe events resend` no duplica la fila en Airtable.
+2. **Comprobar que `npm run dev` arranca** ahora que `node.exe` está autorizado. Si da `EPERM` en `node_modules\.vite`, borrar esa carpeta (es solo caché, se regenera) y repetir.
+3. **Hacer el pedido de prueba** con la deduplicación nueva y comprobar que `stripe events resend` no duplica la fila en Airtable. La CLI de Stripe necesita `stripe login` (no estaba conectada el 2026-09-20) y el `whsec_` que da `stripe listen` debe ir al `.env` antes de arrancar el servidor.
 
 ## Reglas y límites del proyecto
 
