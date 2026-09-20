@@ -70,7 +70,12 @@ El 2026-09-20 el servidor de desarrollo no arrancaba y eso impidió hacer el ped
 
 ✅ **Ana autorizó `node.exe` el 2026-09-20 y lo deja autorizado de forma permanente.** Ya estaban autorizados `git.exe` y `bash.exe`.
 
-⚠️ **Autorizado sí, comprobado no:** después de autorizarlo no se llegó a arrancar el servidor. **Lo primero de la próxima sesión es comprobar que `npm run dev` levanta.**
+✅ **Comprobado el mismo día:** `npm run dev` arranca sin errores. Vite 8.2.2, listo en ~3 s.
+
+🔹 **El servidor de desarrollo escucha en el puerto `5000`**, no en el 3000. La URL local es `http://localhost:5000/`. Todo lo de Stripe debe apuntar ahí:
+```
+stripe listen --forward-to localhost:5000/api/stripe-webhook
+```
 
 Si volviera a fallar la escritura en `Documentos` desde Node (`ENOENT` o `EPERM` con el archivo existiendo), es otra vez el Acceso controlado. ⛔ **No buscar rodeos técnicos**: el 2026-09-20 se probaron `npx vite dev --configLoader runner`, borrar la caché de Vite y `dangerouslyDisableSandbox`, y **ninguno sirve**. ⛔ **Nunca desactivar la protección entera**: esta oficina maneja datos de clientes y proyectos sanitarios.
 
@@ -130,8 +135,8 @@ Si volviera a fallar la escritura en `Documentos` desde Node (`ENOENT` o `EPERM`
 **Tres cosas, en este orden:**
 
 1. **Escribir al cliente** pidiéndole los cinco datos: razón social, NIF/CIF, domicilio fiscal, datos registrales (si es sociedad) y tarifa real de Correos por tramos de peso. Es lo único que no depende de Ana, y por eso va primero. *(No se hizo el 2026-09-20; el correo no está redactado ni enviado.)*
-2. **Comprobar que `npm run dev` arranca** ahora que `node.exe` está autorizado. Si da `EPERM` en `node_modules\.vite`, borrar esa carpeta (es solo caché, se regenera) y repetir.
-3. **Hacer el pedido de prueba** con la deduplicación nueva y comprobar que `stripe events resend` no duplica la fila en Airtable. La CLI de Stripe necesita `stripe login` (no estaba conectada el 2026-09-20) y el `whsec_` que da `stripe listen` debe ir al `.env` antes de arrancar el servidor.
+2. ✅ **Entorno local funcionando** — comprobado el 2026-09-20. `npm run dev` arranca en el puerto **5000**.
+3. **Hacer el pedido de prueba** con la deduplicación nueva y comprobar que `stripe events resend` no duplica la fila en Airtable. Requisitos: `stripe login` (la CLI no estaba conectada el 2026-09-20) y meter en el `.env` el `whsec_` que devuelve `stripe listen`, reiniciando el servidor después. Sin eso, el webhook rechaza todo por firma inválida.
 
 ## Reglas y límites del proyecto
 
