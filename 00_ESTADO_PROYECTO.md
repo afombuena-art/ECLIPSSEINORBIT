@@ -102,14 +102,17 @@ Si volviera a fallar la escritura en `Documentos` desde Node (`ENOENT` o `EPERM`
 
 ### B · Depende del cliente — ⚠️ pedírselo cuanto antes, es lo que más tarda
 
-7. **Datos fiscales.** Hay **10 huecos sin rellenar**. Vender sin esto incumple la LSSI-CE.
-   - `src/routes/legal.aviso-legal.tsx` líneas 21, 23, 25, 27 → `[RAZÓN SOCIAL]`, `[NIF/CIF]`, `[DOMICILIO FISCAL]`, `[DATOS REGISTRALES SI APLICA]`
-   - `src/routes/legal.privacidad.tsx` línea 21 → razón social, NIF, domicilio
-   - `src/routes/legal.terminos.tsx` líneas 18-19 → razón social, NIF, domicilio
-   - Si el titular es autónomo, `[DATOS REGISTRALES SI APLICA]` se elimina.
-   - ⚠️ El único contacto en las tres páginas es `eclipssebrand@gmail.com`. Legal, pero da mala imagen en una tienda. Comentárselo.
-8. **Tarifas de envío reales.** `src/lib/shipping.ts` línea 12 lleva `TODO Ana`. Los tramos actuales (3,95 € – 12,90 €, por peso, en céntimos) **son inventados**. Hace falta su tarifa real de Correos / Packlink PRO por tramos de peso.
+7. ✅ **Datos fiscales — COMPLETADO el 2026-09-20** (commit `d55b28f`). Los 10 huecos están rellenos en las tres páginas legales.
+   - Titular: **Jacobo Otero Campos**, NIF `48806552T`, Plaza del Cabildo 12, 41001, Sevilla.
+   - Es **autónomo**, así que se eliminaron las líneas de datos registrales del aviso legal (solo aplican a sociedades).
+   - El domicilio se publica **sin piso ni puerta**, a petición del cliente. Comprobado que `legal.devoluciones.tsx` no publica dirección postal, así que acortarlo no afecta a las devoluciones.
+   - ⚠️ **Criterio, no dictamen jurídico:** se valoró que calle + número + CP + ciudad cumple el art. 10 de la LSSI-CE. No lo ha revisado un abogado ni el especialista legal de la oficina.
+   - ⚠️ El único contacto en las tres páginas es `eclipssebrand@gmail.com`. Legal, pero da mala imagen en una tienda. Pendiente de comentárselo.
+8. **Tarifas de envío reales — SIGUE PENDIENTE.** `src/lib/shipping.ts` línea 12 lleva `TODO Ana`. Los tramos actuales (3,95 € – 12,90 €, por peso, en céntimos) **son inventados**.
+   - El cliente confirmó el 2026-09-20 que envía por **Packlink PRO** y dijo «sacar tarifas de ahí», pero **esas tarifas están dentro de su cuenta y no son públicas**: dependen del volumen de cada cuenta. ⛔ **No usar precios genéricos de internet**: cada céntimo de desviación lo pierde él en cada envío.
+   - Lo que hay que pedirle: captura de su simulador de Packlink PRO con el **precio por tramo de peso**. Si sus tramos no coinciden con los del código, se adapta el código a los suyos.
    - Además, `FREE_SHIPPING_THRESHOLD_CENTS = 7500` (envío gratis desde 75 €) **es una decisión suya, no una tarifa**: cada pedido por encima le cuesta el envío de su bolsillo. Que lo confirme.
+   - Estado: el 2026-09-20 se le preparó a Ana el mensaje para pedírselo. **No consta enviado.**
 
 ### C · Legal y protección de datos — sin revisar
 
@@ -134,7 +137,7 @@ Si volviera a fallar la escritura en `Documentos` desde Node (`ENOENT` o `EPERM`
 
 **Dos cosas, en este orden:**
 
-**1 · Escribir al cliente** pidiéndole los cinco datos: razón social, NIF/CIF, domicilio fiscal, datos registrales (si es sociedad) y tarifa real de Correos por tramos de peso. Es lo único que no depende de Ana, y por eso va primero. *(No se hizo el 2026-09-20; el correo no está redactado ni enviado.)*
+**1 · Enviar al cliente la petición de tarifas de envío.** Los datos fiscales ya los dio y están puestos (punto 7). Falta su tabla de Packlink PRO por tramos de peso y que confirme el umbral de envío gratis. El mensaje se le redactó a Ana el 2026-09-20 pero **no consta enviado**. Es lo único que no depende de Ana, y por eso va primero.
 
 **2 · Hacer el pedido de prueba** de la deduplicación. El entorno ya funciona, así que se retoma directamente aquí:
 
