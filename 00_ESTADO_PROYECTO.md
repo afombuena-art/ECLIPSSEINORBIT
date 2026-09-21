@@ -147,7 +147,11 @@ Si volviera a fallar la escritura en `Documentos` desde Node (`ENOENT` o `EPERM`
 
    **Tres validaciones, no una:** el navegador calcula para mostrar, `checkout.server.ts` **recalcula la zona en el servidor** (el cliente se puede manipular) y el webhook compara la zona cobrada con el CP que acabó recogiendo Stripe.
 
-   ⚠️ **Agujero conocido y asumido: el CP del checkout y la dirección de Stripe pueden no coincidir.** Se cobra antes de que Stripe pida la dirección, así que se puede pagar tarifa de Sevilla y recibir en Barcelona, **o saltarse el bloqueo de Canarias**. Comprobado el 2026-09-21. **Con el checkout alojado no se puede impedir**: impedirlo exige el checkout incrustado, que desactiva Apple Pay (ver punto 8). La defensa es detectarlo y que se vea antes de preparar el paquete.
+   ⚠️ **Agujero conocido y asumido: el CP del checkout y la dirección de Stripe pueden no coincidir.** Se cobra antes de que Stripe pida la dirección, así que se puede pagar tarifa de Sevilla y recibir en Barcelona, **o saltarse el bloqueo de Canarias**. Comprobado el 2026-09-21. La defensa actual es detectarlo y que se vea antes de preparar el paquete.
+
+   🔹 **Cómo se eliminaría del todo, si algún día compensa** (evaluado el 2026-09-21, **decisión de Ana: no hacerlo ahora**). El problema existe porque la dirección se pide en dos sitios. Si se pide **solo en nuestro checkout** —nombre, calle, piso, ciudad y CP— y se le pasa a Stripe ya hecha con **`payment_intent_data.shipping`** (verificado en su API: `name` y `address.line1` obligatorios, más `city`, `postal_code`, `country`), se quita `shipping_address_collection` y **Stripe deja de pedirla**. Sigue siendo checkout alojado, así que **Apple Pay se conserva**; no es lo mismo que el checkout incrustado descartado en el punto 8.
+   - Contrapartida: hoy la dirección la valida Stripe con autocompletado. Si la pedimos nosotros, **esa validación pasa a ser nuestra** y una dirección mal escrita son paquetes devueltos. Y obliga a repetir todas las pruebas del checkout.
+   - **Cuándo replantearlo:** si con clientes reales la columna «Aviso envío» se llena a menudo.
 
    ✅ **Aviso de envío — implementado y probado el 2026-09-21** (commit `00aec8e`). El webhook manda `envio.aviso`, un texto ya redactado, que el nodo de n8n vuelca en la columna **«Aviso envío»** de Airtable. Vacío cuando todo cuadra. Dos gravedades:
    - `REVISAR — se cobró envío de sevilla (CP 41001) pero la entrega es en peninsula (CP 08001)…`
@@ -231,6 +235,18 @@ Nada. Los datos fiscales y las tarifas de envío llegaron el 2026-09-20 y ya est
 **5 · ✅ Los 7 segundos — resueltos el 2026-09-21** (3749 ms). Ver arriba.
 
 **6 · Puesta en producción**, cuando lo anterior esté: mergear `feature/stripe-integration` → `main`, pasar a claves **live**, dar de alta el endpoint del webhook en modo live (el signing secret es **distinto**), cargar las variables de entorno en Vercel (`.vercel` está vacío) y hacer una compra real de importe pequeño.
+
+### ⚠️ Métodos de pago: el camino asíncrono está programado pero SIN PROBAR
+
+El checkout ofrece, además de tarjeta: **Klarna, MB WAY, Bancontact, EPS, Satispay y Link** (visto el 2026-09-21). Se activan desde el panel de Stripe → Configuración → Métodos de pago, **no desde el código**.
+
+**Lo que esto cambia para nosotros:** con tarjeta el pago se confirma al instante, pero varios de esos métodos son **asíncronos**: Stripe manda `checkout.session.completed` con `payment_status: "unpaid"` y confirma después con `checkout.session.async_payment_succeeded` (o `…_failed`).
+
+✅ El webhook **ya lo contempla**: sale antes si `payment_status === "unpaid"` y escucha los dos eventos asíncronos. Estaba previsto desde el principio.
+
+⚠️ **Pero nunca se ha probado.** Todas las pruebas se hicieron con tarjeta `4242…`, que es síncrona. **Antes de producción hay que hacer una compra de prueba con Klarna** y comprobar que el pedido llega a Airtable una sola vez y solo cuando el pago se confirma de verdad. Si ese camino falla, el síntoma sería un pedido que no aparece o que aparece sin estar pagado.
+
+🔹 **Decisión pendiente de Jacobo, no técnica:** qué métodos dejar activos. Bancontact (Bélgica), MB WAY (Portugal), EPS (Austria) y Satispay (Italia) no pintan mucho en una tienda que **solo envía a España**; son ruido en la pantalla de pago. Klarna sí es una decisión de negocio: sube la conversión pero **cobra más comisión** y trae el camino asíncrono.
 
 ⚠️ **Sigue sin haber ni un test automático.** Todo lo verificado el 2026-09-20 fue a mano. Si se toca el webhook o el cálculo de envío, hay que repetir las pruebas a mano. Añadir tests requiere una dependencia nueva (vitest) → `CLAUDE.md` §11 obliga a preguntar a Ana.
 
