@@ -68,7 +68,11 @@ Criterios aplicados, por si hay que revisarlos:
 
 La tercera prueba es la importante: con el servidor recién arrancado la caché en memoria está vacía, igual que en Vercel, donde cada petición puede caer en una instancia nueva. **Se confirmó que el cerrojo persistente (la marca en la metadata del PaymentIntent) funciona por sí solo.** Si alguien toca este código, repetir esa prueba concreta, no solo la fácil.
 
-⚠️ **Pendiente de revisar, no bloquea: los 7 segundos.** La entrega buena tardó 7 s en responder a Stripe (20:03:51 → 20:03:58). Dentro de ese tiempo caben: releer la sesión expandida, el POST a n8n (timeout propio de 12 s), la escritura en Airtable y el `paymentIntents.update` de la marca. Stripe corta los webhooks lentos, así que **hoy va sobrado pero sin mucho margen**: si n8n o Airtable se ralentizan, Stripe reintentará. No es grave —para eso está la deduplicación— pero conviene medir de dónde vienen esos segundos y, si hace falta, bajar `N8N_TIMEOUT_MS` o aligerar el workflow de n8n. **Verificar antes el límite real de Stripe, que no está confirmado.**
+✅ **Los 7 segundos — resueltos el 2026-09-21.** Bajaron a **3749 ms** al simplificar el workflow de n8n (ver más abajo). El webhook registra ahora el desglose en cada entrega:
+```
+stripe-webhook: evt_... entregado en 3749 ms (releer sesión 390 · n8n 3077 · marcar 282)
+```
+El grueso es n8n↔Airtable y no se puede bajar más sin romper el contrato de «solo 200 si n8n confirma», que pidió Ana expresamente. ⚠️ Stripe **no publica su tiempo límite exacto**; solo recomienda responder 2xx antes de la lógica pesada y reintenta 3 días en producción. Nuestro diseño va a propósito contra esa recomendación, y la deduplicación es justo lo que lo hace seguro.
 
 ✅ **Resuelto el 2026-09-21: no hay camino paralelo.** El `pending_webhooks: 2` del evento reenviado hizo sospechar de un segundo destino. Comprobado en el panel (Workbench → Webhooks → Destinos de eventos): el único oyente era el `stripe listen` local (`JACOBO_HP → localhost:5000/api/stripe-webhook`) y **«No se han añadido destinos»**. Cero endpoints configurados. El único camino hacia Airtable es el del código, y está deduplicado.
 
@@ -168,11 +172,25 @@ Si volviera a fallar la escritura en `Documentos` desde Node (`ENOENT` o `EPERM`
 
    ⚠️ Todo lo anterior es criterio técnico, **no dictamen jurídico**. No lo ha revisado un abogado ni el especialista Legal de la oficina.
 
-## Bug abierto en n8n — sigue sin diagnosticar
+## Bug de n8n — ✅ RESUELTO el 2026-09-21
 
-- **Síntoma (2026-08-29):** al reenviar el evento `evt_1U9q0m3pSwZ8rGo9SvI6bh3A` con `stripe events resend`, se creó un **registro duplicado en Airtable con el mismo `eventId`**. La tabla estaba vacía antes de la prueba.
-- **Diagnóstico pendiente:** abrir el historial de *Executions* de n8n, localizar esa ejecución y ver qué devolvió el nodo **«Buscar duplicado»**. El fallo está o en la búsqueda (filtro o campo equivocado) o en la condición del nodo **«¿Ya existe?»** (rama invertida).
-- ⚠️ El conector de n8n **requiere autorización** y no estaba autorizado el 2026-09-20. Hay que activarlo en los ajustes de conectores de claude.ai antes de poder consultarlo desde Claude Code.
+**Síntoma (2026-08-29):** al reenviar un evento, se creaba un **registro duplicado en Airtable con el mismo `eventId`**.
+
+**Qué se hizo:** en vez de buscar la causa exacta del nodo que fallaba, se **rediseñó el workflow** para que el problema no pueda darse. La deduplicación era un «comprobar y luego actuar» en tres pasos (buscar → ¿existe? → crear), frágil por construcción. Ahora **la garantiza Airtable**.
+
+```
+ANTES    Webhook → Wait(2s) → Buscar duplicado → ¿Ya existe? → Crear → Responder
+DESPUÉS  Webhook → Crear pedido (upsert, coincidencia por eventId) → Responder
+```
+
+⚠️ **El workflow en uso es OTRO, con ID nuevo:**
+- **Activo:** `qmS3k2Pp3wxyKUqZ` — «Pedidos Stripe — ECLIPSSEINORBIT», 3 nodos, ruta `stripe-eclipsse-order`.
+- **Desactivado:** `17y7m9VMFcYZDNff` — «Pedidos Stripe — ECLIPSSEINORBIT_versión anterior (con bug)», 7 nodos. Se conserva como respaldo; **no reactivar**.
+- La ruta del webhook y la autenticación de cabecera son las mismas, así que **el `.env` no cambia**.
+
+✅ Efecto medido en la prueba del 2026-09-21: el webhook pasó de **~7000 ms a 3749 ms** (releer sesión 390 · n8n 3077 · marcar 282). Se quitaron los 2 s del `Wait` y una llamada entera a Airtable. **El grueso restante es latencia de n8n↔Airtable**; no se puede bajar más sin romper el contrato de «solo 200 si n8n confirma». Con ese margen, el aviso sobre los 7 segundos queda cerrado.
+
+⚠️ **Matiz honesto:** el reenvío de prueba lo descartó el cerrojo en memoria del código **antes** de llegar a n8n, así que el upsert no llegó a ejercitarse en esa prueba concreta. Su corrección se verificó leyendo la configuración guardada (`operation: upsert`, `matchingColumns: ["eventId"]`) y validando el workflow, no viéndolo descartar un duplicado. Ahora hay **dos defensas independientes**; para probar solo la de n8n habría que llamar a su webhook directamente, saltándose el código.
 
 ## Bloqueado por el cliente
 
@@ -188,9 +206,9 @@ Nada. Los datos fiscales y las tarifas de envío llegaron el 2026-09-20 y ya est
 
 **3 · ✅ Plazos de conservación — ESCRITOS el 2026-09-21** (6 / 3 años). Queda **aplicarlos**: hoy nada borra nada en Airtable y ahora está prometido por escrito. Ver punto 9.
 
-**4 · Confirmar con Jacobo dos cosas de la tabla de envíos:** que las limítrofes son solo Cádiz, Huelva, Córdoba y Málaga (dijo «aproximadamente», y Badajoz no está), y que está de acuerdo con que no haya envío gratis.
+**4 · Confirmar con Jacobo dos cosas de la tabla de envíos:** que las limítrofes son solo Cádiz, Huelva, Córdoba y Málaga (dijo «aproximadamente», y Badajoz no está), y que está de acuerdo con que no haya envío gratis. **Es lo único que queda pendiente de terceros.**
 
-**5 · Revisar los 7 segundos del webhook** (ver arriba). No bloquea.
+**5 · ✅ Los 7 segundos — resueltos el 2026-09-21** (3749 ms). Ver arriba.
 
 **6 · Puesta en producción**, cuando lo anterior esté: mergear `feature/stripe-integration` → `main`, pasar a claves **live**, dar de alta el endpoint del webhook en modo live (el signing secret es **distinto**), cargar las variables de entorno en Vercel (`.vercel` está vacío) y hacer una compra real de importe pequeño.
 
