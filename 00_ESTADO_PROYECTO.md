@@ -70,7 +70,9 @@ La tercera prueba es la importante: con el servidor recién arrancado la caché 
 
 ⚠️ **Pendiente de revisar, no bloquea: los 7 segundos.** La entrega buena tardó 7 s en responder a Stripe (20:03:51 → 20:03:58). Dentro de ese tiempo caben: releer la sesión expandida, el POST a n8n (timeout propio de 12 s), la escritura en Airtable y el `paymentIntents.update` de la marca. Stripe corta los webhooks lentos, así que **hoy va sobrado pero sin mucho margen**: si n8n o Airtable se ralentizan, Stripe reintentará. No es grave —para eso está la deduplicación— pero conviene medir de dónde vienen esos segundos y, si hace falta, bajar `N8N_TIMEOUT_MS` o aligerar el workflow de n8n. **Verificar antes el límite real de Stripe, que no está confirmado.**
 
-⚠️ **Pendiente de mirar: `pending_webhooks: 2`.** El evento reenviado indicaba **dos** destinos pendientes, no uno. Uno es el `stripe listen` local. **Hay que mirar en el panel de Stripe → Desarrolladores → Webhooks qué otro endpoint está dado de alta.** Si hubiera uno apuntando directamente a n8n, existiría un camino paralelo hacia Airtable que la deduplicación de este código **no cubre**.
+✅ **Resuelto el 2026-09-21: no hay camino paralelo.** El `pending_webhooks: 2` del evento reenviado hizo sospechar de un segundo destino. Comprobado en el panel (Workbench → Webhooks → Destinos de eventos): el único oyente era el `stripe listen` local (`JACOBO_HP → localhost:5000/api/stripe-webhook`) y **«No se han añadido destinos»**. Cero endpoints configurados. El único camino hacia Airtable es el del código, y está deduplicado.
+
+⚠️ **Consecuencia para producción, no olvidar:** como no hay ningún endpoint dado de alta, **al pasar a modo live hay que crearlo a mano** apuntando a la URL de Vercel (`https://<dominio>/api/stripe-webhook`). Ese endpoint genera un **signing secret distinto** del de `stripe listen`, y es el que debe ir en `STRIPE_WEBHOOK_SECRET` de producción. Si se olvida, la tienda **cobrará pero ningún pedido llegará a Airtable**.
 - ✅ `npx tsc --noEmit` pasa limpio en los dos archivos.
 - Los errores de tipos que aparecen en `src/components/ContactCTA.tsx` y `src/routes/prendas.$slug.tsx` son **preexistentes** (framer-motion), no los introdujo este cambio.
 
@@ -180,7 +182,7 @@ Nada. Los datos fiscales y las tarifas de envío llegaron el 2026-09-20 y ya est
 
 **1 · ✅ DPA de Airtable — FIRMADO el 2026-09-20.** Ver punto 9.
 
-**2 · Mirar los webhooks dados de alta en Stripe** (panel → Desarrolladores → Webhooks). El `pending_webhooks: 2` sugiere que hay otro endpoint además del local. Si apunta a n8n, hay un camino paralelo sin deduplicar.
+**2 · ✅ Webhooks de Stripe — COMPROBADO el 2026-09-21.** No hay ningún endpoint configurado, así que no existe camino paralelo. Ver arriba, incluida la consecuencia para producción.
 
 **3 · Decidir los plazos de conservación** y sustituir el «tiempo necesario» de la política de privacidad por plazos concretos. Orientación: facturas 6 años (obligación fiscal), datos de envío 3 años. Y que alguien los aplique de verdad: hoy **nada borra nada en Airtable**.
 
