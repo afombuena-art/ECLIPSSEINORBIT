@@ -149,12 +149,12 @@ Si volviera a fallar la escritura en `Documentos` desde Node (`ENOENT` o `EPERM`
 
    ⚠️ **Contexto que manda sobre cualquier suposición: Jacobo es el marido de Ana.** Por eso no hay contrato de servicios ni de encargado del tratamiento entre ellos, y no hay que proponerlo. La base de datos de pedidos vive en la **cuenta de Airtable de iActivaPráctica (de Ana)**, decisión consciente del 2026-09-20; se revisará solo si la tienda crece.
 
-   ⚠️ **PENDIENTE y es el único trámite previo a abrir: firmar el DPA de Airtable a nombre de iActivaPráctica.**
-   - Formulario: `https://airtable.com/shrxzlIweOYYaBBuv` → llega por DocuSign → firmar y **guardar el PDF**.
-   - **No es automático al registrarse**, hay que pedirlo (verificado el 2026-09-20 en la documentación de Airtable).
-   - Lo firma **Ana con los datos de iActivaPráctica**, no Jacobo: la cuenta es de ella.
-   - Al leerlo, comprobar que **incluye las cláusulas contractuales tipo**. La web ya las promete, así que hasta que se firme el texto publicado afirma algo sin respaldo.
-   - **Estado el 2026-09-20: formulario enviado, esperando el correo de DocuSign.** Sin firmar todavía.
+   ✅ **DPA de Airtable FIRMADO el 2026-09-20** por Ana Fombuena Zapata a nombre de **iactivapractica**, vía DocuSign. PDF guardado en `01_DOCUMENTOS/` del proyecto.
+   - ✅ **Incluye las cláusulas contractuales tipo de la UE** (sección 9.2, Módulo 2 responsable→encargado), que es justo lo que promete la política de privacidad. Ley y tribunales **de Irlanda**; autoridad de control, la irlandesa.
+   - Airtable se obliga a: no vender ni compartir los datos, avisar de brechas **en 72 h**, avisar con **10 días** de antelación de subencargados nuevos (con derecho a oponerse en 10 días hábiles), ayudar con los derechos de los clientes y enseñar sus auditorías (SOC 2, ISO 27001) una vez al año.
+   - ⚠️ **Los avisos llegan a `afombuena@gmail.com`** (el correo del bloque de firma). Que no caigan en spam: el plazo para oponerse a un subencargado nuevo es de solo 10 días hábiles.
+   - ⚠️ **El borrado al terminar no es automático:** la sección 12 exige **petición escrita**. Si algún día se deja Airtable, hay que pedirlo expresamente.
+   - ⚠️ El PDF **no está versionado a propósito** (`01_DOCUMENTOS/` está en el `.gitignore` desde el commit `d427d58`): lleva firma, nombre y dirección, y este repo tiene remoto en GitHub. Existe **solo en el disco del portátil**; la copia al disco externo del 2026-09-12 no lo cubre.
 
    ⚠️ **PENDIENTE: el borrado.** La política promete conservar los datos «el tiempo necesario» y **en Airtable no borra nada nadie**. Hay que decidir plazos (orientación: facturación 6 años por obligación fiscal, datos de envío 3 años), escribirlos en el texto en vez del «tiempo necesario», y que alguien los aplique —a mano una vez al año o con un workflow de n8n—. No es urgente mientras no haya pedidos reales, pero conviene decidirlo antes de abrir.
 
@@ -178,7 +178,7 @@ Nada. Los datos fiscales y las tarifas de envío llegaron el 2026-09-20 y ya est
 
 **El código está terminado y probado. Lo que queda son trámites y decisiones, no programación.**
 
-**1 · Firmar el DPA de Airtable** — `https://airtable.com/shrxzlIweOYYaBBuv`, a nombre de **iActivaPráctica**. Cinco minutos. Es el único trámite que debería estar hecho **antes de abrir**, porque la política de privacidad ya promete esas garantías. Enviado el formulario el 2026-09-20; **pendiente de que llegue el DocuSign y de firmarlo**.
+**1 · ✅ DPA de Airtable — FIRMADO el 2026-09-20.** Ver punto 9.
 
 **2 · Mirar los webhooks dados de alta en Stripe** (panel → Desarrolladores → Webhooks). El `pending_webhooks: 2` sugiere que hay otro endpoint además del local. Si apunta a n8n, hay un camino paralelo sin deduplicar.
 
