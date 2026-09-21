@@ -246,7 +246,21 @@ El checkout ofrece, además de tarjeta: **Klarna, MB WAY, Bancontact, EPS, Satis
 
 ⚠️ **Pero nunca se ha probado.** Todas las pruebas se hicieron con tarjeta `4242…`, que es síncrona. **Antes de producción hay que hacer una compra de prueba con Klarna** y comprobar que el pedido llega a Airtable una sola vez y solo cuando el pago se confirma de verdad. Si ese camino falla, el síntoma sería un pedido que no aparece o que aparece sin estar pagado.
 
-🔹 **Decisión pendiente de Jacobo, no técnica:** qué métodos dejar activos. Bancontact (Bélgica), MB WAY (Portugal), EPS (Austria) y Satispay (Italia) no pintan mucho en una tienda que **solo envía a España**; son ruido en la pantalla de pago. Klarna sí es una decisión de negocio: sube la conversión pero **cobra más comisión** y trae el camino asíncrono.
+✅ **Métodos de pago depurados el 2026-09-21.** Había **16 habilitados**, casi todos inútiles para una tienda que solo envía a España. Quedan **cinco**:
+
+| Se queda | Por qué |
+|---|---|
+| **Tarjetas** | El principal |
+| **Cartes Bancaires** | ⚠️ **No tocar.** No es un botón aparte, es una red de tarjetas francesa; desactivarlo podría impedir pagar a algunas tarjetas |
+| **Apple Pay** | Es una tarjeta por debajo, **sin comisión extra** |
+| **Google Pay** | Igual. ⚠️ Se desactivó por error y se volvió a habilitar |
+| **Link** | Tarifa de tarjeta normal; agiliza la segunda compra de quien repite |
+
+Desactivados: Klarna (decisión de Ana: más comisión y poco sentido en carritos de 24 €), Amazon Pay, Alipay, Pix, BLIK, Bancontact, EPS, MB WAY, Satispay, y los coreanos (Kakao Pay, Naver Pay, PAYCO, Samsung Pay, Tarjetas coreanas).
+
+⚠️ **Apple Pay solo se ve en Safari sobre iPhone o Mac.** Que no cunda el pánico al no verlo desde Windows: es lo esperado.
+
+⚠️ **Los ajustes de métodos de pago son independientes por entorno.** El 2026-09-21 se hizo en el **entorno de prueba** (`Entorno de prueba de eclipssebrand`). **Comprobar que también está hecho en la cuenta real (`marca eclipse`)** antes de abrir; si no, la tienda saldría a producción con los 16 métodos.
 
 ⚠️ **Sigue sin haber ni un test automático.** Todo lo verificado el 2026-09-20 fue a mano. Si se toca el webhook o el cálculo de envío, hay que repetir las pruebas a mano. Añadir tests requiere una dependencia nueva (vitest) → `CLAUDE.md` §11 obliga a preguntar a Ana.
 
