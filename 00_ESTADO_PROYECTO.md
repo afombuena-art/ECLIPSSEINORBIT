@@ -145,7 +145,15 @@ Si volviera a fallar la escritura en `Documentos` desde Node (`ENOENT` o `EPERM`
 
    **Envío gratis: retirado** por decisión de Ana el 2026-09-20. `FREE_SHIPPING_THRESHOLD_CENTS = null`. El umbral anterior de 75 € no lo había decidido nadie y le costaba el envío de su bolsillo. Se quitó también de los textos de **términos** y **devoluciones**, donde estaba prometido al comprador. Para reactivarlo basta con poner el subtotal en céntimos; el aviso del carrito reaparece solo.
 
-   **Tres validaciones, no una:** el navegador calcula para mostrar, `checkout.server.ts` **recalcula la zona en el servidor** (el cliente se puede manipular) y el webhook compara la zona cobrada con el CP que acabó recogiendo Stripe. Si no coinciden, el pedido llega a n8n con `envio.revisar: true` y se avisa en el log. No bloquea —el pago ya se hizo— pero se ve antes de enviar.
+   **Tres validaciones, no una:** el navegador calcula para mostrar, `checkout.server.ts` **recalcula la zona en el servidor** (el cliente se puede manipular) y el webhook compara la zona cobrada con el CP que acabó recogiendo Stripe.
+
+   ⚠️ **Agujero conocido y asumido: el CP del checkout y la dirección de Stripe pueden no coincidir.** Se cobra antes de que Stripe pida la dirección, así que se puede pagar tarifa de Sevilla y recibir en Barcelona, **o saltarse el bloqueo de Canarias**. Comprobado el 2026-09-21. **Con el checkout alojado no se puede impedir**: impedirlo exige el checkout incrustado, que desactiva Apple Pay (ver punto 8). La defensa es detectarlo y que se vea antes de preparar el paquete.
+
+   ✅ **Aviso de envío — implementado y probado el 2026-09-21** (commit `00aec8e`). El webhook manda `envio.aviso`, un texto ya redactado, que el nodo de n8n vuelca en la columna **«Aviso envío»** de Airtable. Vacío cuando todo cuadra. Dos gravedades:
+   - `REVISAR — se cobró envío de sevilla (CP 41001) pero la entrega es en peninsula (CP 08001)…`
+   - `NO ENVIAR — la dirección de entrega (CP 35007) está en Canarias, Ceuta o Melilla…` ← **el caso que importa**, probado de punta a punta.
+
+   ⚠️ Antes solo se mandaba `revisar: true`, **y n8n no lo mapeaba a ninguna columna**: el aviso se generaba y se perdía. Si alguien añade campos al payload, comprobar que el nodo «Crear pedido» los mapea, o no llegan.
 
    ✅ **Probado el 2026-09-20:** 41001→4,50 €, 14001→4,90 €, 28001→4,99 €, 07001→6,50 €, 35001→bloqueado con aviso de WhatsApp. Compra completa a Sevilla: 23,97 + 4,50 = **28,47 €** cobrados correctamente, con `shippingZone: "sevilla"` en la metadata.
 
@@ -215,6 +223,10 @@ Nada. Los datos fiscales y las tarifas de envío llegaron el 2026-09-20 y ya est
 **3 · ✅ Plazos de conservación — ESCRITOS el 2026-09-21** (6 / 3 años). Queda **aplicarlos**: hoy nada borra nada en Airtable y ahora está prometido por escrito. Ver punto 9.
 
 **4 · Confirmar con Jacobo dos cosas de la tabla de envíos:** que las limítrofes son solo Cádiz, Huelva, Córdoba y Málaga (dijo «aproximadamente», y Badajoz no está), y que está de acuerdo con que no haya envío gratis. **Es lo único que queda pendiente de terceros.**
+
+🔹 **Y explicarle la columna «Aviso envío» de Airtable**: si un pedido la trae rellena, no se prepara hasta mirarla. Un `NO ENVIAR` significa dirección fuera de cobertura.
+
+🔹 **Limpieza pendiente en Airtable:** la columna «Estado» tiene una opción basura, `Pagado` precedida de un tabulador, creada por el `typecast` del nodo. Borrarla. Origen desconocido, probablemente manual; si reaparece tras una compra, la genera el flujo y hay que investigarlo. **No quitar el `typecast`**: sin él, un valor inesperado haría fallar el nodo, n8n no respondería 200 y el pedido no se guardaría.
 
 **5 · ✅ Los 7 segundos — resueltos el 2026-09-21** (3749 ms). Ver arriba.
 
