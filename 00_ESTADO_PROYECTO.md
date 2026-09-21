@@ -16,9 +16,11 @@
 
 ⚠️ **Está bloqueado por un dato que falta:** nadie ha confirmado si la web está publicada y en qué dominio. Sin eso no se puede dar de alta el webhook de Stripe ni fijar `SITE_URL`.
 
-⚠️ **Todo el trabajo vive en la rama `feature/stripe-integration`**, que va 38 commits por delante de `main`. En `main` está la web antigua, sin tienda.
+⚠️ **La rama buena es ahora `auditoria-preproduccion`**, no `feature/stripe-integration`. Contiene todo lo de esa rama más un commit, y va **39 por delante de `main`** sin nada por detrás (comprobado el 2026-09-21: el merge a `main` sería directo). En `main` está la web antigua, sin tienda. El repositorio remoto es `github.com/afombuena-art/ECLIPSSEINORBIT` y `main` lo sigue.
 
 ⚠️ **Dos cosas quedaron sin decidir**, ambas explicadas abajo: si se añaden tests automáticos, y cómo va a mantener Jacobo el catálogo de prendas sin romper los precios.
+
+🔹 **Hay dos informes de revisión sin versionar en la carpeta**, `CALIDAD.md` y `SEGURIDAD.md`. No son trabajo pendiente: son el diagnóstico de lo que falta pulir. Léelos antes de tocar código.
 
 ## Situación
 
@@ -226,6 +228,24 @@ Resultado: el log pasó de «ya procesado (memoria), se descarta» a **«entrega
 
 Nada. Los datos fiscales y las tarifas de envío llegaron el 2026-09-20 y ya están aplicados.
 
+## Revisión de calidad de código — 2026-09-21
+
+Se hizo una **revisión estática** de todo el código escrito a mano (`src/`, excluyendo los 48 ficheros de shadcn y lo generado), más la configuración del proyecto. Resultado en **`CALIDAD.md`**, en esta misma carpeta: **22 hallazgos con fichero y línea — 0 altos, 10 medios, 12 bajos.**
+
+Es solo diagnóstico: **no se tocó ni una línea de código ni de configuración.**
+
+✅ **Confirmado de nuevo, leyendo el código:** los importes se recalculan en el servidor, el webhook verifica firma, hay CSRF en las server functions, no hay ningún secreto en el repositorio, ningún `TODO`/`FIXME`, ningún `localhost` en `src/`, ningún `any` escrito a mano, y el hook de gitleaks está activo. Las cinco variables de entorno están correctamente declaradas en `.env` y en `.env.example`.
+
+⚠️ **Tres cosas que no dependen de ninguna decisión pendiente.** Las dos primeras están **también en `main`**, idénticas (comprobado el 2026-09-21), así que **no llegaron con el trabajo de Stripe**: si la web está publicada, se están viendo ya. Eso no se sabrá hasta responder la pregunta del dominio.
+
+1. **La cuenta atrás de la portada marca `00:00:00:00`.** `DropCountdown.tsx:4` apunta al 2026-09-01, que ya pasó. Hay que decidir dos cosas: qué fecha va ahí y qué debe mostrarse cuando venza (ahora no hay ninguna previsión para ese caso).
+2. **La tienda anuncia 5 camisetas del DROP 008 y el catálogo tiene 4.** En `src/assets/` están las imágenes de la camiseta granate sin ningún producto que las use. O falta darla de alta, o sobra el «5» del texto. **Es una pregunta para Jacobo.**
+3. **Compartir la web por WhatsApp no muestra imagen.** No hay `og:image` general, y el de las fichas de producto es una ruta relativa, que ni WhatsApp ni Instagram resuelven. Para una marca que vende por ahí, no es menor.
+
+⚠️ **Lo que enlaza con el bloqueo del dominio:** el dominio `www.eclipssebrand.es` está escrito a mano en **8 etiquetas** (`og:url`, `canonical` y el JSON-LD) repartidas por cuatro archivos. No es solo `SITE_URL`. Si se publica en otra dirección y no se cambian, cada página le dirá a Google que la versión buena está en otro sitio.
+
+🔹 **Refuerza dos cosas ya abiertas en este archivo, no las sustituye:** la conveniencia de tests para `shipping.ts` (ver «Tests automáticos») y los pendientes de idempotencia y deduplicación que documenta `SEGURIDAD.md`.
+
 ## Próxima acción
 
 **El código está terminado y probado. Lo que queda son trámites y decisiones, no programación.**
@@ -244,17 +264,21 @@ Nada. Los datos fiscales y las tarifas de envío llegaron el 2026-09-20 y ya est
 
 **6 · Puesta en producción — ES LO ÚNICO QUE QUEDA.** Medio día de pasos cuidadosos, sin programar nada. Ver la sección siguiente.
 
+**7 · Tres arreglos de la revisión del 2026-09-21 que sí son programar**, pequeños y sin dependencias: el contador caducado de la portada, el `og:image` que falta, y aclarar si el DROP 008 son 4 camisetas o 5. **Sin decidir cuándo se hacen**: ninguno bloquea el paso a producción, pero los tres estarán a la vista el día que se abra la tienda, y los dos primeros ya están en `main`. El resto de los 22 hallazgos está en `CALIDAD.md`, ordenado por prioridad.
+
 ## Cómo pasar a producción
 
 ⚠️ **Dato que falta antes de empezar: ¿está la web publicada y en qué dominio?** Quedó sin responder el 2026-09-21. De ahí salen la URL del webhook y `SITE_URL`, y sin eso no se puede seguir. No hay `vercel.json` ni nada en `.vercel/`, así que o el despliegue está conectado desde GitHub o **no existe todavía**.
 
-**1 · Mergear `feature/stripe-integration` → `main`.** El 2026-09-21 la rama iba **38 commits por delante**: todo el trabajo de Stripe, envíos, textos legales y RGPD vive solo ahí. En `main` está la web antigua. ⚠️ `CLAUDE.md` §9 prohíbe `git push` directo a `main`.
+**1 · Mergear `auditoria-preproduccion` → `main`.** ⚠️ **Ojo, cambió la rama:** `auditoria-preproduccion` contiene todo lo de `feature/stripe-integration` más un commit, y el 2026-09-21 iba **39 por delante de `main` y 0 por detrás**, así que el merge es directo. Todo el trabajo de Stripe, envíos, textos legales y RGPD vive solo ahí. En `main` está la web antigua. ⚠️ `CLAUDE.md` §9 prohíbe `git push` directo a `main`.
 
 **2 · Dar de alta el webhook en Stripe modo live**, apuntando a `https://<dominio>/api/stripe-webhook`. **No existe ninguno** (comprobado). ⚠️ Genera un **signing secret distinto** del de `stripe listen`.
 
 **3 · Cargar las variables de entorno en Vercel**, cinco: `STRIPE_SECRET_KEY` (ahora `sk_live_`), `STRIPE_WEBHOOK_SECRET` (el del paso 2), `N8N_ORDER_WEBHOOK_URL`, `N8N_ORDER_WEBHOOK_SECRET` y `SITE_URL`.
 
 ⚠️ **`SITE_URL` no es un detalle.** De ahí salen las URLs de «pedido confirmado» y **las imágenes de producto que el cliente ve en la pantalla de pago de Stripe**. Si apunta a `localhost`, el comprador paga sin ver las fotos.
+
+⚠️ **Y no basta con `SITE_URL`.** La revisión del 2026-09-21 encontró el dominio `www.eclipssebrand.es` escrito a mano en **8 etiquetas más** (`og:url`, `canonical` y el JSON-LD) en `index.tsx`, `eclipssebrand.tsx`, `personaliza.tsx` y `__root.tsx`. Si el dominio real acaba siendo otro, hay que cambiarlas todas a la vez o la web le dirá a Google que la versión buena está en una dirección que no existe. Detalle en `CALIDAD.md`, hallazgo M-6.
 
 **4 · Limpiar Airtable.** Las compras de prueba del 2026-09-20 y 21 (a nombre de «ana» y «pepe rodriguez») están en **la tabla real**, la misma que usará la tienda. Borrarlas antes de abrir.
 
@@ -327,11 +351,13 @@ Para la deduplicación: `stripe events resend <evt_ de checkout.session.complete
 
 - No desplegar a producción sin autorización expresa de Ana.
 - No usar claves reales de Stripe en pruebas: modo test y tarjetas de prueba. El 2026-09-20 Ana confirmó que `STRIPE_SECRET_KEY` empieza por `sk_test_`.
-- Nunca `git push` directo a `main`. Todo vive en `feature/stripe-integration`.
+- Nunca `git push` directo a `main`. Todo vive en `auditoria-preproduccion` (antes `feature/stripe-integration`, que se quedó un commit atrás).
 - Preguntar a Ana antes de instalar dependencias nuevas o tocar configuración de despliegue (`CLAUDE.md` §11).
 - Para probar el flujo de pago de punta a punta, la herramienta es **playwright** (MCP instalado en la oficina para esto).
 
 ## Documentación
 
 - `CLAUDE.md` de este proyecto — reglas técnicas, §10 es la checklist de pruebas y §11 cuándo parar y preguntar.
+- `CALIDAD.md` — revisión estática de código del 2026-09-21. 22 hallazgos con fichero y línea, ordenados por prioridad. Solo diagnóstico.
+- `SEGURIDAD.md` — revisión de seguridad. Cubre idempotencia, deduplicación, validación del origen del pedido y operación en producción. **`CALIDAD.md` no lo sustituye ni lo duplica.**
 - `ESTADO_ACTUAL.md` — notas técnicas del 2026-08-29. ⚠️ Está desfasado respecto a este archivo; **si hay contradicción, manda este**.
