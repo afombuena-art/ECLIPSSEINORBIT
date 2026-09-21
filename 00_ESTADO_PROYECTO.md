@@ -1,14 +1,24 @@
 # Estado del proyecto · ECLIPSSEINORBIT
 
-**Última actualización:** 2026-09-20
+**Última actualización:** 2026-09-21
 **Tipo:** integración de Stripe para tienda online
-**Estado:** activo — **no está en producción**
+**Estado:** activo — **el desarrollo está terminado y probado; falta desplegar a producción**
 **Ingresos confirmados:** no confirmados
 **Compromiso o fecha:** ninguno confirmado
 
 > Este archivo manda sobre la memoria, sobre conversaciones anteriores y sobre cualquier suposición. Si algo aquí contradice lo que se recuerda, gana lo que está escrito aquí.
 >
 > **Ana trabaja este proyecto con varias herramientas (Claude Code y Codex).** Este archivo es el punto de encuentro: debe entenderse sin haber visto ninguna conversación previa. Quien lo lea, lo lee entero antes de tocar nada.
+
+## Si retomas aquí, lee esto primero
+
+**Lo técnico está hecho y probado con compras reales en modo test.** Lo único que queda es **el despliegue a producción**, que no es programar: ver «Cómo pasar a producción».
+
+⚠️ **Está bloqueado por un dato que falta:** nadie ha confirmado si la web está publicada y en qué dominio. Sin eso no se puede dar de alta el webhook de Stripe ni fijar `SITE_URL`.
+
+⚠️ **Todo el trabajo vive en la rama `feature/stripe-integration`**, que va 38 commits por delante de `main`. En `main` está la web antigua, sin tienda.
+
+⚠️ **Dos cosas quedaron sin decidir**, ambas explicadas abajo: si se añaden tests automáticos, y cómo va a mantener Jacobo el catálogo de prendas sin romper los precios.
 
 ## Situación
 
@@ -226,25 +236,31 @@ Nada. Los datos fiscales y las tarifas de envío llegaron el 2026-09-20 y ya est
 
 **3 · ✅ Plazos de conservación — ESCRITOS el 2026-09-21** (6 / 3 años). Queda **aplicarlos**: hoy nada borra nada en Airtable y ahora está prometido por escrito. Ver punto 9.
 
-**4 · Confirmar con Jacobo dos cosas de la tabla de envíos:** que las limítrofes son solo Cádiz, Huelva, Córdoba y Málaga (dijo «aproximadamente», y Badajoz no está), y que está de acuerdo con que no haya envío gratis. **Es lo único que queda pendiente de terceros.**
+**4 · ✅ Cerrado con Jacobo el 2026-09-21.** Confirmó que **no hay envío gratis «de momento»**. Sobre las limítrofes no lo tenía claro, así que Ana decidió usar la definición geográfica habitual: se **añadió Badajoz (06)** a las cuatro que él nombró (commit `bb3f74c`). Ya le explicó la columna «Aviso envío» y borró la opción basura de Airtable.
 
-🔹 **Y explicarle la columna «Aviso envío» de Airtable**: si un pedido la trae rellena, no se prepara hasta mirarla. Un `NO ENVIAR` significa dirección fuera de cobertura.
-
-🔹 **Limpieza pendiente en Airtable:** la columna «Estado» tiene una opción basura, `Pagado` precedida de un tabulador, creada por el `typecast` del nodo. Borrarla. Origen desconocido, probablemente manual; si reaparece tras una compra, la genera el flujo y hay que investigarlo. **No quitar el `typecast`**: sin él, un valor inesperado haría fallar el nodo, n8n no respondería 200 y el pedido no se guardaría.
+⚠️ **No quitar el `typecast` del nodo de Airtable**: sin él, un valor inesperado haría fallar el nodo, n8n no respondería 200 y el pedido no se guardaría. Es preferible una etiqueta rara a un pedido perdido.
 
 **5 · ✅ Los 7 segundos — resueltos el 2026-09-21** (3749 ms). Ver arriba.
 
-**6 · Puesta en producción**, cuando lo anterior esté: mergear `feature/stripe-integration` → `main`, pasar a claves **live**, dar de alta el endpoint del webhook en modo live (el signing secret es **distinto**), cargar las variables de entorno en Vercel (`.vercel` está vacío) y hacer una compra real de importe pequeño.
+**6 · Puesta en producción — ES LO ÚNICO QUE QUEDA.** Medio día de pasos cuidadosos, sin programar nada. Ver la sección siguiente.
 
-### ⚠️ Métodos de pago: el camino asíncrono está programado pero SIN PROBAR
+## Cómo pasar a producción
 
-El checkout ofrece, además de tarjeta: **Klarna, MB WAY, Bancontact, EPS, Satispay y Link** (visto el 2026-09-21). Se activan desde el panel de Stripe → Configuración → Métodos de pago, **no desde el código**.
+⚠️ **Dato que falta antes de empezar: ¿está la web publicada y en qué dominio?** Quedó sin responder el 2026-09-21. De ahí salen la URL del webhook y `SITE_URL`, y sin eso no se puede seguir. No hay `vercel.json` ni nada en `.vercel/`, así que o el despliegue está conectado desde GitHub o **no existe todavía**.
 
-**Lo que esto cambia para nosotros:** con tarjeta el pago se confirma al instante, pero varios de esos métodos son **asíncronos**: Stripe manda `checkout.session.completed` con `payment_status: "unpaid"` y confirma después con `checkout.session.async_payment_succeeded` (o `…_failed`).
+**1 · Mergear `feature/stripe-integration` → `main`.** El 2026-09-21 la rama iba **38 commits por delante**: todo el trabajo de Stripe, envíos, textos legales y RGPD vive solo ahí. En `main` está la web antigua. ⚠️ `CLAUDE.md` §9 prohíbe `git push` directo a `main`.
 
-✅ El webhook **ya lo contempla**: sale antes si `payment_status === "unpaid"` y escucha los dos eventos asíncronos. Estaba previsto desde el principio.
+**2 · Dar de alta el webhook en Stripe modo live**, apuntando a `https://<dominio>/api/stripe-webhook`. **No existe ninguno** (comprobado). ⚠️ Genera un **signing secret distinto** del de `stripe listen`.
 
-⚠️ **Pero nunca se ha probado.** Todas las pruebas se hicieron con tarjeta `4242…`, que es síncrona. **Antes de producción hay que hacer una compra de prueba con Klarna** y comprobar que el pedido llega a Airtable una sola vez y solo cuando el pago se confirma de verdad. Si ese camino falla, el síntoma sería un pedido que no aparece o que aparece sin estar pagado.
+**3 · Cargar las variables de entorno en Vercel**, cinco: `STRIPE_SECRET_KEY` (ahora `sk_live_`), `STRIPE_WEBHOOK_SECRET` (el del paso 2), `N8N_ORDER_WEBHOOK_URL`, `N8N_ORDER_WEBHOOK_SECRET` y `SITE_URL`.
+
+⚠️ **`SITE_URL` no es un detalle.** De ahí salen las URLs de «pedido confirmado» y **las imágenes de producto que el cliente ve en la pantalla de pago de Stripe**. Si apunta a `localhost`, el comprador paga sin ver las fotos.
+
+**4 · Limpiar Airtable.** Las compras de prueba del 2026-09-20 y 21 (a nombre de «ana» y «pepe rodriguez») están en **la tabla real**, la misma que usará la tienda. Borrarlas antes de abrir.
+
+**5 · Una compra real de importe pequeño** con tarjeta de verdad, comprobar que llega a Airtable, y devolverla.
+
+### Métodos de pago
 
 ✅ **Métodos de pago depurados el 2026-09-21.** Había **16 habilitados**, casi todos inútiles para una tienda que solo envía a España. Quedan **cinco**:
 
@@ -262,7 +278,32 @@ Desactivados: Klarna (decisión de Ana: más comisión y poco sentido en carrito
 
 ✅ **Hecho en los dos entornos el 2026-09-21**: en el de prueba (`Entorno de prueba de eclipssebrand`) y en la cuenta real (`marca eclipse`), cinco métodos activos en cada uno. Los ajustes son independientes por entorno, así que **si algún día se cambia uno hay que cambiar el otro**.
 
-⚠️ **Sigue sin haber ni un test automático.** Todo lo verificado el 2026-09-20 fue a mano. Si se toca el webhook o el cálculo de envío, hay que repetir las pruebas a mano. Añadir tests requiere una dependencia nueva (vitest) → `CLAUDE.md` §11 obliga a preguntar a Ana.
+🔹 **Efecto secundario bueno: desaparece un riesgo que estaba sin probar.** Algunos métodos son **asíncronos** (Klarna entre ellos): Stripe manda `checkout.session.completed` con `payment_status: "unpaid"` y confirma después con `async_payment_succeeded`. El webhook ya lo contempla desde el principio —sale antes si el pago está pendiente y escucha los dos eventos—, **pero nunca se probó**, porque todas las pruebas fueron con tarjeta, que es instantánea. Al quedar solo métodos síncronos, ese camino ya no se usa.
+
+⚠️ **Si algún día se reactiva Klarna o cualquier método asíncrono, hay que probar ese camino antes**: una compra de prueba con él, comprobando que el pedido llega a Airtable una sola vez y solo cuando el pago se confirma de verdad. El síntoma de un fallo sería un pedido que no aparece, o que aparece como pagado sin estarlo.
+
+### Tests automáticos: evaluados y aplazados a propósito
+
+⚠️ **No hay ni un test.** Todo se ha verificado a mano. Si se toca el webhook o el cálculo de envío, hay que repetir las pruebas manuales de abajo.
+
+**Evaluado el 2026-09-21 y descartado por ahora.** Cubrirían `shipping.ts` (zonas por código postal, tramos de peso, los 28 precios de la tabla) y la lógica del aviso de envío — funciones puras, fáciles de probar. **No** cubrirían Stripe, n8n ni Airtable. Requiere instalar **vitest** como dependencia de desarrollo (~30-40 MB sobre los 358 MB que ya ocupa `node_modules`; el espacio nunca fue el problema). `CLAUDE.md` §11 obliga a preguntar a Ana antes.
+
+🔹 **Cuándo replantearlo, y hay un motivo concreto:** el 2026-09-21 Ana comentó que **Jacobo irá añadiendo y quitando prendas y cambiando precios**. En cuanto eso empiece, los tests pasan de lujo a necesidad — ver la sección siguiente.
+
+### ⚠️ Riesgo abierto: Jacobo editando productos
+
+Los productos viven en `src/data/products.ts`, **código TypeScript**, no en un panel. Añadir una prenda son ~25 líneas más tres imágenes con sus `import`. Ana planteó el 2026-09-21 que Jacobo lo hiciera él y subiera los cambios a GitHub para que Vercel desplegara. **No es seguro tal como está.** Cuatro riesgos reales:
+
+1. ⚠️ **`priceCents` va en céntimos.** `2397` = 23,97 €. Si escribe `24` pensando en euros, **la tienda cobra 24 céntimos** y nadie se entera hasta que llegue el pedido.
+2. **`weightGrams` decide el envío cobrado.** Mal puesto, se pierde dinero en portes.
+3. Un error de sintaxis rompe el build. Molesto, pero visible.
+4. ⚠️ **Un `id` repetido rompe el checkout en silencio**: se vende el producto equivocado sin que falle nada.
+
+**Sin decidir. Depende de la frecuencia, que Ana aún no sabe (2026-09-21):**
+- **Por drops, cada dos o tres meses** → que Jacobo pase la información y lo haga Ana. Cero infraestructura, cero riesgo.
+- **Cambios semanales de precios o catálogo** → sacar los productos a **Airtable**, que él ya usa: rellena una tabla y la web lee de ahí. Son horas de trabajo, pero le da autonomía sin poder romper nada.
+
+En cualquiera de los dos casos, **tests con comprobaciones de cordura** (ningún precio por debajo de 5 €, ningún peso a cero, ningún `id` repetido) cazarían el error de los céntimos antes de que llegue a la web.
 
 ### Cómo repetir las pruebas manuales
 
@@ -275,7 +316,9 @@ npm run dev
 stripe listen --forward-to localhost:5000/api/stripe-webhook
 ```
 
-⚠️ **El paso que rompe todo si se salta:** `stripe listen` devuelve un `whsec_...` **nuevo cada vez**. Debe ir al `.env` en `STRIPE_WEBHOOK_SECRET` **y hay que reiniciar el servidor**. Si no, el webhook rechaza todo con «firma no válida» y parece que el código está roto cuando no lo está.
+🔹 **Corrección del 2026-09-21:** el `whsec_` de `stripe listen` **NO cambia entre arranques** mientras sea la misma cuenta y la sesión de la CLI siga viva (verificado en la documentación de Stripe). Antes aquí ponía lo contrario. En la práctica: **basta con lanzar los dos comandos**, sin tocar el `.env` ni reiniciar nada.
+
+⚠️ Solo si el `whsec_` que imprime **no coincide** con el del `.env` (por haber cerrado sesión o cambiado de cuenta) hay que actualizarlo **y reiniciar el servidor**. Si no coincide y no se actualiza, el webhook rechaza todo con «firma no válida» y parece que el código está roto cuando no lo está.
 
 Tarjeta de prueba: `4242 4242 4242 4242`, fecha futura, CVC cualquiera.
 Para la deduplicación: `stripe events resend <evt_ de checkout.session.completed>` — **no** los `evt_3U…`, que son eventos que el webhook ignora a propósito.
