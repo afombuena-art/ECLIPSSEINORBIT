@@ -118,14 +118,24 @@ export const Route = createFileRoute("/api/stripe-webhook")({
         const entregaEn = session.collected_information?.shipping_details?.address?.postal_code ?? null;
         const zonaEntrega = entregaEn ? zoneFromPostalCode(entregaEn) : null;
         const zonaRealEntrega = zonaEntrega?.ok ? zonaEntrega.zone : null;
-        const revisarEnvio =
-          entregaEn !== null && cobradoZona !== null && zonaRealEntrega !== cobradoZona;
 
-        if (revisarEnvio) {
-          console.warn(
-            `stripe-webhook: el pedido ${session.id} se cobró como zona "${cobradoZona}" (CP ${cobradoPor}) ` +
-              `pero se entrega en el CP ${entregaEn} (zona "${zonaRealEntrega ?? "fuera de cobertura"}"). Revisar antes de enviar.`,
-          );
+        // Un solo texto listo para volcar en una columna de Airtable: quien
+        // prepara el pedido tiene que verlo sin interpretar nada.
+        let avisoEnvio: string | null = null;
+        if (entregaEn !== null && cobradoZona !== null) {
+          if (zonaEntrega && !zonaEntrega.ok) {
+            avisoEnvio =
+              zonaEntrega.reason === "fuera-de-cobertura"
+                ? `NO ENVIAR — la dirección de entrega (CP ${entregaEn}) está en Canarias, Ceuta o Melilla, donde no enviamos. Se cobró como ${cobradoZona} (CP ${cobradoPor}). Contactar con el cliente y devolver o regularizar.`
+                : `REVISAR — el CP de entrega (${entregaEn}) no es un código postal español válido. Se cobró como ${cobradoZona} (CP ${cobradoPor}).`;
+          } else if (zonaRealEntrega !== cobradoZona) {
+            avisoEnvio = `REVISAR — se cobró envío de ${cobradoZona} (CP ${cobradoPor}) pero la entrega es en ${zonaRealEntrega} (CP ${entregaEn}). Puede faltar diferencia de portes.`;
+          }
+        }
+        const revisarEnvio = avisoEnvio !== null;
+
+        if (avisoEnvio) {
+          console.warn(`stripe-webhook: pedido ${session.id} — ${avisoEnvio}`);
         }
 
         const orderPayload = {
@@ -165,8 +175,13 @@ export const Route = createFileRoute("/api/stripe-webhook")({
             codigoPostalCobrado: cobradoPor,
             codigoPostalEntrega: entregaEn,
             zonaEntrega: zonaRealEntrega,
-            /** `true` si la zona de entrega no coincide con la cobrada: revisar antes de enviar. */
+            /** `true` si la zona de entrega no coincide con la cobrada. */
             revisar: revisarEnvio,
+            /**
+             * Texto para la persona que prepara el pedido, o cadena vacía si
+             * todo cuadra. Va tal cual a una columna de Airtable.
+             */
+            aviso: avisoEnvio ?? "",
           },
           items: (session.line_items?.data ?? []).map((li) => ({
             description: li.description,
