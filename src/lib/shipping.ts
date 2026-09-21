@@ -20,8 +20,17 @@ export type ZoneLookup =
   /** No son cinco dígitos o el prefijo no existe en España. */
   | { ok: false; reason: "codigo-invalido" };
 
-/** Provincias limítrofes con Sevilla según el cliente: Cádiz, Huelva, Córdoba y Málaga. */
-const PREFIJOS_LIMITROFES = new Set(["11", "21", "14", "29"]);
+/**
+ * Provincias que lindan con Sevilla: Cádiz (11), Huelva (21), Córdoba (14),
+ * Málaga (29) y Badajoz (06).
+ *
+ * El cliente nombró solo las cuatro primeras y dijo «aproximadamente», así que
+ * el 2026-09-21 Ana decidió usar la definición geográfica habitual e incluir
+ * Badajoz. ⚠️ Si Packlink acabara cobrando Badajoz como península, la tienda
+ * perdería la diferencia (9 céntimos en el tramo de hasta 1 kg). Si se ve en
+ * las facturas reales, basta con quitar el "06" de esta lista.
+ */
+const PREFIJOS_LIMITROFES = new Set(["11", "21", "14", "29", "06"]);
 
 /** Canarias (35, 38), Ceuta (51) y Melilla (52). No se envía: fuera del IVA peninsular. */
 const PREFIJOS_SIN_COBERTURA = new Set(["35", "38", "51", "52"]);
