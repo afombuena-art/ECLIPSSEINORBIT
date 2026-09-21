@@ -158,7 +158,9 @@ Si volviera a fallar la escritura en `Documentos` desde Node (`ENOENT` o `EPERM`
    - ⚠️ **El borrado al terminar no es automático:** la sección 12 exige **petición escrita**. Si algún día se deja Airtable, hay que pedirlo expresamente.
    - ⚠️ El PDF **no está versionado a propósito** (`01_DOCUMENTOS/` está en el `.gitignore` desde el commit `d427d58`): lleva firma, nombre y dirección, y este repo tiene remoto en GitHub. Existe **solo en el disco del portátil**; la copia al disco externo del 2026-09-12 no lo cubre.
 
-   ⚠️ **PENDIENTE: el borrado.** La política promete conservar los datos «el tiempo necesario» y **en Airtable no borra nada nadie**. Hay que decidir plazos (orientación: facturación 6 años por obligación fiscal, datos de envío 3 años), escribirlos en el texto en vez del «tiempo necesario», y que alguien los aplique —a mano una vez al año o con un workflow de n8n—. No es urgente mientras no haya pedidos reales, pero conviene decidirlo antes de abrir.
+   ✅ **Plazos de conservación fijados el 2026-09-21** y escritos en la política: **facturación 6 años** (obligación fiscal y contable), **contacto y envío 3 años** desde la entrega, **email de marketing** hasta la baja.
+
+   ⚠️ **PENDIENTE y ahora es una promesa por escrito: que alguien borre de verdad.** En Airtable no borra nada nadie. Con el texto publicado, incumplirlo es peor que no haberlo escrito. Basta una limpieza manual una vez al año (borrar teléfono y dirección de los pedidos de hace más de 3 años, dejando importe y factura) o un workflow de n8n que lo haga solo. No corre prisa mientras no haya pedidos reales.
 
    🔹 Detectado y **no tocado**: la política dice que también se tratan datos de quien escriba por **WhatsApp o Instagram**, lo que convierte a **Meta** en otro encargado no declarado.
 
@@ -184,7 +186,7 @@ Nada. Los datos fiscales y las tarifas de envío llegaron el 2026-09-20 y ya est
 
 **2 · ✅ Webhooks de Stripe — COMPROBADO el 2026-09-21.** No hay ningún endpoint configurado, así que no existe camino paralelo. Ver arriba, incluida la consecuencia para producción.
 
-**3 · Decidir los plazos de conservación** y sustituir el «tiempo necesario» de la política de privacidad por plazos concretos. Orientación: facturas 6 años (obligación fiscal), datos de envío 3 años. Y que alguien los aplique de verdad: hoy **nada borra nada en Airtable**.
+**3 · ✅ Plazos de conservación — ESCRITOS el 2026-09-21** (6 / 3 años). Queda **aplicarlos**: hoy nada borra nada en Airtable y ahora está prometido por escrito. Ver punto 9.
 
 **4 · Confirmar con Jacobo dos cosas de la tabla de envíos:** que las limítrofes son solo Cádiz, Huelva, Córdoba y Málaga (dijo «aproximadamente», y Badajoz no está), y que está de acuerdo con que no haya envío gratis.
 

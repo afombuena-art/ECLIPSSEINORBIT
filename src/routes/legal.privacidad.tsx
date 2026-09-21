@@ -41,8 +41,10 @@ export const Route = createFileRoute("/legal/privacidad")({
       </p>
       <h2>Conservación</h2>
       <p>
-        Conservamos los datos el tiempo necesario para gestionar el pedido y, después, durante los plazos legales de
-        prescripción (facturación, garantías, obligaciones fiscales y contables).
+        Los datos de facturación se conservan <strong>6 años</strong>, como exige la normativa fiscal y contable. Los
+        datos de contacto y envío, <strong>3 años</strong> desde la entrega, mientras puedan ejercerse garantías o
+        reclamaciones. Si nos has dado tu consentimiento para recibir novedades, tu email se conserva hasta que te des
+        de baja.
       </p>
       <h2>Destinatarios y encargados del tratamiento</h2>
       <p>
