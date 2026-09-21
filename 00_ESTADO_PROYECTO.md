@@ -260,7 +260,7 @@ Desactivados: Klarna (decisión de Ana: más comisión y poco sentido en carrito
 
 ⚠️ **Apple Pay solo se ve en Safari sobre iPhone o Mac.** Que no cunda el pánico al no verlo desde Windows: es lo esperado.
 
-⚠️ **Los ajustes de métodos de pago son independientes por entorno.** El 2026-09-21 se hizo en el **entorno de prueba** (`Entorno de prueba de eclipssebrand`). **Comprobar que también está hecho en la cuenta real (`marca eclipse`)** antes de abrir; si no, la tienda saldría a producción con los 16 métodos.
+✅ **Hecho en los dos entornos el 2026-09-21**: en el de prueba (`Entorno de prueba de eclipssebrand`) y en la cuenta real (`marca eclipse`), cinco métodos activos en cada uno. Los ajustes son independientes por entorno, así que **si algún día se cambia uno hay que cambiar el otro**.
 
 ⚠️ **Sigue sin haber ni un test automático.** Todo lo verificado el 2026-09-20 fue a mano. Si se toca el webhook o el cálculo de envío, hay que repetir las pruebas a mano. Añadir tests requiere una dependencia nueva (vitest) → `CLAUDE.md` §11 obliga a preguntar a Ana.
 
