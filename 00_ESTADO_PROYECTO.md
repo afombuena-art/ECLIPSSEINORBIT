@@ -190,7 +190,15 @@ DESPUÉS  Webhook → Crear pedido (upsert, coincidencia por eventId) → Respon
 
 ✅ Efecto medido en la prueba del 2026-09-21: el webhook pasó de **~7000 ms a 3749 ms** (releer sesión 390 · n8n 3077 · marcar 282). Se quitaron los 2 s del `Wait` y una llamada entera a Airtable. **El grueso restante es latencia de n8n↔Airtable**; no se puede bajar más sin romper el contrato de «solo 200 si n8n confirma». Con ese margen, el aviso sobre los 7 segundos queda cerrado.
 
-⚠️ **Matiz honesto:** el reenvío de prueba lo descartó el cerrojo en memoria del código **antes** de llegar a n8n, así que el upsert no llegó a ejercitarse en esa prueba concreta. Su corrección se verificó leyendo la configuración guardada (`operation: upsert`, `matchingColumns: ["eventId"]`) y validando el workflow, no viéndolo descartar un duplicado. Ahora hay **dos defensas independientes**; para probar solo la de n8n habría que llamar a su webhook directamente, saltándose el código.
+✅ **El upsert se probó en ejecución, no solo leyendo su configuración.** El primer reenvío lo paraba el cerrojo del código antes de llegar a n8n, así que para ejercitar el upsert hubo que anular las dos defensas del código a propósito:
+
+1. Borrar la clave **`n8nForwarded`** de la metadata del PaymentIntent en el panel de Stripe (ahí deja el código su marca persistente).
+2. **Reiniciar `npm run dev`**, que vacía la caché en memoria.
+3. `stripe events resend evt_1UI3JO3pSwZ8rGo9YtB463Ek`.
+
+Resultado: el log pasó de «ya procesado (memoria), se descarta» a **«entregado en 3285 ms»**, confirmando que el mismo `eventId` llegó a n8n por segunda vez. **En Airtable siguió habiendo una sola fila.** El upsert actualizó el registro en lugar de duplicarlo.
+
+**Las dos defensas están verificadas por separado.** Este procedimiento es el que hay que repetir si alguien vuelve a tocar el workflow de n8n.
 
 ## Bloqueado por el cliente
 
