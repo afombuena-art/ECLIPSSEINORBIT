@@ -21,3 +21,7 @@ dist/
 # Editors
 .vscode/
 .idea/
+
+# Documentos firmados y papeleo del negocio. No son código y llevan datos
+# personales (firmas, NIF, direcciones): no se suben al repositorio.
+01_DOCUMENTOS/
