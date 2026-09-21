@@ -78,6 +78,12 @@ export const Route = createFileRoute("/api/stripe-webhook")({
           return new Response("pago pendiente", { status: 200 });
         }
 
+        // Cronómetro: la entrega buena tarda varios segundos y Stripe corta los
+        // webhooks lentos. Estas marcas dicen en qué tramo se va el tiempo.
+        const tInicio = Date.now();
+        let msReleer = 0;
+        let msN8n = 0;
+
         // Releemos la sesión completa (line items, dirección recogida, importes).
         let session: Stripe.Checkout.Session;
         try {
@@ -90,6 +96,7 @@ export const Route = createFileRoute("/api/stripe-webhook")({
           console.error("stripe-webhook: no se pudo releer la sesión", err);
           return new Response("retry", { status: 500 });
         }
+        msReleer = Date.now() - tInicio;
 
         // Segunda barrera: este evento ya se entregó a n8n en una entrega anterior.
         if (alreadyForwarded(session, event.id)) {
@@ -176,6 +183,7 @@ export const Route = createFileRoute("/api/stripe-webhook")({
         // Reenvío a n8n. Solo 200 a Stripe si n8n responde 2xx.
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), N8N_TIMEOUT_MS);
+        const tN8n = Date.now();
         try {
           const res = await fetch(n8nUrl, {
             method: "POST",
@@ -195,10 +203,17 @@ export const Route = createFileRoute("/api/stripe-webhook")({
           return new Response("n8n inalcanzable", { status: 504 });
         } finally {
           clearTimeout(timeout);
+          msN8n = Date.now() - tN8n;
         }
 
         // n8n ha confirmado: se apunta el evento para no volver a entregarlo.
+        const tMarcar = Date.now();
         await markForwarded(stripe, session, event.id);
+
+        console.info(
+          `stripe-webhook: ${event.id} entregado en ${Date.now() - tInicio} ms ` +
+            `(releer sesión ${msReleer} · n8n ${msN8n} · marcar ${Date.now() - tMarcar})`,
+        );
 
         return new Response("ok", { status: 200 });
       },
