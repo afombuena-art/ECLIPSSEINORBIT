@@ -321,6 +321,26 @@ queda el proyecto. ⚠️ Está ligado a que **ECLIPSSE es la tienda de Jacobo, 
 cliente con contrato**: conviene dejar claro antes de pagar nada quién asume ese
 coste recurrente.
 
+### 1 bis · ¿Hay alternativa gratuita? Consultado el 2026-09-22
+
+| Sitio | ¿Permite una tienda en su plan gratuito? |
+|---|---|
+| **Vercel Hobby** | ⛔ **No.** Prohíbe el uso comercial, incluido solo anunciar la venta de un producto. |
+| **Cloudflare (Workers/Pages) gratis** | 🟡 **Zona gris.** No prohíbe el uso comercial en general, pero su cláusula 2.2.1(h) prohíbe «procesar o recoger información de tarjetas de crédito en una propiedad web que use los Servicios Gratuitos». Aquí la tarjeta se introduce en `checkout.stripe.com`, no en la web, así que **probablemente cumple**. No es seguro: habría que preguntárselo a su soporte por escrito. |
+| **Netlify gratis** | 🟡 **Sin verificar del todo.** Su página de precios no impone ninguna restricción comercial como la de Vercel, pero no se han leído sus términos completos. |
+
+⚠️ **El coste real de cambiar no es el plan, es el trabajo.** Mover el proyecto
+a Cloudflare **exige tocar código**: el SDK de Stripe necesita su cliente HTTP
+basado en `fetch` para funcionar en Workers, y hay que cambiar el preset de
+Nitro. A Netlify es más ligero, pero en los dos casos hay que rehacer variables
+de entorno, mover el dominio, dar de alta otra vez el webhook y **volver a
+probar la tienda entera**, que es justo lo que acabamos de dejar verificado.
+
+🔹 **Conclusión que se lleva a Jacobo:** Pro cuesta unos 18 €/mes, menos de una
+camiseta. Migrar cuesta una jornada de trabajo, reabre riesgos ya cerrados y
+deja la tienda en un sitio con una cláusula dudosa. **Pagar sale más barato que
+mudarse**, salvo que Jacobo prefiera mudarse por otros motivos.
+
 ### 2 · Rate limiting — gratis, no hace falta Pro para esto
 
 Verificado en `vercel.com/docs/vercel-firewall/vercel-waf/rate-limiting`
