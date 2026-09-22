@@ -6,9 +6,9 @@
 #
 # Qué NO hace, para que nadie se confíe:
 #   - No abre la web ni prueba una compra. Que compile no es que funcione.
-#   - No detecta un precio mal puesto. `priceCents: 24` en vez de `2397` es
-#     código perfectamente válido: la tienda cobraría 24 céntimos y esto no
-#     diría nada. Eso solo lo cazan los tests, que siguen pendientes.
+#   - Un precio mal puesto SÍ lo detecta, desde el 2026-09-22, pero lo cazan las
+#     pruebas, no el compilador: `priceCents: 24` en vez de `2397` es código
+#     válido y construye sin rechistar. Comprobado poniéndolo a mano.
 #   - No ejecuta el linter todavía: hay ~225 avisos de formato pendientes y un
 #     guardia que siempre está en rojo es un guardia al que nadie hace caso.
 #     Cuando se pase `npm run format`, se añade aquí.
@@ -50,6 +50,9 @@ jobs:
 
       - name: Comprobar tipos
         run: npm run typecheck
+
+      - name: Pruebas del catálogo y del envío
+        run: npm test
 
       - name: Construir la web
         # No necesita variables de entorno: las claves se leen al atender una
