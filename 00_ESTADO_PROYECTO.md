@@ -246,6 +246,42 @@ Es solo diagnóstico: **no se tocó ni una línea de código ni de configuració
 
 🔹 **Refuerza dos cosas ya abiertas en este archivo, no las sustituye:** la conveniencia de tests para `shipping.ts` (ver «Tests automáticos») y los pendientes de idempotencia y deduplicación que documenta `SEGURIDAD.md`.
 
+## Decisiones del 2026-09-22
+
+**1 · Email al comprador: recibos automáticos de Stripe.** Decidido por Ana. No se
+añade ningún nodo de Gmail. ⚠️ **Hay que activarlos a mano en el panel de Stripe
+antes de vender** (Configuración → Pagos → Emails a clientes → «Pagos
+completados»). Mientras no se active, nadie recibe nada: por eso la página de
+confirmación ya no promete ningún email. Cuando esté activado, se puede volver a
+mencionar en esa página, pero **solo el justificante de pago**: el recibo de
+Stripe no es una factura ni lleva seguimiento del envío.
+
+**2 · Notas del pedido: se quedan como están.** Ana pidió que fueran solo a
+Airtable y no a Stripe. **No es posible tal como está montado el flujo:** el
+único camino entre el formulario y Airtable es la metadata de la Checkout
+Session (checkout → Stripe → webhook → n8n → Airtable). Quitarlas de Stripe es
+quitarlas de Airtable, y Jacobo dejaría de verlas. Se mantiene el aviso al
+comprador de no escribir datos sensibles, que es la medida que sí reduce el
+riesgo. Queda como opción futura, si alguna vez importa: borrar el campo `notes`
+de la metadata de Stripe justo después de que n8n confirme.
+
+**3 · Deduplicación por sesión (M8 de `SEGURIDAD.md`): aplazada a propósito.**
+Hoy la red de seguridad es el `upsert` de n8n por `eventId`, y funciona.
+🔹 **Cuándo retomarlo, y son señales concretas, no una fecha:**
+- Si aparece **un pedido duplicado en Airtable**. Es lo primero que hay que mirar.
+- Si el volumen deja de ser «unidades limitadas y pocos pedidos».
+Lo que habría que hacer: identificar el pedido por `checkoutSessionId + tipo de
+evento` en vez de por `event.id`, con una operación atómica en Airtable, y
+probarlo con dos eventos distintos de la misma sesión.
+
+**4 · Retención en n8n — ⚠️ tarea abierta, verificada el 2026-09-22.** El
+workflow `qmS3k2Pp3wxyKUqZ` **no tiene configurado nada de guardado**, así que
+usa el valor por defecto de la instancia: guardar todas las ejecuciones con sus
+datos. Comprobado: **hay 4 ejecuciones guardadas** (las pruebas del 21 de
+septiembre), cada una con el nombre, el email, el teléfono, la dirección y las
+notas del comprador. La política de privacidad promete plazos de conservación
+que ahí no los aplica nadie. Ver «Próxima acción».
+
 ## Próxima acción
 
 **El código está terminado y probado. Lo que queda son trámites y decisiones, no programación.**
@@ -264,7 +300,22 @@ Es solo diagnóstico: **no se tocó ni una línea de código ni de configuració
 
 **6 · Puesta en producción — ES LO ÚNICO QUE QUEDA.** Medio día de pasos cuidadosos, sin programar nada. Ver la sección siguiente.
 
-**7 · Tres arreglos de la revisión del 2026-09-21 que sí son programar**, pequeños y sin dependencias: el contador caducado de la portada, el `og:image` que falta, y aclarar si el DROP 008 son 4 camisetas o 5. **Sin decidir cuándo se hacen**: ninguno bloquea el paso a producción, pero los tres estarán a la vista el día que se abra la tienda, y los dos primeros ya están en `main`. El resto de los 22 hallazgos está en `CALIDAD.md`, ordenado por prioridad.
+**7 · Activar los recibos automáticos de Stripe** (decisión 1 de arriba). Panel de
+Stripe, en **modo live**. ⚠️ En modo prueba Stripe no manda recibos solos, así que
+no se puede comprobar hasta estar en producción: no dar por roto lo que no se ha
+podido probar.
+
+**8 · Dejar de guardar los datos personales de cada pedido en n8n** (decisión 4).
+En el workflow → menú de los tres puntos → Settings:
+- «Save successful production executions» → **Do not save**.
+- «Save failed production executions» → **dejar en Save**, que es lo que permite
+  averiguar qué pasó cuando un pedido no llega.
+Y en la instancia de EasyPanel, activar el purgado por antigüedad
+(`EXECUTIONS_DATA_PRUNE` y `EXECUTIONS_DATA_MAX_AGE`) para que lo que sí se
+guarde no se quede para siempre. **Borrar además las 4 ejecuciones de prueba
+que hay ahora.**
+
+**9 · Tres arreglos de la revisión del 2026-09-21 que sí son programar**, pequeños y sin dependencias: el contador caducado de la portada, el `og:image` que falta, y aclarar si el DROP 008 son 4 camisetas o 5. **Sin decidir cuándo se hacen**: ninguno bloquea el paso a producción, pero los tres estarán a la vista el día que se abra la tienda, y los dos primeros ya están en `main`. El resto de los 22 hallazgos está en `CALIDAD.md`, ordenado por prioridad.
 
 ## Cómo pasar a producción
 
