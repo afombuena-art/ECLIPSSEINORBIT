@@ -60,6 +60,7 @@ function ProductPage() {
   const [qty, setQty] = useState(1);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [careOpen, setCareOpen] = useState(false);
+  const [desplazarAGuia, setDesplazarAGuia] = useState(false);
   const sizeGuideRef = useRef<HTMLDivElement>(null);
   const cart = useCart();
   const images = product.images;
@@ -79,10 +80,19 @@ function ProductPage() {
 
   const openSizeGuide = () => {
     setSizeGuideOpen(true);
-    setTimeout(() => {
-      sizeGuideRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 50);
+    setDesplazarAGuia(true);
   };
+
+  // El scroll espera a que la guía esté abierta y medida. Con limpieza, para no
+  // dejar un temporizador vivo si se cambia de prenda mientras tanto.
+  useEffect(() => {
+    if (!desplazarAGuia) return;
+    const id = setTimeout(() => {
+      sizeGuideRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setDesplazarAGuia(false);
+    }, 50);
+    return () => clearTimeout(id);
+  }, [desplazarAGuia]);
 
   const slideVariants = {
     enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 0 }),

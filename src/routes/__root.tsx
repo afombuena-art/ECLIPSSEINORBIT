@@ -7,7 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { Logo } from "@/components/Logo";
@@ -39,8 +39,14 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
   const router = useRouter();
+
+  // En un efecto, no en el cuerpo del componente: ahí se ejecutaba en cada
+  // render y se duplicaba con las comprobaciones de desarrollo de React.
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-white px-4 text-black">
       <div className="max-w-md text-center">

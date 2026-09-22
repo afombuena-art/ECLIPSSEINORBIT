@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/")({
@@ -40,10 +40,18 @@ function Landing() {
   const go = (to: "brand" | "custom") => {
     if (going) return;
     setGoing(to);
-    setTimeout(() => {
-      navigate({ to: to === "brand" ? "/eclipssebrand" : "/personaliza" });
-    }, 680);
   };
+
+  // La navegación espera a que termine la transición de salida. Va en un efecto
+  // con limpieza para que, si el usuario se va antes, no se le navegue a una
+  // página que ya no había pedido.
+  useEffect(() => {
+    if (!going) return;
+    const id = setTimeout(() => {
+      navigate({ to: going === "brand" ? "/eclipssebrand" : "/personaliza" });
+    }, 680);
+    return () => clearTimeout(id);
+  }, [going, navigate]);
 
   return (
     <main className="relative min-h-[100svh] overflow-hidden bg-white text-black flex flex-col items-center px-6">
