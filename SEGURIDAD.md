@@ -58,12 +58,27 @@ ni las reglas de negocio.** Los bloqueantes 1, 2, 5 y 6 de la lista del final
 siguen abiertos; el 3 está cerrado, el 4 solo documentado, y el 7 resuelto.
 
 🔹 **Hallazgo nuevo de esta sesión, que no estaba en ningún informe:** `npx tsc
---noEmit` devuelve **6 errores de tipos preexistentes** — 5 en
-`src/components/ContactCTA.tsx` (arrays de `ease` que `framer-motion` no acepta
-como tipo) y 1 en `src/routes/prendas.$slug.tsx:56` (`Property 'product' does
-not exist on type 'undefined'`). No rompen el build ni se ha observado que
-rompan en ejecución, pero significan que **el proyecto no compila limpio**.
-Ninguno lo introdujo esta sesión: estaban antes de tocar nada.
+--noEmit` devolvía **6 errores de tipos preexistentes**, ninguno introducido por
+esta sesión. **Quedan 1 de 6.**
+
+- ✅ **5 en `src/components/ContactCTA.tsx`** — las animaciones estaban en una
+  constante sin tipo, así que TypeScript deducía `number[]` para `ease`, donde
+  `framer-motion` exige exactamente cuatro números (una curva de Bézier).
+  Resueltos anotando las constantes con el tipo `Variants`. En el resto del
+  proyecto no pasaba porque esas animaciones van escritas dentro del JSX, donde
+  el tipo del atributo ya impone la forma.
+- ⛔ **1 en `src/routes/prendas.$slug.tsx`** — `Property 'product' does not exist
+  on type 'undefined'`. Es una **limitación de inferencia de TanStack Router**,
+  no un fallo del código: el tipo de `Route` depende de su `component`, y el
+  componente pregunta por el tipo de `Route`; TypeScript rompe ese círculo
+  dando `undefined`. **No afecta a la ejecución:** el loader devuelve el
+  producto y la página funciona. Probado y descartado: anotar el tipo de retorno
+  del loader y `getRouteApi()`. Lo único que lo silenciaría es una aserción de
+  tipo, que taparía el problema. Se deja visible, con el porqué escrito en el
+  propio fichero.
+
+⚠️ Mientras quede ese error, un futuro script `typecheck` en CI fallaría. Si se
+añade, hay que decidir antes si se acepta esa única excepción.
 
 ### ⚠️ Límites de esta auditoría — léelos antes de fiarte del informe
 
