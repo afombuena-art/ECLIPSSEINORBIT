@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Marquee } from "@/components/Marquee";
 import { ContactCTA } from "@/components/ContactCTA";
 import { SiteFooter } from "@/components/SiteFooter";
-import { getProduct, products } from "@/data/products";
+import { getProduct, products, type Product } from "@/data/products";
 import { formatEuros } from "@/lib/money";
 import { useCart } from "@/lib/cart";
 import { WHATSAPP_URL } from "@/data/contacto";
@@ -44,7 +44,11 @@ export const Route = createFileRoute("/prendas/$slug")({
       <p className="text-sm uppercase tracking-[0.3em]">Prenda no encontrada</p>
     </div>
   ),
-  loader: ({ params }) => {
+  // El tipo de retorno va escrito a mano a propósito. Sin él hay una referencia
+  // circular: el tipo de `Route` depende de `component`, y `ProductPage` usa
+  // `Route.useLoaderData()`. TypeScript rompe ese círculo dando `undefined`, y
+  // entonces `product` deja de existir para el compilador.
+  loader: ({ params }): { product: Product } => {
     const p = getProduct(params.slug);
     if (!p) throw notFound();
     return { product: p };
@@ -52,6 +56,17 @@ export const Route = createFileRoute("/prendas/$slug")({
 });
 
 function ProductPage() {
+  // ⚠️ `tsc --noEmit` da aquí un error de tipos: «Property 'product' does not
+  // exist on type 'undefined'». **No es un fallo de este código y no afecta a la
+  // ejecución**: en tiempo real el loader devuelve el producto y la página
+  // funciona. Es una limitación de inferencia de TanStack Router — el tipo de
+  // `Route` depende de `component`, y `component` pregunta por el tipo de
+  // `Route`; TypeScript rompe ese círculo dando `undefined`.
+  //
+  // Probado el 2026-09-22 y NO lo arreglan: anotar el tipo de retorno del
+  // loader, ni `getRouteApi("/prendas/$slug")`. Lo único que lo silenciaría es
+  // una aserción de tipo, que esconde el problema en vez de resolverlo.
+  // Se deja visible a propósito. Ver `CALIDAD.md`.
   const { product } = Route.useLoaderData();
   const [active, setActive] = useState(0);
   const [direction, setDirection] = useState(0);

@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 
 import { WHATSAPP_URL, INSTAGRAM_URL, TIKTOK_URL, EMAIL } from "@/data/contacto";
 
@@ -28,12 +28,17 @@ function WhatsAppIcon() {
   );
 }
 
-const containerVariants = {
+// El tipo `Variants` no es decorativo: sin él, TypeScript deduce que `ease` es
+// un `number[]` de longitud libre, y framer-motion exige exactamente cuatro
+// números (los de una curva de Bézier). En el resto del proyecto no pasa porque
+// las animaciones van escritas dentro del propio JSX, donde el tipo del atributo
+// ya dice de qué forma tiene que ser.
+const containerVariants: Variants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.1 } },
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 16 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
 };
