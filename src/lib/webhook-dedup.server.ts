@@ -24,8 +24,14 @@ const FORWARDED_KEY = "n8nForwarded";
 const MAX_VALUE_CHARS = 480;
 
 /**
- * Caché en memoria: primera barrera, sin llamar a Stripe. Solo vale dentro de
- * esta instancia del servidor, por eso NO sustituye a la marca en Stripe.
+ * Caché en memoria: primera barrera, sin llamar a Stripe.
+ *
+ * ⚠️ **Es una optimización para duplicados secuenciales, no un cerrojo.** Se
+ * consulta al entrar y solo se apunta cuando n8n ya ha confirmado, varios
+ * segundos después. Dos entregas simultáneas del mismo evento pasan las dos.
+ * Tampoco vale entre instancias: en Vercel cada petición puede caer en una
+ * nueva. La garantía real tiene que venir de una operación persistente y
+ * atómica — ver M8 de `SEGURIDAD.md`.
  */
 const seenInThisInstance = new Set<string>();
 const SEEN_MAX = 500;

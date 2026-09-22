@@ -91,10 +91,19 @@ const RELEVANT_EVENTS = new Set<Stripe.Event["type"]>([
  *   - Firma inválida → 400 (no se procesa, no se reintenta).
  *   - Evento no relevante → 200 (para que Stripe deje de reenviarlo).
  *
- * Deduplicación (doble cerrojo): aquí se descartan los eventos ya entregados,
- * apuntados en la metadata de Stripe (ver `webhook-dedup.server.ts`), y n8n
- * vuelve a descartarlos por `eventId`. Stripe puede entregar el mismo evento
- * más de una vez y en cualquier orden.
+ * Deduplicación: aquí se descartan los eventos ya entregados, apuntados en la
+ * metadata de Stripe (ver `webhook-dedup.server.ts`), y n8n vuelve a
+ * descartarlos por `eventId`. Stripe puede entregar el mismo evento más de una
+ * vez y en cualquier orden.
+ *
+ * ⚠️ **Lo que esto NO cubre**, para que nadie lo dé por resuelto:
+ *   - Dos entregas simultáneas del mismo evento: ninguna de las dos barreras es
+ *     atómica, así que ambas pueden llegar a n8n.
+ *   - Dos Event distintos de Stripe para la misma sesión y el mismo tipo:
+ *     tienen `event.id` diferente y pasan los dos.
+ * En ambos casos la red de seguridad es el `upsert` de n8n. Cerrarlo de verdad
+ * exige una clave de negocio persistente (`checkoutSessionId + event.type`) y
+ * una operación atómica — ver M8 de `SEGURIDAD.md`.
  */
 export const Route = createFileRoute("/api/stripe-webhook")({
   server: {
