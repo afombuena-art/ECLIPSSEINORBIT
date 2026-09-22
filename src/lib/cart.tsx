@@ -26,8 +26,10 @@ type CartContextValue = {
   detailedLines: CartLineDetailed[];
   count: number;
   subtotalCents: number;
-  shippingCents: number;
-  totalCents: number;
+  /** `null` si el pedido no se puede enviar (pesa más de lo que cubre la tabla). */
+  shippingCents: number | null;
+  /** `null` cuando no hay envío posible: no existe un total que enseñar. */
+  totalCents: number | null;
   isOpen: boolean;
   open: () => void;
   close: () => void;
@@ -106,7 +108,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       count,
       subtotalCents,
       shippingCents,
-      totalCents: subtotalCents + shippingCents,
+      totalCents: shippingCents === null ? null : subtotalCents + shippingCents,
       isOpen,
       open: () => setOpen(true),
       close: () => setOpen(false),

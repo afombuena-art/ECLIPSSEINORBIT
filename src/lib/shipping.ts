@@ -135,14 +135,19 @@ export function quoteShipping(
 }
 
 /**
- * Precio del envío en céntimos. Para mostrar una estimación antes de saber el
- * destino se usa `peninsula`, que es la zona más probable.
+ * Precio del envío en céntimos, o **`null` si el pedido no se puede enviar**
+ * (pesa más de lo que cubre la tabla). Para mostrar una estimación antes de
+ * saber el destino se usa `peninsula`, que es la zona más probable.
+ *
+ * ⚠️ Devuelve `null`, y no 0, a propósito: 0 significa «envío gratis». Cuando
+ * esto devolvía 0 para un pedido demasiado pesado, el carrito mostraba «Envío:
+ * Gratis» y un total que no era el que se iba a cobrar.
  */
 export function calcShippingCents(
   items: ShippingItem[],
   subtotalCents: number,
   zone: ShippingZone = "peninsula",
-): number {
+): number | null {
   const quote = quoteShipping(items, subtotalCents, zone);
-  return quote.ok ? quote.cents : 0;
+  return quote.ok ? quote.cents : null;
 }

@@ -28,7 +28,7 @@ const inputClass =
 
 function CheckoutPage() {
   const navigate = useNavigate();
-  const { detailedLines, subtotalCents, shippingCents, totalCents, hydrated } = useCart();
+  const { detailedLines, subtotalCents, shippingCents, hydrated } = useCart();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -61,12 +61,15 @@ function CheckoutPage() {
 
   const items = detailedLines.map((l) => ({ id: l.id, qty: l.qty }));
   const quote = zone ? quoteShipping(items, subtotalCents, zone) : null;
-  const demasiadoPeso = quote !== null && !quote.ok;
 
-  // Mientras no haya código postal se muestra la estimación de península.
+  // Mientras no haya código postal se muestra la estimación de península, que es
+  // `null` si el pedido ya pesa más de lo que se puede enviar. Sin esa segunda
+  // parte, un pedido demasiado pesado se veía como «Gratis» hasta que el cliente
+  // escribía las cinco cifras.
   const envioCents = quote?.ok ? quote.cents : shippingCents;
-  const envioEsGratis = quote?.ok ? quote.free : shippingCents === 0;
-  const totalConEnvio = subtotalCents + (quote?.ok ? quote.cents : shippingCents);
+  const demasiadoPeso = quote !== null ? !quote.ok : shippingCents === null;
+  const envioEsGratis = quote?.ok ? quote.free : envioCents === 0;
+  const totalConEnvio = envioCents === null ? null : subtotalCents + envioCents;
   const noSePuedeEnviar = sinCobertura || demasiadoPeso;
 
   const onSubmit = handleSubmit(
@@ -131,7 +134,7 @@ function CheckoutPage() {
                 </p>
               )}
 
-              {zone && !noSePuedeEnviar && (
+              {zone && !noSePuedeEnviar && envioCents !== null && (
                 <p className="mt-2 text-sm">
                   Envío a <strong>{ZONE_LABELS[zone]}</strong>:{" "}
                   <span className="tabular-nums">
@@ -243,7 +246,7 @@ function CheckoutPage() {
                   {noSePuedeEnviar ? "Envío" : `Envío${zone ? ` · ${ZONE_LABELS[zone]}` : " (estimado)"}`}
                 </span>
                 <span className="tabular-nums">
-                  {noSePuedeEnviar
+                  {noSePuedeEnviar || envioCents === null
                     ? "No disponible"
                     : envioEsGratis
                       ? "Gratis"
@@ -253,7 +256,7 @@ function CheckoutPage() {
               <div className="flex justify-between border-t border-border pt-2 font-display text-base">
                 <span>Total</span>
                 <span className="tabular-nums">
-                  {noSePuedeEnviar ? "—" : formatEuros(totalConEnvio)}
+                  {noSePuedeEnviar || totalConEnvio === null ? "—" : formatEuros(totalConEnvio)}
                 </span>
               </div>
               {noSePuedeEnviar ? (

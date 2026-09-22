@@ -108,11 +108,17 @@ export function CartSheet() {
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Envío (estimado)</span>
                 <span className="tabular-nums">
-                  {shippingCents === 0 ? "Gratis" : formatEuros(shippingCents)}
+                  {shippingCents === null
+                    ? "No disponible"
+                    : shippingCents === 0
+                      ? "Gratis"
+                      : formatEuros(shippingCents)}
                 </span>
               </div>
               <p className="text-[11px] text-muted-foreground">
-                El envío definitivo se calcula con tu código postal en el siguiente paso.
+                {shippingCents === null
+                  ? "Este pedido supera el peso máximo de nuestro envío habitual. Escríbenos por WhatsApp y lo gestionamos de otra manera."
+                  : "El envío definitivo se calcula con tu código postal en el siguiente paso."}
               </p>
 
               {remainingForFree !== null &&
@@ -127,7 +133,9 @@ export function CartSheet() {
 
               <div className="flex justify-between border-t border-border pt-3 font-display text-base">
                 <span>Total</span>
-                <span className="tabular-nums">{formatEuros(totalCents)}</span>
+                <span className="tabular-nums">
+                  {totalCents === null ? "—" : formatEuros(totalCents)}
+                </span>
               </div>
               <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
                 IVA incluido
