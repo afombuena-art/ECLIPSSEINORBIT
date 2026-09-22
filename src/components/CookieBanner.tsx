@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function CookieBanner() {
@@ -44,9 +45,9 @@ export function CookieBanner() {
               <p className="font-display text-xs uppercase tracking-[0.2em] mb-1">Cookies</p>
               <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
                 Usamos cookies propias para mejorar tu experiencia de navegación. Puedes aceptarlas o rechazarlas.{" "}
-                <a href="/legal/cookies" className="underline underline-offset-2 hover:text-black transition-colors">
+                <Link to="/legal/cookies" className="underline underline-offset-2 hover:text-black transition-colors">
                   Política de cookies
-                </a>
+                </Link>
                 .
               </p>
             </div>
