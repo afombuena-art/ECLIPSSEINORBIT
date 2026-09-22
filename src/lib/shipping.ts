@@ -130,7 +130,11 @@ export function quoteShipping(
     return { ok: true, cents: 0, free: true };
   }
 
-  const bracket = SHIPPING_TABLE.find((b) => weight <= b.maxGrams) ?? SHIPPING_TABLE[0];
+  const bracket = SHIPPING_TABLE.find((b) => weight <= b.maxGrams);
+  // El control de peso de arriba ya ha descartado todo lo que excede el último
+  // tramo, así que aquí siempre hay tramo. Si alguna vez no lo hubiera sería un
+  // fallo de la tabla: mejor no vender que cobrar el tramo más barato.
+  if (!bracket) return { ok: false, reason: "demasiado-peso" };
   return { ok: true, cents: bracket.cents[zone], free: false };
 }
 
