@@ -31,7 +31,15 @@ const seenInThisInstance = new Set<string>();
 const SEEN_MAX = 500;
 
 function remember(eventId: string): void {
-  if (seenInThisInstance.size >= SEEN_MAX) seenInThisInstance.clear();
+  // Se descarta el más antiguo, no la caché entera: un `Set` recorre en orden de
+  // inserción, así que el primer valor es el que lleva más tiempo. Vaciarla del
+  // todo dejaba ciega la primera barrera justo después, incluso para el evento
+  // recién procesado.
+  while (seenInThisInstance.size >= SEEN_MAX) {
+    const masAntiguo = seenInThisInstance.values().next();
+    if (masAntiguo.done) break;
+    seenInThisInstance.delete(masAntiguo.value);
+  }
   seenInThisInstance.add(eventId);
 }
 
