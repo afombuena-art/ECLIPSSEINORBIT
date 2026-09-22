@@ -1,0 +1,64 @@
+# Revisión automática de cada cambio.
+#
+# Qué hace: cada vez que se suben commits a GitHub, o se abre una pull request
+# hacia `main`, GitHub comprueba que el proyecto sigue en pie antes de que nadie
+# lo publique. Si algo falla, sale un aspa roja en el commit y en la PR.
+#
+# Qué NO hace, para que nadie se confíe:
+#   - No abre la web ni prueba una compra. Que compile no es que funcione.
+#   - No detecta un precio mal puesto. `priceCents: 24` en vez de `2397` es
+#     código perfectamente válido: la tienda cobraría 24 céntimos y esto no
+#     diría nada. Eso solo lo cazan los tests, que siguen pendientes.
+#   - No ejecuta el linter todavía: hay ~225 avisos de formato pendientes y un
+#     guardia que siempre está en rojo es un guardia al que nadie hace caso.
+#     Cuando se pase `npm run format`, se añade aquí.
+
+name: Revisión automática
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+# Si se suben varios commits seguidos, solo se revisa el último.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  revision:
+    name: Tipos, build y dependencias
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          # Si Vercel acaba usando otra versión, cambiar este número para que
+          # la revisión y el despliegue real comprueben lo mismo.
+          node-version: "22"
+          cache: npm
+
+      - name: Instalar dependencias
+        # `npm ci` instala exactamente lo del package-lock.json, sin actualizar
+        # nada por su cuenta. Es lo que hace que esta revisión sea reproducible.
+        run: npm ci
+
+      - name: Comprobar tipos
+        run: npm run typecheck
+
+      - name: Construir la web
+        # No necesita variables de entorno: las claves se leen al atender una
+        # petición, no al construir. Si algún día esto falla pidiendo una clave,
+        # es que alguien ha movido esa lectura a donde no debe.
+        run: npm run build
+
+      - name: Vulnerabilidades en dependencias
+        # Hoy el proyecto está a cero. Esto avisa el día que entre una nueva.
+        # Si alguna vez bloquea por algo que no aplica a la tienda, se comenta
+        # esta línea y se anota el motivo, no se borra sin explicación.
+        run: npm audit --audit-level=high
