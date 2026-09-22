@@ -1,14 +1,35 @@
 # Estado del proyecto · ECLIPSSEINORBIT
 
-**Última actualización:** 2026-09-21
+**Última actualización:** 2026-09-22
 **Tipo:** integración de Stripe para tienda online
-**Estado:** activo — **el desarrollo está terminado y probado; falta desplegar a producción**
+**Estado:** activo — **el código está terminado, revisado y corregido; falta desplegar a producción**
 **Ingresos confirmados:** no confirmados
 **Compromiso o fecha:** ninguno confirmado
 
 > Este archivo manda sobre la memoria, sobre conversaciones anteriores y sobre cualquier suposición. Si algo aquí contradice lo que se recuerda, gana lo que está escrito aquí.
 >
 > **Ana trabaja este proyecto con varias herramientas (Claude Code y Codex).** Este archivo es el punto de encuentro: debe entenderse sin haber visto ninguna conversación previa. Quien lo lea, lo lee entero antes de tocar nada.
+
+## Qué pasó el 2026-09-22 (sesión larga, resumen para retomar)
+
+✅ **Hecho y verificado:**
+- **Dominio confirmado** y el bloqueo principal levantado. Ver abajo.
+- **20 hallazgos corregidos** de `CALIDAD.md` y `SEGURIDAD.md`, un commit cada uno.
+- **Dependencias: de 10 vulnerabilidades (6 altas) a 0.** Los tres `overrides`
+  las causaban, no las tapaban. `npm run lint` vuelve a funcionar, y de minutos
+  pasa a 5 segundos.
+- **Tipos: de 6 errores a 0.** Nuevo `npm run typecheck`.
+- **64 pruebas** (`npm test`) del catálogo y del cálculo de envío. Probadas de
+  verdad: poniendo `priceCents: 24` a mano, los tipos y el build pasan y **la
+  prueba falla**. Es el fallo que más caro salía.
+- **Revisión automática en GitHub Actions**, en verde: tipos, tests, build y
+  vulnerabilidades en cada push.
+- **Todo subido** a `origin/auditoria-preproduccion`. Antes existía solo en el
+  portátil de Ana.
+- **Stripe configurado por Ana**: recibos automáticos y política de devoluciones.
+- **n8n ajustado por Ana**: deja de guardar datos personales de cada pedido.
+
+⛔ **Lo que queda ya no es código.** Ver «Próxima acción».
 
 ## Si retomas aquí, lee esto primero
 
@@ -445,7 +466,27 @@ que las 4 antiguas están borradas.
 
 ## Próxima acción
 
-**El código está terminado y probado. Lo que queda son trámites y decisiones, no programación.**
+🔹 **Lo primero, y desbloquea casi todo: una conversación con Jacobo.** Cuatro
+preguntas cortas, todas con la información ya preparada en este archivo:
+
+1. **El plan de Vercel.** Enseñarle la cita literal de arriba. Decidir si se
+   pasa a Pro (~18 €/mes), si prefiere mudarse a otro sitio, y **quién lo paga**.
+   Es su cuenta y su tienda; Ana no debería sostener ese coste.
+2. **El rate limiting.** Diez pasos ya escritos abajo. Hace falta acceso a su
+   Vercel, o que lo haga él siguiéndolos.
+3. **¿El DROP 008 son 4 camisetas o 5?** Están las fotos de la granate sin
+   producto que las use.
+4. **La cuenta atrás de la portada está a cero** desde el 1 de septiembre, y se
+   ve en la web publicada. Qué fecha va, y qué mostrar cuando venza.
+
+⚠️ **Y una comprobación que no ha hecho nadie: abrir la tienda en un navegador.**
+Ni móvil, ni escritorio, ni una compra de prueba de punta a punta con el código
+actual. El build pasa y los tests están en verde, pero eso no es una tienda
+probada. La vista previa que Vercel crea de la rama es el sitio ideal para
+hacerlo sin tocar la web publicada.
+
+**El resto está terminado, probado y corregido. Lo que queda son trámites y
+decisiones, no programación.**
 
 **1 · ✅ DPA de Airtable — FIRMADO el 2026-09-20.** Ver punto 9.
 
