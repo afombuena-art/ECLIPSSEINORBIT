@@ -14,7 +14,23 @@
 
 **Lo técnico está hecho y probado con compras reales en modo test.** Lo único que queda es **el despliegue a producción**, que no es programar: ver «Cómo pasar a producción».
 
-⚠️ **Está bloqueado por un dato que falta:** nadie ha confirmado si la web está publicada y en qué dominio. Sin eso no se puede dar de alta el webhook de Stripe ni fijar `SITE_URL`.
+✅ **DESBLOQUEADO el 2026-09-22.** Ana confirmó el dominio y se comprobó en vivo:
+la web **está publicada en `https://www.eclipssebrand.es/`**. De ahí salen
+`SITE_URL` y la URL del webhook de Stripe (`https://www.eclipssebrand.es/api/stripe-webhook`).
+
+⚠️ **Lo publicado es `main`, la web antigua, no la tienda.** Comprobado el
+2026-09-22 abriendo el sitio real:
+- `/eclipssebrand` muestra las prendas con sus precios, pero **no hay carrito ni
+  botón de comprar**: dice «a través de Instagram DM o WhatsApp».
+- `/checkout` devuelve **404**.
+- La cuenta atrás de la portada se está viendo **a cero** (`00 : 00 : 00 : 00`)
+  para cualquiera que entre hoy. No es una hipótesis del informe de calidad: está
+  pasando en la web real.
+
+⚠️ **Los ocho `og:url` y `canonical` del código apuntan ya a
+`https://www.eclipssebrand.es/`, que es el dominio correcto.** El hallazgo M-6 de
+`CALIDAD.md` queda cerrado sin tocar nada: el riesgo era publicar en otra
+dirección, y no ha ocurrido.
 
 ⚠️ **La rama buena es ahora `auditoria-preproduccion`**, no `feature/stripe-integration`. Contiene todo lo de esa rama más un commit, y va **39 por delante de `main`** sin nada por detrás (comprobado el 2026-09-21: el merge a `main` sería directo). En `main` está la web antigua, sin tienda. El repositorio remoto es `github.com/afombuena-art/ECLIPSSEINORBIT` y `main` lo sigue.
 
@@ -319,7 +335,18 @@ que hay ahora.**
 
 ## Cómo pasar a producción
 
-⚠️ **Dato que falta antes de empezar: ¿está la web publicada y en qué dominio?** Quedó sin responder el 2026-09-21. De ahí salen la URL del webhook y `SITE_URL`, y sin eso no se puede seguir. No hay `vercel.json` ni nada en `.vercel/`, así que o el despliegue está conectado desde GitHub o **no existe todavía**.
+✅ **Dato resuelto el 2026-09-22:** la web está publicada en
+`https://www.eclipssebrand.es/` y sirve la rama `main`. El despliegue está
+conectado desde GitHub (el repositorio remoto es
+`github.com/afombuena-art/ECLIPSSEINORBIT` y `main` lo sigue).
+
+- `SITE_URL` = `https://www.eclipssebrand.es`
+- URL del webhook en Stripe = `https://www.eclipssebrand.es/api/stripe-webhook`
+
+⚠️ **Mergear a `main` es publicar.** Ya no es un paso interno: en cuanto ese
+merge llegue a GitHub, Vercel desplegará y **la tienda estará abierta al
+público**. Todo lo demás de esta lista tiene que estar hecho ANTES de ese merge,
+no después.
 
 **1 · Mergear `auditoria-preproduccion` → `main`.** ⚠️ **Ojo, cambió la rama:** `auditoria-preproduccion` contiene todo lo de `feature/stripe-integration` más un commit, y el 2026-09-21 iba **39 por delante de `main` y 0 por detrás**, así que el merge es directo. Todo el trabajo de Stripe, envíos, textos legales y RGPD vive solo ahí. En `main` está la web antigua. ⚠️ `CLAUDE.md` §9 prohíbe `git push` directo a `main`.
 
