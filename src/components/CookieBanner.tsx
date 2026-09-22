@@ -13,15 +13,21 @@ export function CookieBanner() {
     }
   }, []);
 
-  const accept = () => {
-    localStorage.setItem("cookie_consent", "accepted");
+  // El banner se cierra siempre, aunque no se pueda guardar la elección. Si
+  // `setItem` lanza (cuota agotada, almacenamiento restringido, política del
+  // navegador) y no se captura, el `setVisible(false)` no se ejecuta y el banner
+  // se queda tapando la parte baja de la pantalla, botón de pagar incluido.
+  const decidir = (valor: "accepted" | "rejected") => {
+    try {
+      localStorage.setItem("cookie_consent", valor);
+    } catch {
+      // Sin dónde guardarlo, el banner volverá a salir en la próxima visita.
+    }
     setVisible(false);
   };
 
-  const reject = () => {
-    localStorage.setItem("cookie_consent", "rejected");
-    setVisible(false);
-  };
+  const accept = () => decidir("accepted");
+  const reject = () => decidir("rejected");
 
   return (
     <AnimatePresence>
