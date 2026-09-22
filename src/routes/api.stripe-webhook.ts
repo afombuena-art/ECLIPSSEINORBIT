@@ -7,6 +7,37 @@ import { ORIGEN_PEDIDO } from "@/lib/checkout-schema";
 
 const N8N_TIMEOUT_MS = 12_000;
 
+/**
+ * Caracteres con los que Excel y LibreOffice empiezan a interpretar una celda
+ * como fórmula. Airtable no evalúa nada, pero sus exportaciones a CSV se abren
+ * en una hoja de cálculo, y ahí sí se ejecutan.
+ */
+const INICIO_DE_FORMULA = /^[=+\-@\t\r]/;
+
+/**
+ * Texto libre del comprador listo para guardarse. Si empieza por un carácter de
+ * fórmula se le antepone un apóstrofo, que es como se marca «esto es texto» en
+ * una hoja de cálculo.
+ */
+function textoSeguro(valor: string | null | undefined): string | null {
+  if (valor == null) return null;
+  return INICIO_DE_FORMULA.test(valor) ? `'${valor}` : valor;
+}
+
+/** Igual que `textoSeguro`, sobre los campos libres de una dirección. */
+function direccionSegura(address: Stripe.Address | null | undefined): Stripe.Address | null {
+  if (!address) return null;
+  return {
+    ...address,
+    line1: textoSeguro(address.line1),
+    line2: textoSeguro(address.line2),
+    city: textoSeguro(address.city),
+    state: textoSeguro(address.state),
+    postal_code: textoSeguro(address.postal_code),
+    // `country` es un código ISO de dos letras que pone Stripe, no texto libre.
+  };
+}
+
 /** `orderRef` es un `randomUUID()`; cualquier otra cosa no la generamos nosotros. */
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -204,18 +235,21 @@ export const Route = createFileRoute("/api/stripe-webhook")({
             shipping: session.total_details?.amount_shipping ?? 0,
             total: session.amount_total,
           },
+          // El nombre, la dirección y las notas los escribe el comprador: van
+          // por `textoSeguro` para que una exportación de Airtable a CSV no se
+          // convierta en una fórmula en el Excel de quien la abra.
           customer: {
             email: session.customer_details?.email ?? null,
-            name: session.customer_details?.name ?? null,
+            name: textoSeguro(session.customer_details?.name),
             phone: session.customer_details?.phone ?? null,
           },
           shipping: session.collected_information?.shipping_details
             ? {
-                name: session.collected_information.shipping_details.name,
-                address: session.collected_information.shipping_details.address,
+                name: textoSeguro(session.collected_information.shipping_details.name),
+                address: direccionSegura(session.collected_information.shipping_details.address),
               }
             : null,
-          notes: session.metadata?.notes ?? "",
+          notes: textoSeguro(session.metadata?.notes) ?? "",
           marketingOptIn: session.metadata?.marketingOptIn === "true",
           envio: {
             zonaCobrada: cobradoZona,
