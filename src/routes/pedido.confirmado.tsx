@@ -8,7 +8,7 @@ import { useCart } from "@/lib/cart";
 export const Route = createFileRoute("/pedido/confirmado")({
   head: () => ({
     meta: [
-      { title: "Pedido confirmado — ECLIPSSE™ UNIVERSE" },
+      { title: "Gracias por tu compra — ECLIPSSE™ UNIVERSE" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -20,6 +20,12 @@ function PedidoConfirmadoPage() {
 
   // Llegar aquí solo significa que Stripe redirigió tras el pago. La confirmación
   // real del pedido la da el webhook. Vaciamos el carrito local por comodidad.
+  //
+  // ⚠️ Por eso el texto NO afirma que el pago esté recibido: esta página no lo
+  // comprueba. Cualquiera puede abrir la URL directamente, y un comprador puede
+  // llegar antes de que el webhook haya terminado. Pendiente (SEGURIDAD M9): que
+  // el servidor lea el `session_id`, compruebe que es una sesión nuestra y
+  // muestre confirmado / pendiente / no confirmado.
   useEffect(() => {
     if (hydrated) clear();
   }, [hydrated, clear]);
@@ -31,10 +37,10 @@ function PedidoConfirmadoPage() {
 
       <section className="flex-1 mx-auto max-w-xl px-5 md:px-8 py-24 md:py-32 text-center">
         <p className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground mb-6">Gracias</p>
-        <h1 className="font-display text-4xl md:text-6xl leading-tight">Pedido confirmado</h1>
+        <h1 className="font-display text-4xl md:text-6xl leading-tight">Gracias por tu compra</h1>
         <p className="mt-6 text-sm md:text-base text-muted-foreground leading-relaxed">
-          Hemos recibido tu pago. Te enviaremos un email con los detalles y el seguimiento del
-          envío. Si tienes cualquier duda, escríbenos a{" "}
+          Stripe ha terminado el proceso de pago y estamos confirmando tu pedido. Si tienes
+          cualquier duda, escríbenos a{" "}
           <a href="mailto:eclipssebrand@gmail.com" className="underline underline-offset-4">eclipssebrand@gmail.com</a>.
         </p>
 
