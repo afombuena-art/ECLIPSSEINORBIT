@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import type Stripe from "stripe";
-import { checkoutSchema } from "@/lib/checkout-schema";
+import { checkoutSchema, ORIGEN_PEDIDO } from "@/lib/checkout-schema";
 import { getProductById } from "@/data/products";
 import { quoteShipping, zoneFromPostalCode, ZONE_LABELS } from "@/lib/shipping";
 import { getStripe } from "@/lib/stripe.server";
@@ -123,6 +123,11 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         success_url: `${origin}/pedido/confirmado?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/pedido/cancelado`,
         metadata: {
+          // Marca de origen. El webhook exige encontrarla antes de mandar nada a
+          // n8n: así, si algún día esta cuenta de Stripe se usa para otro flujo,
+          // sus sesiones no acaban en el Airtable de pedidos de la tienda.
+          // Si se cambia este valor, hay que cambiarlo también en el webhook.
+          source: ORIGEN_PEDIDO,
           orderRef,
           notes: data.orderNotes ?? "",
           marketingOptIn: String(Boolean(data.marketingOptIn)),

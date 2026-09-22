@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+/**
+ * Marca que identifica una sesión de pago creada por esta tienda. Se guarda en
+ * la metadata de la Checkout Session (`checkout.server.ts`) y el webhook
+ * (`api.stripe-webhook.ts`) la exige antes de reenviar el pedido a n8n.
+ *
+ * Vive aquí, y no en `checkout.server.ts`, para que el webhook pueda leerla sin
+ * importar de paso la server function del checkout.
+ */
+export const ORIGEN_PEDIDO = "eclipsseinorbit-web-v1";
+
 export const cartItemSchema = z.object({
   id: z.string().min(1),
   size: z.string().min(1).max(40),

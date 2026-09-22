@@ -3,8 +3,45 @@ import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe.server";
 import { alreadyForwarded, markForwarded, seenInMemory } from "@/lib/webhook-dedup.server";
 import { zoneFromPostalCode } from "@/lib/shipping";
+import { ORIGEN_PEDIDO } from "@/lib/checkout-schema";
 
 const N8N_TIMEOUT_MS = 12_000;
+
+/** `orderRef` es un `randomUUID()`; cualquier otra cosa no la generamos nosotros. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Motivo por el que esta sesión NO es un pedido válido de esta tienda, o `null`
+ * si lo es.
+ *
+ * La firma solo demuestra que el evento viene de Stripe para este endpoint, no
+ * que la sesión la creáramos nosotros. Si la cuenta de Stripe se usara algún día
+ * para otro flujo, sus sesiones llegarían igual hasta aquí.
+ *
+ * ⚠️ Las sesiones creadas antes de que existiera la marca `source` (pruebas de
+ * septiembre de 2026) no la llevan: al reenviar uno de esos eventos antiguos se
+ * descartará. Es lo esperado.
+ */
+function motivoParaDescartar(
+  session: Stripe.Checkout.Session,
+  tipo: Stripe.Event["type"],
+): string | null {
+  if (session.metadata?.source !== ORIGEN_PEDIDO) {
+    return `no lleva la marca de origen (source=${session.metadata?.source ?? "ausente"})`;
+  }
+  if (session.mode !== "payment") return `modo inesperado (${session.mode})`;
+  if (session.currency !== "eur") return `moneda inesperada (${session.currency})`;
+
+  const orderRef = session.client_reference_id ?? session.metadata?.orderRef ?? "";
+  if (!UUID.test(orderRef)) return "el orderRef no tiene el formato esperado";
+
+  // Un pago fallido llega con el pedido sin pagar: ahí no se exige nada. En los
+  // dos eventos de éxito, el pago tiene que constar cobrado de verdad.
+  if (tipo !== "checkout.session.async_payment_failed" && session.payment_status !== "paid") {
+    return `el pago no consta cobrado (payment_status=${session.payment_status})`;
+  }
+  return null;
+}
 
 const RELEVANT_EVENTS = new Set<Stripe.Event["type"]>([
   "checkout.session.completed",
@@ -97,6 +134,16 @@ export const Route = createFileRoute("/api/stripe-webhook")({
           return new Response("retry", { status: 500 });
         }
         msReleer = Date.now() - tInicio;
+
+        // ¿Es esto un pedido nuestro y en un estado que podamos dar por bueno?
+        // Se responde 200: reintentarlo no va a cambiar nada.
+        const descartar = motivoParaDescartar(session, event.type);
+        if (descartar) {
+          console.warn(
+            `stripe-webhook: sesión ${session.id} descartada, ${descartar}. No se envía a n8n.`,
+          );
+          return new Response("no es un pedido de esta tienda", { status: 200 });
+        }
 
         // Segunda barrera: este evento ya se entregó a n8n en una entrega anterior.
         if (alreadyForwarded(session, event.id)) {
