@@ -326,10 +326,16 @@ tumbaría entregas reales. Lo prohíbe el `CLAUDE.md` §4 del proyecto.
 🔹 Para comprobar que funciona: Firewall → vista general → elegir la regla en el
 desplegable de agrupación de tráfico.
 
-## Paso a paso · Stripe (pendiente, en modo LIVE)
+## Paso a paso · Stripe — ✅ HECHO por Ana el 2026-09-22
 
-⚠️ **Todo esto se configura por separado en modo prueba y en modo live.** Hacerlo
-en live, que es donde va a cobrar. El selector está arriba a la izquierda.
+⚠️ **Sin verificar desde aquí:** esta oficina no tiene acceso al panel de Stripe.
+Consta lo que dijo Ana. Lo de abajo queda como registro de qué se configuró y
+por qué, para poder comprobarlo de un vistazo antes de abrir.
+
+⚠️ **Todo esto se configura por separado en modo prueba y en modo live.** Tiene
+que estar en **live**, que es donde va a cobrar. El selector está arriba a la
+izquierda. **Comprobar que se hizo en live y no en pruebas** es la única
+verificación que queda pendiente de este bloque.
 
 ### 1 · Emails al comprador — `dashboard.stripe.com/settings/emails`
 

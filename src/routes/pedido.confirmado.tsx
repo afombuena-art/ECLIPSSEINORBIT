@@ -26,6 +26,13 @@ function PedidoConfirmadoPage() {
   // llegar antes de que el webhook haya terminado. Pendiente (SEGURIDAD M9): que
   // el servidor lea el `session_id`, compruebe que es una sesión nuestra y
   // muestre confirmado / pendiente / no confirmado.
+  //
+  // ⚠️ El texto promete un email con el justificante de pago. Eso lo manda
+  // **Stripe**, no este código, y solo si sigue activa la casilla «Pagos que se
+  // han efectuado correctamente» en Configuración → Emails a clientes, en modo
+  // live (activada por Ana el 2026-09-22). Si algún día se desactiva, hay que
+  // quitar esa frase de aquí: la web estaría prometiendo algo que no ocurre.
+  // El justificante NO incluye seguimiento del envío: nadie manda ese email hoy.
   useEffect(() => {
     if (hydrated) clear();
   }, [hydrated, clear]);
@@ -39,8 +46,8 @@ function PedidoConfirmadoPage() {
         <p className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground mb-6">Gracias</p>
         <h1 className="font-display text-4xl md:text-6xl leading-tight">Gracias por tu compra</h1>
         <p className="mt-6 text-sm md:text-base text-muted-foreground leading-relaxed">
-          Stripe ha terminado el proceso de pago y estamos confirmando tu pedido. Si tienes
-          cualquier duda, escríbenos a{" "}
+          Stripe ha terminado el proceso de pago y estamos confirmando tu pedido. Recibirás por
+          email el justificante del pago. Si tienes cualquier duda, escríbenos a{" "}
           <a href="mailto:eclipssebrand@gmail.com" className="underline underline-offset-4">eclipssebrand@gmail.com</a>.
         </p>
 
