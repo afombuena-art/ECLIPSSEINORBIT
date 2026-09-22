@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import type Stripe from "stripe";
-import { checkoutSchema, ORIGEN_PEDIDO } from "@/lib/checkout-schema";
+import { checkoutSchema, ORIGEN_PEDIDO, type CheckoutResult } from "@/lib/checkout-schema";
 import { getProductById } from "@/data/products";
 import { quoteShipping, zoneFromPostalCode, ZONE_LABELS } from "@/lib/shipping";
 import { getStripe } from "@/lib/stripe.server";
@@ -18,10 +18,14 @@ function resolveOrigin(): string {
  * catálogo (nunca se confía en lo que manda el cliente — CLAUDE.md §6). La
  * dirección de envío la recoge Stripe. El estado real del pago llega por el
  * webhook verificado (`/api/stripe-webhook`), que es la única fuente de verdad.
+ *
+ * Devuelve la URL de pago, o el motivo del rechazo con un código estable. Solo
+ * lanza ante fallos imprevistos (Stripe caído, configuración rota), que el
+ * navegador muestra como error genérico.
  */
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .validator(checkoutSchema)
-  .handler(async ({ data }) => {
+  .handler(async ({ data }): Promise<CheckoutResult> => {
     const stripe = getStripe();
     const origin = resolveOrigin();
 
@@ -40,44 +44,50 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         .values(),
     ];
 
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map(
-      (item) => {
-        const product = getProductById(item.id);
-        if (!product) {
-          throw new Error(`Producto no disponible: ${item.id}`);
-        }
-        if (!product.sizes.includes(item.size)) {
-          throw new Error(`Talla no disponible para ${product.name}: ${item.size}`);
-        }
-        return {
-          quantity: item.qty,
-          price_data: {
-            currency: "eur",
-            unit_amount: product.priceCents,
-            product_data: {
-              name: `${product.name} · Talla ${item.size}`,
-              images: [`${origin}${product.front}`],
-              metadata: { productId: product.id, size: item.size },
-            },
-          },
-        };
-      },
-    );
+    // Los rechazos previsibles se devuelven con un código, no se lanzan: una
+    // excepción llega al navegador como una página de error sin mensaje y el
+    // comprador se queda sin saber qué corregir. Ver `CheckoutError`.
+    //
+    // Un solo recorrido valida, construye las líneas y suma el subtotal, para
+    // que no haya forma de que las tres cosas se calculen sobre catálogos
+    // distintos.
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+    let subtotalCents = 0;
 
-    const subtotalCents = items.reduce((sum, item) => {
+    for (const item of items) {
       const product = getProductById(item.id);
-      return sum + (product ? product.priceCents * item.qty : 0);
-    }, 0);
+      if (!product) {
+        console.warn(`checkout: producto no disponible (${item.id})`);
+        return { ok: false, error: "PRODUCTO_NO_DISPONIBLE" };
+      }
+      if (!product.sizes.includes(item.size)) {
+        console.warn(`checkout: talla no disponible (${product.id} / ${item.size})`);
+        return { ok: false, error: "TALLA_NO_DISPONIBLE" };
+      }
+
+      subtotalCents += product.priceCents * item.qty;
+      lineItems.push({
+        quantity: item.qty,
+        price_data: {
+          currency: "eur",
+          unit_amount: product.priceCents,
+          product_data: {
+            name: `${product.name} · Talla ${item.size}`,
+            images: [`${origin}${product.front}`],
+            metadata: { productId: product.id, size: item.size },
+          },
+        },
+      });
+    }
 
     // La zona se recalcula aquí: el navegador se puede manipular y el envío no
     // puede depender de lo que diga el cliente.
     const lookup = zoneFromPostalCode(data.shippingPostalCode);
     if (!lookup.ok) {
-      throw new Error(
-        lookup.reason === "fuera-de-cobertura"
-          ? "No enviamos a ese código postal. Escríbenos por WhatsApp y gestionamos tu pedido de otra manera."
-          : "El código postal no es válido.",
-      );
+      return {
+        ok: false,
+        error: lookup.reason === "fuera-de-cobertura" ? "FUERA_DE_COBERTURA" : "CODIGO_POSTAL_INVALIDO",
+      };
     }
 
     const quote = quoteShipping(
@@ -86,9 +96,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       lookup.zone,
     );
     if (!quote.ok) {
-      throw new Error(
-        "Este pedido supera el peso máximo de envío. Escríbenos por WhatsApp y lo gestionamos de otra manera.",
-      );
+      return { ok: false, error: "DEMASIADO_PESO" };
     }
     const shippingCents = quote.cents;
 
@@ -145,5 +153,5 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       throw new Error("Stripe no devolvió una URL de pago");
     }
 
-    return { url: session.url };
+    return { ok: true, url: session.url };
   });

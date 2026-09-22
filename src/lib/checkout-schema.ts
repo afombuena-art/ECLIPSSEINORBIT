@@ -45,6 +45,28 @@ export const checkoutSchema = z.object({
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
 
+/**
+ * Motivos por los que el servidor rechaza un pedido, con un código estable que
+ * el navegador puede traducir a un mensaje útil.
+ *
+ * Existen porque un `throw` no sirve: el middleware de `start.ts` convierte
+ * cualquier excepción de una server function en una página de error genérica y
+ * **sin mensaje**, a propósito, para no filtrar detalles internos. Sin estos
+ * códigos, el cliente solo podía leer «inténtalo de nuevo» ante errores que
+ * nunca se van a arreglar solos.
+ *
+ * Los tres primeros son permanentes: reintentar no cambia nada.
+ */
+export type CheckoutError =
+  | "PRODUCTO_NO_DISPONIBLE"
+  | "TALLA_NO_DISPONIBLE"
+  | "FUERA_DE_COBERTURA"
+  | "CODIGO_POSTAL_INVALIDO"
+  | "DEMASIADO_PESO";
+
+/** Respuesta de `createCheckoutSession`: o la URL de pago, o el motivo del rechazo. */
+export type CheckoutResult = { ok: true; url: string } | { ok: false; error: CheckoutError };
+
 /** Esquema del formulario (sin `items`, que se añaden en el submit desde el carrito). */
 export const checkoutFormSchema = checkoutSchema.omit({ items: true });
 

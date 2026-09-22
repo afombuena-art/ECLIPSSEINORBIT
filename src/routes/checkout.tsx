@@ -7,11 +7,31 @@ import { Marquee } from "@/components/Marquee";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useCart } from "@/lib/cart";
 import { formatEuros } from "@/lib/money";
-import { checkoutFormSchema, type CheckoutFormInput } from "@/lib/checkout-schema";
+import {
+  checkoutFormSchema,
+  type CheckoutError,
+  type CheckoutFormInput,
+} from "@/lib/checkout-schema";
 import { createCheckoutSession } from "@/lib/checkout.server";
 import { quoteShipping, zoneFromPostalCode, ZONE_LABELS } from "@/lib/shipping";
 
 const WHATSAPP_URL = "https://wa.me/message/P5FFTHYMWKNRA1";
+
+/**
+ * Qué lee el comprador cuando el servidor rechaza el pedido. Los tres primeros
+ * son permanentes: no se le invita a reintentar, se le dice qué corregir.
+ */
+const MENSAJES_DE_ERROR: Record<CheckoutError, string> = {
+  PRODUCTO_NO_DISPONIBLE:
+    "Una de las prendas de tu carrito ya no está disponible. Quítala y vuelve a intentarlo.",
+  TALLA_NO_DISPONIBLE:
+    "Una de las tallas de tu carrito ya no está disponible. Elige otra talla y vuelve a intentarlo.",
+  FUERA_DE_COBERTURA:
+    "No enviamos a ese código postal. Escríbenos por WhatsApp y gestionamos tu pedido de otra manera.",
+  CODIGO_POSTAL_INVALIDO: "El código postal no es válido. Revísalo y vuelve a intentarlo.",
+  DEMASIADO_PESO:
+    "Este pedido supera el peso máximo de nuestro envío habitual. Escríbenos por WhatsApp y lo gestionamos de otra manera.",
+};
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -81,9 +101,15 @@ function CheckoutPage() {
         return;
       }
       try {
-        const { url } = await createCheckoutSession({ data: { ...values, items } });
-        window.location.href = url;
+        const resultado = await createCheckoutSession({ data: { ...values, items } });
+        if (!resultado.ok) {
+          setSubmitError(MENSAJES_DE_ERROR[resultado.error]);
+          return;
+        }
+        window.location.href = resultado.url;
       } catch {
+        // Fallo imprevisto (Stripe caído, red, configuración rota): aquí sí
+        // tiene sentido invitar a reintentar.
         setSubmitError(
           "No se ha podido iniciar el pago. Inténtalo de nuevo en unos segundos.",
         );
