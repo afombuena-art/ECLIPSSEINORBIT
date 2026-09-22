@@ -74,11 +74,33 @@ function motivoParaDescartar(
   return null;
 }
 
-const RELEVANT_EVENTS = new Set<Stripe.Event["type"]>([
-  "checkout.session.completed",
-  "checkout.session.async_payment_succeeded",
-  "checkout.session.async_payment_failed",
-]);
+/**
+ * Eventos que este webhook procesa. No es un `Set`: se usan como `case` de un
+ * `switch` para que TypeScript deduzca por sí mismo que `event.data.object` es
+ * una Checkout Session. Antes eso se afirmaba con un `as` que el compilador no
+ * podía comprobar, y que habría dejado de ser cierto en cuanto alguien añadiera
+ * a la lista un evento de otro tipo.
+ */
+type EventoDePedido = Extract<
+  Stripe.Event,
+  {
+    type:
+      | "checkout.session.completed"
+      | "checkout.session.async_payment_succeeded"
+      | "checkout.session.async_payment_failed";
+  }
+>;
+
+function esEventoDePedido(event: Stripe.Event): event is EventoDePedido {
+  switch (event.type) {
+    case "checkout.session.completed":
+    case "checkout.session.async_payment_succeeded":
+    case "checkout.session.async_payment_failed":
+      return true;
+    default:
+      return false;
+  }
+}
 
 /**
  * Webhook de Stripe. Única fuente de verdad del estado del pago (CLAUDE.md §3-§4).
@@ -135,7 +157,7 @@ export const Route = createFileRoute("/api/stripe-webhook")({
           return new Response("Firma no válida", { status: 400 });
         }
 
-        if (!RELEVANT_EVENTS.has(event.type)) {
+        if (!esEventoDePedido(event)) {
           return new Response("ignored", { status: 200 });
         }
 
@@ -145,7 +167,8 @@ export const Route = createFileRoute("/api/stripe-webhook")({
           return new Response("duplicado", { status: 200 });
         }
 
-        const sessionRef = event.data.object as Stripe.Checkout.Session;
+        // Sin aserción: `esEventoDePedido` ya ha estrechado el tipo del evento.
+        const sessionRef = event.data.object;
 
         // Pago asíncrono todavía pendiente: esperamos al async_payment_succeeded.
         if (
