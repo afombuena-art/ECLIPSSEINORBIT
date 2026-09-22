@@ -173,6 +173,13 @@ function CheckoutPage() {
                 Notas del pedido (opcional)
               </label>
               <textarea id="orderNotes" rows={3} className={inputClass} {...register("orderNotes")} />
+              {/* El contenido de este campo se guarda en la metadata de Stripe y
+                  viaja hasta Airtable. Stripe pide expresamente no almacenar ahí
+                  información sensible, así que se avisa antes de escribirla. */}
+              <p className="mt-1.5 text-[11px] text-muted-foreground">
+                Para indicaciones de entrega. No escribas aquí datos bancarios, de salud ni
+                ninguna otra información sensible.
+              </p>
               {errors.orderNotes?.message && (
                 <p className="field-error mt-1.5 text-[11px] text-red-600">{errors.orderNotes.message}</p>
               )}
