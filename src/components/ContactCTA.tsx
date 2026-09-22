@@ -1,9 +1,6 @@
 import { motion } from "framer-motion";
 
-const WHATSAPP_URL = "https://wa.me/message/P5FFTHYMWKNRA1";
-const INSTAGRAM_URL = "https://www.instagram.com/eclipssebrand/";
-const TIKTOK_URL = "https://tiktok.com/@eclipssebrand";
-const EMAIL = "eclipssebrand@gmail.com";
+import { WHATSAPP_URL, INSTAGRAM_URL, TIKTOK_URL, EMAIL } from "@/data/contacto";
 
 function InstagramIcon() {
   return (

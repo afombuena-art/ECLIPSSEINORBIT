@@ -8,8 +8,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { getProduct, products } from "@/data/products";
 import { formatEuros } from "@/lib/money";
 import { useCart } from "@/lib/cart";
-
-const WHATSAPP_URL = "https://wa.me/message/P5FFTHYMWKNRA1";
+import { WHATSAPP_URL } from "@/data/contacto";
 
 const SIZE_GUIDE = [
   { talla: "S", pecho: 53, largo: 69, manga: 24 },

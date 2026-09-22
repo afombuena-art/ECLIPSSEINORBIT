@@ -14,8 +14,7 @@ import {
 } from "@/lib/checkout-schema";
 import { createCheckoutSession } from "@/lib/checkout.server";
 import { quoteShipping, zoneFromPostalCode, ZONE_LABELS } from "@/lib/shipping";
-
-const WHATSAPP_URL = "https://wa.me/message/P5FFTHYMWKNRA1";
+import { WHATSAPP_URL } from "@/data/contacto";
 
 /**
  * Qué lee el comprador cuando el servidor rechaza el pedido. Los tres primeros
