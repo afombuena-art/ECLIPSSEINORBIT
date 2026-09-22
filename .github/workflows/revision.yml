@@ -33,10 +33,10 @@ jobs:
 
     steps:
       - name: Descargar el código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Preparar Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           # Si Vercel acaba usando otra versión, cambiar este número para que
           # la revisión y el despliegue real comprueben lo mismo.
