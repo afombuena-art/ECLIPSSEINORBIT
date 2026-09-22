@@ -24,7 +24,13 @@ export const checkoutSchema = z.object({
     message: "Debes aceptar los términos y la política de privacidad",
   }),
   marketingOptIn: z.boolean().optional(),
-  items: z.array(cartItemSchema).min(1, "El carrito está vacío"),
+  // El tope de líneas no es arbitrario: Stripe rechaza una sesión con más de 100
+  // line items. El catálogo entero da 17 combinaciones de producto y talla, así
+  // que 20 no estorba a nadie que compre de verdad.
+  items: z
+    .array(cartItemSchema)
+    .min(1, "El carrito está vacío")
+    .max(20, "El pedido tiene demasiadas líneas distintas"),
 });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;

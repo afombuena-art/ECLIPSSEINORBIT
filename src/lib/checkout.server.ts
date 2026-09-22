@@ -25,7 +25,22 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     const stripe = getStripe();
     const origin = resolveOrigin();
 
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = data.items.map(
+    // Un carrito manipulado puede mandar la misma prenda repetida en muchas
+    // líneas. Se agrupan por producto+talla antes de construir nada: Stripe
+    // rechaza la sesión a partir de 100 line items y el error saldría en la
+    // cara del comprador. Se conserva el orden de la primera aparición.
+    const items = [
+      ...data.items
+        .reduce((acc, item) => {
+          const clave = `${item.id}__${item.size}`;
+          const previo = acc.get(clave);
+          acc.set(clave, previo ? { ...previo, qty: previo.qty + item.qty } : { ...item });
+          return acc;
+        }, new Map<string, (typeof data.items)[number]>())
+        .values(),
+    ];
+
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map(
       (item) => {
         const product = getProductById(item.id);
         if (!product) {
@@ -49,7 +64,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       },
     );
 
-    const subtotalCents = data.items.reduce((sum, item) => {
+    const subtotalCents = items.reduce((sum, item) => {
       const product = getProductById(item.id);
       return sum + (product ? product.priceCents * item.qty : 0);
     }, 0);
@@ -66,7 +81,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     }
 
     const quote = quoteShipping(
-      data.items.map((i) => ({ id: i.id, qty: i.qty })),
+      items.map((i) => ({ id: i.id, qty: i.qty })),
       subtotalCents,
       lookup.zone,
     );
