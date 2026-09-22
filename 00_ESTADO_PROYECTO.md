@@ -285,6 +285,79 @@ al Vercel de Jacobo, y el conector de Vercel no está autorizado. Lo que consta 
 lo que dice la documentación de Vercel y lo que Ana ha dicho del plan. **Hay que
 confirmarlo con Jacobo antes de abrir.**
 
+## Paso a paso · Vercel (pendiente, hace falta la cuenta de Jacobo)
+
+### 1 · El plan — hay que pagarlo antes de abrir la tienda
+
+Ver el riesgo de arriba. **20 $ por usuario y mes** el plan Pro, según la web de
+Vercel a 2026-09-22. Cómo comprobar el plan actual: en el panel de Vercel,
+seleccionar el equipo arriba a la izquierda → **Settings → Billing** → apartado
+**Plan**. Si pone «Hobby», es el gratuito.
+
+Decisión pendiente de Ana y Jacobo: quién paga esa cuenta y a nombre de quién
+queda el proyecto. ⚠️ Está ligado a que **ECLIPSSE es la tienda de Jacobo, no un
+cliente con contrato**: conviene dejar claro antes de pagar nada quién asume ese
+coste recurrente.
+
+### 2 · Rate limiting — gratis, no hace falta Pro para esto
+
+Verificado en `vercel.com/docs/vercel-firewall/vercel-waf/rate-limiting`
+(2026-09-22): **incluido en el plan Hobby**, 1 regla por proyecto, conteo por IP,
+ventana de 10 s a 10 min, 1.000.000 de peticiones permitidas incluidas.
+
+Pasos exactos:
+
+1. Panel de Vercel → el proyecto → **Firewall** en el menú lateral.
+2. Arriba a la derecha: **Configure** → **+ New Rule**.
+3. Nombre: `Limite creacion de pagos`.
+4. **If**: la ruta (*Path*) **empieza por** `/_serverFn`.
+5. **Then**: **Rate Limit**. La primera vez sale un aviso de precios → Continue.
+6. Estrategia: **Fixed Window** (es la única del plan gratuito).
+7. **Time Window**: `60s`. **Request Limit**: `20`.
+8. Clave de conteo: **IP**.
+9. Acción: empezar en **Log** (solo observa, no bloquea). Pasada una semana con
+   tráfico real, si no salta con compradores normales, cambiar a **Deny**.
+10. **Save Rule** → **Review Changes** → **Publish**.
+
+⚠️ **No tocar el webhook.** La regla debe afectar solo a `/_serverFn`, nunca a
+`/api/stripe-webhook`: Stripe reintenta de forma legítima y un límite ahí
+tumbaría entregas reales. Lo prohíbe el `CLAUDE.md` §4 del proyecto.
+
+🔹 Para comprobar que funciona: Firewall → vista general → elegir la regla en el
+desplegable de agrupación de tráfico.
+
+## Paso a paso · Stripe (pendiente, en modo LIVE)
+
+⚠️ **Todo esto se configura por separado en modo prueba y en modo live.** Hacerlo
+en live, que es donde va a cobrar. El selector está arriba a la izquierda.
+
+### 1 · Emails al comprador — `dashboard.stripe.com/settings/emails`
+
+Decidido el 2026-09-22: **las dos casillas del apartado «Pagos» activadas.**
+- **«Pagos que se han efectuado correctamente»** → el justificante de pago.
+- **«Reembolsos»** → aviso automático cuando se devuelve dinero. Evita el
+  «¿me has devuelto ya?» y deja constancia de la fecha.
+
+### 2 · Política de devoluciones en la pasarela de pago
+
+Comprobado el 2026-09-22 contra el texto real de
+`https://www.eclipssebrand.es/legal/devoluciones`, que está publicado y accesible:
+
+- ✅ **«Se aceptan devoluciones»** — sí. La página reconoce los 14 días naturales
+  de desistimiento que exige la ley.
+- ⛔ **«Se aceptan cambios»** — **no marcar.** La política **no dice nada de
+  cambios**. Marcarlo sería prometer en la pasarela algo que no está escrito.
+  Si algún día se quieren ofrecer, primero se añade a la página legal.
+- ✅ **«Se admiten reembolsos»** — sí. La página tiene su apartado: reembolso por
+  el mismo medio de pago, máximo 14 días naturales.
+- **URL (obligatoria):** `https://www.eclipssebrand.es/legal/devoluciones`
+- **Mensaje personalizado** (opcional, 300 caracteres), redactado a partir de la
+  política real:
+  > 14 días naturales para devolver desde que recibes el pedido. La prenda debe
+  > estar sin usar, con su etiqueta y su embalaje. El envío de la devolución
+  > corre a tu cargo, salvo defecto de fabricación. Los productos personalizados
+  > están excluidos por ley.
+
 ## Decisiones del 2026-09-22
 
 **1 · Email al comprador: recibos automáticos de Stripe.** Decidido por Ana. No se
