@@ -59,7 +59,11 @@ function readStorage(): CartLine[] {
           typeof (l as CartLine).size === "string" &&
           typeof (l as CartLine).qty === "number",
       )
-      .filter((l) => getProductById(l.id)) // descarta productos que ya no existen
+      // Descarta lo que el servidor rechazaría igualmente: productos que ya no
+      // existen y tallas retiradas del catálogo. El carrito vive en el navegador
+      // y puede llevar meses guardado; sin esto, una talla que desapareció deja
+      // la línea a la vista y cada intento de pago muere en el servidor.
+      .filter((l) => getProductById(l.id)?.sizes.includes(l.size))
       .map((l) => ({ id: l.id, size: l.size, qty: clampQty(l.qty) }));
   } catch {
     return [];
@@ -114,7 +118,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       close: () => setOpen(false),
       setOpen,
       add: (id, size, qty = 1) => {
-        if (!getProductById(id)) return;
+        // Misma regla que al leer de localStorage: producto y talla tienen que
+        // existir hoy en el catálogo.
+        if (!getProductById(id)?.sizes.includes(size)) return;
         setLines((prev) => {
           const i = prev.findIndex((l) => l.id === id && l.size === size);
           if (i === -1) return [...prev, { id, size, qty: clampQty(qty) }];
