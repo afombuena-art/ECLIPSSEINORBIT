@@ -262,6 +262,29 @@ Es solo diagnóstico: **no se tocó ni una línea de código ni de configuració
 
 🔹 **Refuerza dos cosas ya abiertas en este archivo, no las sustituye:** la conveniencia de tests para `shipping.ts` (ver «Tests automáticos») y los pendientes de idempotencia y deduplicación que documenta `SEGURIDAD.md`.
 
+## ⚠️ Riesgo nuevo detectado el 2026-09-22 · El plan de Vercel no permite vender
+
+El despliegue está en **la cuenta de Jacobo, en plan Hobby (gratuito)**, según
+Ana. La documentación de Vercel dice literalmente que **«el plan Hobby limita a
+los usuarios a uso personal y no comercial»**
+(`vercel.com/docs/plans/hobby`, consultado el 2026-09-22, y sus *fair use
+guidelines*).
+
+Hoy no hay problema: lo publicado es una web de marca sin tienda. **El problema
+aparece el día que se abra la tienda**, que es exactamente lo que este proyecto
+va a hacer. Vercel puede pausar el despliegue por incumplimiento de políticas, y
+lo haría sin avisar con tiempo: la tienda dejaría de existir de golpe.
+
+🔹 **Qué hay que decidir antes de publicar la tienda** (no es urgente hoy, es
+bloqueante para el día del merge):
+- Pasar el proyecto a **plan Pro** (20 $ por usuario y mes según su web), o
+- Mover el proyecto a una cuenta de empresa con plan de pago.
+
+⚠️ **No se ha verificado en la cuenta real**: nadie de esta oficina tiene acceso
+al Vercel de Jacobo, y el conector de Vercel no está autorizado. Lo que consta es
+lo que dice la documentación de Vercel y lo que Ana ha dicho del plan. **Hay que
+confirmarlo con Jacobo antes de abrir.**
+
 ## Decisiones del 2026-09-22
 
 **1 · Email al comprador: recibos automáticos de Stripe.** Decidido por Ana. No se
@@ -290,13 +313,14 @@ Lo que habría que hacer: identificar el pedido por `checkoutSessionId + tipo de
 evento` en vez de por `event.id`, con una operación atómica en Airtable, y
 probarlo con dos eventos distintos de la misma sesión.
 
-**4 · Retención en n8n — ⚠️ tarea abierta, verificada el 2026-09-22.** El
-workflow `qmS3k2Pp3wxyKUqZ` **no tiene configurado nada de guardado**, así que
-usa el valor por defecto de la instancia: guardar todas las ejecuciones con sus
-datos. Comprobado: **hay 4 ejecuciones guardadas** (las pruebas del 21 de
-septiembre), cada una con el nombre, el email, el teléfono, la dirección y las
-notas del comprador. La política de privacidad promete plazos de conservación
-que ahí no los aplica nadie. Ver «Próxima acción».
+**4 · Retención en n8n — ✅ HECHO por Ana el 2026-09-22.** Se detectó que el
+workflow `qmS3k2Pp3wxyKUqZ` no tenía configurado nada de guardado y usaba el
+valor por defecto (guardar todas las ejecuciones con sus datos): había **4
+ejecuciones guardadas** con nombre, email, teléfono, dirección y notas de las
+pruebas del 21. Ana lo ajustó. ⚠️ **Sin verificar desde aquí:** el acceso a n8n
+de esta oficina es de solo lectura y no se ha vuelto a comprobar el estado.
+Conviene confirmar de un vistazo que las ejecuciones de éxito ya no se guardan y
+que las 4 antiguas están borradas.
 
 ## Próxima acción
 

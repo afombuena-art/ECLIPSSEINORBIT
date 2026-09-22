@@ -36,12 +36,12 @@ Sesión de corrección por orden de severidad, un commit por arreglo, con
 
 | # | Estado | Nota |
 |---|---|---|
-| **A1** rate limiting | ⛔ **Pendiente — bloqueado** | El arreglo bueno es Vercel WAF o un contador compartido: cuenta, plan o configuración nueva. `CLAUDE.md` §11 obliga a preguntar a Ana. **Sigue siendo el bloqueante nº 1.** |
+| **A1** rate limiting | ⛔ **Pendiente, pero ya sin excusa técnica** | Verificado en la documentación de Vercel el 2026-09-22: **el rate limiting del WAF está incluido en el plan gratuito (Hobby)** — 1 regla por proyecto, por IP, ventana de 10 s a 10 min, con 1.000.000 de peticiones permitidas incluidas. Se configura con clicks en Firewall → New Rule → Rate Limit, sin tocar código. **Solo hace falta acceso al proyecto en Vercel, que está en la cuenta de Jacobo.** |
 | **M1** cabeceras | ⛔ **Pendiente — bloqueado** | `vercel.json` es configuración de despliegue (§11). La propuesta de este informe sigue vigente, con la CSP en `Report-Only` primero. |
 | **M2** tope de `items` | ✅ **Resuelto** | `.max(20)` en el esquema y agrupación por producto+talla antes de construir la sesión. Commit `61aa680`. |
 | **M3** origen por Host | ⛔ **Pendiente — bloqueado** | Exigir `SITE_URL` sin confirmar antes que está en Vercel dejaría la tienda sin vender. Va junto con el dato del dominio. |
 | **M4** desajuste de CP | 🟡 **Sin cambios, riesgo asumido** | Decisión previa de Ana. Sigue pendiente lo que añadía este informe: que la columna «Aviso envío» se vea sin buscarla. |
-| **M5** `overrides` | ⛔ **Pendiente — bloqueado** | Tocar dependencias (§11). Es lo que tiene roto `npm run lint`. |
+| **M5** `overrides` | ✅ **Resuelto el 2026-09-22** | Ana dio el OK. Quitados los tres: **`npm audit` pasa de 10 vulnerabilidades (6 altas, 4 moderadas) a 0**, y `npm run lint` vuelve a funcionar. Confirmado que las notas *causaban* el problema en vez de taparlo. Commit `60ddef1`. |
 | **M6** idempotencia | ⛔ **Pendiente** | Necesita un identificador estable del intento de compra, o sea persistencia o un id del navegador. Es una decisión de diseño, no un arreglo mecánico. |
 | **M7** validar el pedido | ✅ **Resuelto** | Marca `source` en la metadata al crear la sesión; el webhook la exige y valida `mode`, moneda, formato de `orderRef` y que el pago conste cobrado. Commit `a29f487`. |
 | **M8** deduplicación | 🟡 **Parcial — documentado, no cerrado** | El arreglo real (clave de negocio persistente y atómica, más prueba con dos Event distintos) sigue pendiente y toca Airtable. Lo que sí se hizo: el código ya no describe como «cerrojo» algo que en concurrencia no lo es, y enumera los dos casos que no cubre. Commit `2bc21f0`. |
