@@ -56,18 +56,20 @@ export const Route = createFileRoute("/prendas/$slug")({
 });
 
 function ProductPage() {
-  // ⚠️ `tsc --noEmit` da aquí un error de tipos: «Property 'product' does not
-  // exist on type 'undefined'». **No es un fallo de este código y no afecta a la
-  // ejecución**: en tiempo real el loader devuelve el producto y la página
-  // funciona. Es una limitación de inferencia de TanStack Router — el tipo de
-  // `Route` depende de `component`, y `component` pregunta por el tipo de
-  // `Route`; TypeScript rompe ese círculo dando `undefined`.
+  // ⚠️ La aserción es deliberada y aquí **añade** seguridad en vez de quitarla.
   //
-  // Probado el 2026-09-22 y NO lo arreglan: anotar el tipo de retorno del
-  // loader, ni `getRouteApi("/prendas/$slug")`. Lo único que lo silenciaría es
-  // una aserción de tipo, que esconde el problema en vez de resolverlo.
-  // Se deja visible a propósito. Ver `CALIDAD.md`.
-  const { product } = Route.useLoaderData();
+  // TanStack Router no consigue deducir el tipo de los datos del loader: el tipo
+  // de `Route` depende de `component`, y `component` pregunta por el tipo de
+  // `Route`. TypeScript rompe ese círculo dando `undefined`, y entonces `product`
+  // y todo lo que cuelga de él quedan sin comprobar en el resto del componente.
+  //
+  // Probado el 2026-09-22 y NO lo arreglan: anotar el tipo de retorno del loader,
+  // ni `getRouteApi("/prendas/$slug")`.
+  //
+  // Es correcta por construcción: el loader de esta misma ruta, quince líneas más
+  // arriba, devuelve exactamente `{ product: Product }` o lanza `notFound()`. Si
+  // alguien cambia el loader, hay que cambiar esto con él.
+  const { product } = Route.useLoaderData() as { product: Product };
   const [active, setActive] = useState(0);
   const [direction, setDirection] = useState(0);
   const [size, setSize] = useState(product.sizes[0]);
