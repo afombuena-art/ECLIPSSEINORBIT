@@ -30,6 +30,52 @@ producción. Este informe se limita a calidad de código y experiencia visible.
 
 ---
 
+## 🔧 Estado de corrección — 2026-09-22
+
+Sesión de corrección por orden de severidad, un commit por arreglo, con
+`npx tsc --noEmit` tras cada cambio y `npm run build` al final (✅ pasa).
+
+| # | Estado | Nota |
+|---|---|---|
+| **M-10** «Envío: Gratis» falso | ✅ **Resuelto** | `calcShippingCents` devuelve `number \| null`; carrito, panel lateral y checkout distinguen «gratis» de «no disponible». Tarifas y cálculo sin tocar. Commit `4c3b055`. |
+| **M-1** cerrojo de deduplicación | 🟡 **Parcial — documentado** | Comportamiento sin cambios. El código ya no lo llama «cerrojo» y enumera lo que no cubre. El arreglo real va en M8 de `SEGURIDAD.md`. Commit `2bc21f0`. |
+| **M-2** caché que se vacía entera | ✅ **Resuelto** | Se descarta el evento más antiguo en vez de toda la caché. Commit `4c64e1c`. |
+| **M-3** errores del checkout | ✅ **Resuelto** | El servidor devuelve códigos estables (`PRODUCTO_NO_DISPONIBLE`, `TALLA_NO_DISPONIBLE`, `FUERA_DE_COBERTURA`, `CODIGO_POSTAL_INVALIDO`, `DEMASIADO_PESO`) y el cliente los traduce. Los fallos imprevistos siguen dando el mensaje genérico. Commit `028f5e2`. |
+| **M-4** talla obsoleta | ✅ **Resuelto** | `readStorage` y `add` descartan tallas que ya no están en el catálogo. Commit `6f18410`. |
+| **M-5** contador caducado | ⛔ **Pendiente — decisión de Ana** | Hacen falta dos datos: qué fecha va ahí y qué debe mostrarse cuando venza. Está también en `main`. |
+| **M-6** dominio a mano ×8 | ⛔ **Pendiente — bloqueado** | Depende del dato que bloquea todo el proyecto. Va junto con `SITE_URL` (M3 de `SEGURIDAD.md`). |
+| **M-7** `og:image` | ⛔ **Pendiente — bloqueado** | Una URL absoluta necesita el dominio. Se arregla a la vez que M-6. |
+| **M-8** banner pegado | ✅ **Resuelto** | Las dos escrituras de `localStorage` van en `try/catch`; el banner se cierra siempre. Commit `2a919e4`. |
+| **M-9** 5 camisetas vs 4 | ⛔ **Pendiente — pregunta a Jacobo** | O falta dar de alta la camiseta granate, o sobra el «5» del texto. Está también en `main`. |
+| **B-1** consentimiento sin efecto | ⛔ **Pendiente** | Decisión de negocio y cumplimiento, no un fallo técnico. |
+| **B-2** Google Fonts | ⛔ **Pendiente** | Alojar las fuentes en `/public` cambia la carga de la web; se propone, no se aplica. |
+| **B-3** `front`/`back` cruzados | ⛔ **Pendiente — comprobación visual** | Nadie ha mirado todavía si se está enseñando la espalda como foto principal. No se toca a ciegas. |
+| **B-4** código muerto en envío | ✅ **Resuelto** | El tramo de respaldo cobraba el precio más barato; ahora rechaza. Commit `6d0c49b`. |
+| **B-5** contacto duplicado | ✅ **Resuelto** | Nuevo `src/data/contacto.ts`. Los textos legales mantienen el email a mano a propósito. Commit `2a701c4`. |
+| **B-6** log en el render | ✅ **Resuelto** | Movido a un efecto. Commit `47af3c8`. |
+| **B-7** `setTimeout` sin limpiar | ✅ **Resuelto** | Los dos, en efectos con `clearTimeout`. Commit `47af3c8`. |
+| **B-8** CP en los logs | ⛔ **Pendiente** | Es una decisión de retención, no un arreglo de código. |
+| **B-9** aserción de tipo | ✅ **Resuelto** | El filtro de eventos es ahora una guarda de tipo; añadir un evento de otro tipo da error al compilar. Commit `77002bc`. |
+| **B-10** sin tests | ⛔ **Pendiente — bloqueado** | Instalar `vitest` toca dependencias (`CLAUDE.md` §11). |
+| **B-11** página de error en inglés | ✅ **Resuelto** | Commit `8104817`. |
+| **B-12** enlace con recarga | ✅ **Resuelto** | Commit `70cd896`. |
+
+**Resumen: 12 resueltos, 2 parciales, 8 pendientes.** Ninguno de los pendientes
+es un arreglo que se pueda hacer sin una decisión de Ana, un dato que falta o
+permiso para tocar dependencias o despliegue.
+
+⚠️ **Lo corregido no ha tocado el diseño ni las reglas de negocio.** Las tarifas
+de envío, las zonas, los precios, el catálogo y qué pedidos se aceptan o rechazan
+siguen exactamente igual: solo cambia cómo se comunica y cuándo se valida.
+
+⚠️ **Sigue sin hacerse la QA visual y funcional** de la sección «No comprobado en
+esta revisión». Los cambios de esta sesión tocan carrito, checkout, banner de
+cookies y página de confirmación: **hay que verlos en un navegador de verdad**
+antes de dar nada por bueno. `npm run build` pasa, pero un build que compila no
+es una tienda probada.
+
+---
+
 ## 🟠 MEDIA
 
 ### M-10 · Un pedido que no se puede enviar muestra «Envío: Gratis» y un total falso
