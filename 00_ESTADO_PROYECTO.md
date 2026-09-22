@@ -265,15 +265,37 @@ Es solo diagnóstico: **no se tocó ni una línea de código ni de configuració
 ## ⚠️ Riesgo nuevo detectado el 2026-09-22 · El plan de Vercel no permite vender
 
 El despliegue está en **la cuenta de Jacobo, en plan Hobby (gratuito)**, según
-Ana. La documentación de Vercel dice literalmente que **«el plan Hobby limita a
-los usuarios a uso personal y no comercial»**
-(`vercel.com/docs/plans/hobby`, consultado el 2026-09-22, y sus *fair use
-guidelines*).
+Ana. Texto literal de `vercel.com/docs/limits/fair-use-guidelines`, apartado
+*Commercial usage*, consultado el 2026-09-22:
 
-Hoy no hay problema: lo publicado es una web de marca sin tienda. **El problema
-aparece el día que se abra la tienda**, que es exactamente lo que este proyecto
-va a hacer. Vercel puede pausar el despliegue por incumplimiento de políticas, y
-lo haría sin avisar con tiempo: la tienda dejaría de existir de golpe.
+> **Hobby teams** are restricted to non-commercial personal use only. All
+> commercial usage of the platform requires either a Pro or Enterprise plan.
+>
+> Commercial usage is defined as any Deployment that is used for the purpose of
+> financial gain of **anyone** involved in **any part of the production** of the
+> project, including a paid employee or consultant writing the code. Examples of
+> this include, but are not limited to, the following:
+> - Any method of requesting or processing payment from visitors of the site
+> - **Advertising the sale of a product or service**
+> - Receiving payment to create, update, or host the site
+
+⚠️ **Corrección al aviso anterior de este archivo: no es un problema futuro.** Se
+dijo que «hoy no hay problema porque lo publicado es una web sin tienda». Es
+falso. El segundo ejemplo de la lista es *anunciar la venta de un producto*, y
+`https://www.eclipssebrand.es/eclipssebrand` ya muestra las prendas **con su
+precio** (23,97 €, 14,97 €) e indica cómo comprarlas por Instagram o WhatsApp.
+Según la definición de Vercel, **eso ya es uso comercial**, sin tienda y sin
+pasarela de pago.
+
+⚠️ **No hay excepción por vender poco.** Se buscó expresamente: la definición no
+menciona volumen, ingresos ni tamaño del proyecto. La única excepción que recoge
+es pedir donaciones.
+
+⚠️ **Y no avisan antes.** El «avisamos antes de actuar» de su documentación se
+refiere al **consumo excesivo de recursos**, no a las infracciones de política.
+Para una infracción de política, según
+`vercel.com/kb/guide/why-is-my-account-deployment-blocked`, **pausan primero y
+mandan el email después**. No hay plazo de gracia documentado.
 
 🔹 **Qué hay que decidir antes de publicar la tienda** (no es urgente hoy, es
 bloqueante para el día del merge):
