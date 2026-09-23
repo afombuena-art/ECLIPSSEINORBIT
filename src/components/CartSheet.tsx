@@ -19,9 +19,7 @@ export function CartSheet() {
         className="w-full sm:max-w-md flex flex-col bg-white text-black p-0"
       >
         <SheetHeader className="px-5 md:px-6 pt-6 pb-4 border-b border-border text-left">
-          <SheetTitle className="font-display text-2xl tracking-tight">
-            Tu carrito
-          </SheetTitle>
+          <SheetTitle className="font-display text-2xl tracking-tight">Tu carrito</SheetTitle>
         </SheetHeader>
 
         {detailedLines.length === 0 ? (
@@ -124,8 +122,9 @@ export function CartSheet() {
               {remainingForFree !== null &&
                 (remainingForFree > 0 ? (
                   <p className="text-[11px] text-muted-foreground">
-                    Te faltan <strong className="text-black">{formatEuros(remainingForFree)}</strong>{" "}
-                    para el envío gratis.
+                    Te faltan{" "}
+                    <strong className="text-black">{formatEuros(remainingForFree)}</strong> para el
+                    envío gratis.
                   </p>
                 ) : (
                   <p className="text-[11px] text-muted-foreground">Envío gratis conseguido.</p>

@@ -5,32 +5,29 @@ import { Logo } from "@/components/Logo";
 import { absoluteSiteUrl } from "@/data/site";
 
 export const Route = createFileRoute("/")({
- head: () => ({
-  meta: [
-    { title: "ECLIPSSE™ UNIVERSE | Por y para jóvenes" },
-    {
-      name: "description",
-      content:
-        "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
-    },
-    { name: "robots", content: "index, follow" },
-    { property: "og:title", content: "ECLIPSSE™ UNIVERSE | Por y para jóvenes" },
-    {
-      property: "og:description",
-      content:
-        "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
-    },
-    { property: "og:type", content: "website" },
-    { property: "og:url", content: absoluteSiteUrl() },
-    { name: "twitter:title", content: "ECLIPSSE™ UNIVERSE | Por y para jóvenes" },
-    {
-      name: "twitter:description",
-      content:
-        "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
-    },
-  ],
-  links: [{ rel: "canonical", href: absoluteSiteUrl() }],
-}),
+  head: () => ({
+    meta: [
+      { title: "ECLIPSSE™ UNIVERSE | Por y para jóvenes" },
+      {
+        name: "description",
+        content: "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
+      },
+      { name: "robots", content: "index, follow" },
+      { property: "og:title", content: "ECLIPSSE™ UNIVERSE | Por y para jóvenes" },
+      {
+        property: "og:description",
+        content: "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
+      },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: absoluteSiteUrl() },
+      { name: "twitter:title", content: "ECLIPSSE™ UNIVERSE | Por y para jóvenes" },
+      {
+        name: "twitter:description",
+        content: "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
+      },
+    ],
+    links: [{ rel: "canonical", href: absoluteSiteUrl() }],
+  }),
   component: Landing,
 });
 
@@ -56,7 +53,6 @@ function Landing() {
 
   return (
     <main className="relative min-h-[100svh] overflow-hidden bg-white text-black flex flex-col items-center px-6">
-
       {/* Transition overlay */}
       <AnimatePresence>
         {going && (

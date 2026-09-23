@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { getProductById, type Product } from "@/data/products";
 import { calcShippingCents } from "@/lib/shipping";
 
@@ -50,21 +43,23 @@ function readStorage(): CartLine[] {
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter(
-        (l): l is CartLine =>
-          !!l &&
-          typeof l === "object" &&
-          typeof (l as CartLine).id === "string" &&
-          typeof (l as CartLine).size === "string" &&
-          typeof (l as CartLine).qty === "number",
-      )
-      // Descarta lo que el servidor rechazaría igualmente: productos que ya no
-      // existen y tallas retiradas del catálogo. El carrito vive en el navegador
-      // y puede llevar meses guardado; sin esto, una talla que desapareció deja
-      // la línea a la vista y cada intento de pago muere en el servidor.
-      .filter((l) => getProductById(l.id)?.sizes.includes(l.size))
-      .map((l) => ({ id: l.id, size: l.size, qty: clampQty(l.qty) }));
+    return (
+      parsed
+        .filter(
+          (l): l is CartLine =>
+            !!l &&
+            typeof l === "object" &&
+            typeof (l as CartLine).id === "string" &&
+            typeof (l as CartLine).size === "string" &&
+            typeof (l as CartLine).qty === "number",
+        )
+        // Descarta lo que el servidor rechazaría igualmente: productos que ya no
+        // existen y tallas retiradas del catálogo. El carrito vive en el navegador
+        // y puede llevar meses guardado; sin esto, una talla que desapareció deja
+        // la línea a la vista y cada intento de pago muere en el servidor.
+        .filter((l) => getProductById(l.id)?.sizes.includes(l.size))
+        .map((l) => ({ id: l.id, size: l.size, qty: clampQty(l.qty) }))
+    );
   } catch {
     return [];
   }

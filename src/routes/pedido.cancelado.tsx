@@ -20,7 +20,9 @@ function PedidoCanceladoPage() {
       <SiteHeader current="brand" />
 
       <section className="flex-1 mx-auto max-w-xl px-5 md:px-8 py-24 md:py-32 text-center">
-        <p className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground mb-6">Sin cargo</p>
+        <p className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground mb-6">
+          Sin cargo
+        </p>
         <h1 className="font-display text-4xl md:text-6xl leading-tight">Pago cancelado</h1>
         <p className="mt-6 text-sm md:text-base text-muted-foreground leading-relaxed">
           No se ha realizado ningún cobro. Tu carrito sigue guardado, puedes retomar la compra

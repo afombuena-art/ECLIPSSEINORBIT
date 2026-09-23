@@ -17,7 +17,8 @@ describe("identificador estable del intento de compra", () => {
 
   it("rechaza un identificador arbitrario", () => {
     expect(
-      checkoutSchema.safeParse({ ...validCheckout, checkoutAttemptId: "pedido-manipulado" }).success,
+      checkoutSchema.safeParse({ ...validCheckout, checkoutAttemptId: "pedido-manipulado" })
+        .success,
     ).toBe(false);
   });
 });

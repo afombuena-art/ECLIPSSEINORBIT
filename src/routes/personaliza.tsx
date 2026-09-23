@@ -48,17 +48,42 @@ export const Route = createFileRoute("/personaliza")({
 });
 
 const steps = [
-  { n: "01", t: "Cuéntanos tu idea", d: "Mándanos tu concepto, referencias y cantidades. Te asesoramos sin compromiso." },
-  { n: "02", t: "Diseño y prueba", d: "Nuestro estudio prepara el arte final y una visualización digital antes de imprimir." },
-  { n: "03", t: "Producción", d: "Imprimimos en serigrafía, DTF o bordado sobre prendas heavy cotton de primera calidad." },
-  { n: "04", t: "Entrega", d: "Recibe tu pedido en 7–14 días en toda España. Packaging neutro disponible." },
+  {
+    n: "01",
+    t: "Cuéntanos tu idea",
+    d: "Mándanos tu concepto, referencias y cantidades. Te asesoramos sin compromiso.",
+  },
+  {
+    n: "02",
+    t: "Diseño y prueba",
+    d: "Nuestro estudio prepara el arte final y una visualización digital antes de imprimir.",
+  },
+  {
+    n: "03",
+    t: "Producción",
+    d: "Imprimimos en serigrafía, DTF o bordado sobre prendas heavy cotton de primera calidad.",
+  },
+  {
+    n: "04",
+    t: "Entrega",
+    d: "Recibe tu pedido en 7–14 días en toda España. Packaging neutro disponible.",
+  },
 ];
 
 const services = [
-  { t: "Serigrafía", d: "Acabado profesional, colores planos y máxima durabilidad. Ideal para tiradas medianas y grandes." },
-  { t: "DTF", d: "Detalle fotográfico, full color y diseños complejos. Perfecto para pequeñas cantidades." },
+  {
+    t: "Serigrafía",
+    d: "Acabado profesional, colores planos y máxima durabilidad. Ideal para tiradas medianas y grandes.",
+  },
+  {
+    t: "DTF",
+    d: "Detalle fotográfico, full color y diseños complejos. Perfecto para pequeñas cantidades.",
+  },
   { t: "Bordado", d: "Textura premium para logos, gorras y prendas corporativas." },
-  { t: "Diseño gráfico", d: "Si no tienes diseño, lo creamos contigo. De la idea al artwork final." },
+  {
+    t: "Diseño gráfico",
+    d: "Si no tienes diseño, lo creamos contigo. De la idea al artwork final.",
+  },
 ];
 
 function CustomPage() {
@@ -83,8 +108,10 @@ function CustomPage() {
             transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             className="font-display text-5xl md:text-[8rem] leading-[0.9] tracking-tight"
           >
-            Tu idea,<br />
-            nuestra<br />
+            Tu idea,
+            <br />
+            nuestra
+            <br />
             órbita.
           </motion.h1>
           <motion.p
@@ -93,8 +120,8 @@ function CustomPage() {
             transition={{ duration: 0.7, delay: 0.3 }}
             className="mt-8 max-w-2xl text-base md:text-lg text-muted-foreground leading-relaxed"
           >
-            En ECLIPSSE™ UNIVERSE creemos que cada idea merece convertirse en algo real. Ofrecemos productos
-            personalizados, tanto para pedidos pequeños como para proyectos más grandes.
+            En ECLIPSSE™ UNIVERSE creemos que cada idea merece convertirse en algo real. Ofrecemos
+            productos personalizados, tanto para pedidos pequeños como para proyectos más grandes.
           </motion.p>
           <motion.a
             href="#contacto"
@@ -111,7 +138,10 @@ function CustomPage() {
           aria-hidden
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.05, rotate: 360 }}
-          transition={{ opacity: { duration: 2 }, rotate: { duration: 80, repeat: Infinity, ease: "linear" } }}
+          transition={{
+            opacity: { duration: 2 },
+            rotate: { duration: 80, repeat: Infinity, ease: "linear" },
+          }}
           className="pointer-events-none absolute -right-40 -bottom-40 w-[600px] h-[600px] hidden md:block"
         >
           <Logo className="w-full h-full" />
@@ -139,7 +169,9 @@ function CustomPage() {
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           >
-            <p className="text-[10px] uppercase tracking-[0.4em] opacity-60 mb-4">01 · Pedidos pequeños</p>
+            <p className="text-[10px] uppercase tracking-[0.4em] opacity-60 mb-4">
+              01 · Pedidos pequeños
+            </p>
             <h2 className="font-display text-4xl md:text-6xl leading-none mb-10">1 a 3 unidades</h2>
           </motion.div>
           <motion.div
@@ -149,7 +181,10 @@ function CustomPage() {
             transition={{ duration: 0.7, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
             className="space-y-5 text-sm md:text-base opacity-90 leading-relaxed"
           >
-            <p>Si lo que buscas es una unidad única o pocas unidades, estás en el lugar correcto. Productos personalizables como:</p>
+            <p>
+              Si lo que buscas es una unidad única o pocas unidades, estás en el lugar correcto.
+              Productos personalizables como:
+            </p>
             <ul className="list-disc list-inside space-y-1 opacity-90">
               <li>Camisetas personalizadas</li>
               <li>Sudaderas personalizadas</li>
@@ -163,7 +198,10 @@ function CustomPage() {
               <li>Idea tu diseño.</li>
               <li>Mándanos tus ideas contactando con nosotros.</li>
             </ol>
-            <p>Nosotros nos encargamos de ajustar el diseño, producir el producto y enviarlo a tu casa.</p>
+            <p>
+              Nosotros nos encargamos de ajustar el diseño, producir el producto y enviarlo a tu
+              casa.
+            </p>
 
             <h3 className="font-display text-2xl pt-6">A tu gusto</h3>
             <ul className="list-disc list-inside space-y-1">
@@ -172,7 +210,8 @@ function CustomPage() {
               <li>Crea una prenda única, hecha especialmente para ti.</li>
             </ul>
             <p className="opacity-70 text-xs uppercase tracking-[0.2em] pt-4">
-              Importante: los productos personalizados se fabrican bajo pedido. No se admiten devoluciones salvo defecto de fabricación.
+              Importante: los productos personalizados se fabrican bajo pedido. No se admiten
+              devoluciones salvo defecto de fabricación.
             </p>
           </motion.div>
         </div>
@@ -186,7 +225,9 @@ function CustomPage() {
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           >
-            <p className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground mb-4">02 · Pedidos grandes</p>
+            <p className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground mb-4">
+              02 · Pedidos grandes
+            </p>
             <h2 className="font-display text-4xl md:text-6xl mb-10">Más de 3 unidades</h2>
           </motion.div>
           <motion.div
@@ -203,7 +244,9 @@ function CustomPage() {
               <li>Algo más complejo (packaging, calidades concretas, asesoramiento).</li>
               <li>Producción más profesional y a mayor escala.</li>
             </ul>
-            <p className="font-display text-black text-xl">Trabajamos contigo de forma totalmente personalizada.</p>
+            <p className="font-display text-black text-xl">
+              Trabajamos contigo de forma totalmente personalizada.
+            </p>
 
             <h3 className="font-display text-2xl pt-6 text-black">Trabajos a medida</h3>
             <ul className="list-disc list-inside space-y-1">

@@ -137,7 +137,9 @@ export const Route = createFileRoute("/api/stripe-webhook")({
         const n8nSecret = process.env.N8N_ORDER_WEBHOOK_SECRET;
 
         if (!webhookSecret || !n8nUrl || !n8nSecret) {
-          console.error("stripe-webhook: faltan variables de entorno (STRIPE_WEBHOOK_SECRET / N8N_ORDER_WEBHOOK_URL / N8N_ORDER_WEBHOOK_SECRET)");
+          console.error(
+            "stripe-webhook: faltan variables de entorno (STRIPE_WEBHOOK_SECRET / N8N_ORDER_WEBHOOK_URL / N8N_ORDER_WEBHOOK_SECRET)",
+          );
           return new Response("Webhook mal configurado", { status: 500 });
         }
 
@@ -171,10 +173,7 @@ export const Route = createFileRoute("/api/stripe-webhook")({
         const sessionRef = event.data.object;
 
         // Pago asíncrono todavía pendiente: esperamos al async_payment_succeeded.
-        if (
-          event.type === "checkout.session.completed" &&
-          sessionRef.payment_status === "unpaid"
-        ) {
+        if (event.type === "checkout.session.completed" && sessionRef.payment_status === "unpaid") {
           return new Response("pago pendiente", { status: 200 });
         }
 
@@ -225,7 +224,8 @@ export const Route = createFileRoute("/api/stripe-webhook")({
         // ser un error del comprador o un intento de pagar de menos.
         const cobradoPor = session.metadata?.shippingPostalCode ?? null;
         const cobradoZona = session.metadata?.shippingZone ?? null;
-        const entregaEn = session.collected_information?.shipping_details?.address?.postal_code ?? null;
+        const entregaEn =
+          session.collected_information?.shipping_details?.address?.postal_code ?? null;
         const zonaEntrega = entregaEn ? zoneFromPostalCode(entregaEn) : null;
         const zonaRealEntrega = zonaEntrega?.ok ? zonaEntrega.zone : null;
 

@@ -1,6 +1,14 @@
 import { Link } from "@tanstack/react-router";
 
-const links: { to: "/legal/aviso-legal" | "/legal/privacidad" | "/legal/cookies" | "/legal/terminos" | "/legal/devoluciones"; label: string }[] = [
+const links: {
+  to:
+    | "/legal/aviso-legal"
+    | "/legal/privacidad"
+    | "/legal/cookies"
+    | "/legal/terminos"
+    | "/legal/devoluciones";
+  label: string;
+}[] = [
   { to: "/legal/aviso-legal", label: "Aviso legal" },
   { to: "/legal/privacidad", label: "Privacidad" },
   { to: "/legal/cookies", label: "Cookies" },
@@ -12,7 +20,10 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-white/10 bg-black">
       <div className="mx-auto max-w-7xl px-5 md:px-8 py-10 flex flex-col gap-6">
-        <nav aria-label="Enlaces legales" className="flex flex-wrap justify-center md:justify-start gap-x-5 gap-y-2">
+        <nav
+          aria-label="Enlaces legales"
+          className="flex flex-wrap justify-center md:justify-start gap-x-5 gap-y-2"
+        >
           {links.map((l) => (
             <Link
               key={l.to}

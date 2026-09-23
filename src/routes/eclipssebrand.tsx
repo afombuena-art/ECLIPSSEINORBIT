@@ -48,17 +48,41 @@ export const Route = createFileRoute("/eclipssebrand")({
 });
 
 const historia = [
-  { t: "DROP 001 — SUPERNOVA DROP", d: "Nuestro primer lanzamiento oficial. Una camiseta oversize en dos colores, con el lema \"Don't Stop Shining\". Más de 50 unidades vendidas en formato PRE-ORDER. El inicio de todo." },
-  { t: "DROP 003 — YOUTH HOODIE", d: "Una sudadera llamada \"YOUTH HOODIE\" para el invierno, con la mejor calidad posible y representando nuestra marca por y para jóvenes. Venta mediante PRE-ORDER." },
-  { t: "DROP 005 — De SVQ al mundo | Fulness of joy", d: "Nuestro primer lanzamiento con stock. Dos diseños de camisetas blancas para la primavera. De Sevilla al mundo." },
-  { t: "Verano 2025 — Tres Drops", d: "SUMMER DROP 006: camiseta para el verano en blanco, celeste y amarillo, corte oversize y 100% algodón. DROP 002 / SUPERNOVA 1.0: segunda edición de la camiseta del SUPERNOVA DROP 001, blanca, oversize, 100% algodón. DROP 004: camiseta blanca con diseño en rojo y negro, corte oversize y 100% algodón, \"Creadores del futuro\"." },
-  { t: "DROP 007 — ECLIPSSEBRAND × ANDEX", d: "La crewneck en dos colores sacada en nuestro primer invierno oficial. Una sudadera sin capucha de unidades limitadas en colaboración con Andex Cáncer Infantil Sevilla, en la que el 75% del beneficio obtenido fue donado a la asociación." },
-  { t: "DROP 008 — IN ORBIT", d: "Colección para el Verano de 2026 de 5 camisetas oversize perfectas para disfrutar de la playa y una gorra vintage de alta calidad. Make in Orbit." },
+  {
+    t: "DROP 001 — SUPERNOVA DROP",
+    d: 'Nuestro primer lanzamiento oficial. Una camiseta oversize en dos colores, con el lema "Don\'t Stop Shining". Más de 50 unidades vendidas en formato PRE-ORDER. El inicio de todo.',
+  },
+  {
+    t: "DROP 003 — YOUTH HOODIE",
+    d: 'Una sudadera llamada "YOUTH HOODIE" para el invierno, con la mejor calidad posible y representando nuestra marca por y para jóvenes. Venta mediante PRE-ORDER.',
+  },
+  {
+    t: "DROP 005 — De SVQ al mundo | Fulness of joy",
+    d: "Nuestro primer lanzamiento con stock. Dos diseños de camisetas blancas para la primavera. De Sevilla al mundo.",
+  },
+  {
+    t: "Verano 2025 — Tres Drops",
+    d: 'SUMMER DROP 006: camiseta para el verano en blanco, celeste y amarillo, corte oversize y 100% algodón. DROP 002 / SUPERNOVA 1.0: segunda edición de la camiseta del SUPERNOVA DROP 001, blanca, oversize, 100% algodón. DROP 004: camiseta blanca con diseño en rojo y negro, corte oversize y 100% algodón, "Creadores del futuro".',
+  },
+  {
+    t: "DROP 007 — ECLIPSSEBRAND × ANDEX",
+    d: "La crewneck en dos colores sacada en nuestro primer invierno oficial. Una sudadera sin capucha de unidades limitadas en colaboración con Andex Cáncer Infantil Sevilla, en la que el 75% del beneficio obtenido fue donado a la asociación.",
+  },
+  {
+    t: "DROP 008 — IN ORBIT",
+    d: "Colección para el Verano de 2026 de 5 camisetas oversize perfectas para disfrutar de la playa y una gorra vintage de alta calidad. Make in Orbit.",
+  },
 ];
 
 const faqs = [
-  { q: "Cómo comprar", a: "A través de Instagram DM o WhatsApp. Te respondemos lo antes posible y te orientamos en todo el proceso de compra." },
-  { q: "Historia", a: "Nuestra marca trabaja mediante DROPS: lanzamientos de un número limitado de prendas, disponibles solo durante un periodo concreto o hasta agotar existencias. Cada DROP es único. Una vez se agota el stock, no vuelve a estar disponible." },
+  {
+    q: "Cómo comprar",
+    a: "A través de Instagram DM o WhatsApp. Te respondemos lo antes posible y te orientamos en todo el proceso de compra.",
+  },
+  {
+    q: "Historia",
+    a: "Nuestra marca trabaja mediante DROPS: lanzamientos de un número limitado de prendas, disponibles solo durante un periodo concreto o hasta agotar existencias. Cada DROP es único. Una vez se agota el stock, no vuelve a estar disponible.",
+  },
 ];
 
 function BrandPage() {
@@ -99,10 +123,7 @@ function BrandPage() {
           {products.map((p, i) => (
             <div
               key={p.slug}
-              className={[
-                "md:col-span-2",
-                i === 3 ? "md:col-start-2" : "",
-              ].join(" ").trim()}
+              className={["md:col-span-2", i === 3 ? "md:col-start-2" : ""].join(" ").trim()}
             >
               <ProductCard {...p} index={i} />
             </div>
@@ -147,20 +168,23 @@ function BrandPage() {
             className="space-y-5 text-sm md:text-base opacity-90 leading-relaxed"
           >
             <p>
-              Somos una marca de ropa nacida en 2024 en Sevilla (España), fundada por un grupo de amigos jugadores de
-              rugby. Bajo el lema "por y para jóvenes", nuestro objetivo es ofrecer productos únicos, con la mejor
-              calidad posible y con un estilo que conecte con nuestra generación. Apostamos por un modelo responsable y
-              local, buscando siempre cuidar el medioambiente.
+              Somos una marca de ropa nacida en 2024 en Sevilla (España), fundada por un grupo de
+              amigos jugadores de rugby. Bajo el lema "por y para jóvenes", nuestro objetivo es
+              ofrecer productos únicos, con la mejor calidad posible y con un estilo que conecte con
+              nuestra generación. Apostamos por un modelo responsable y local, buscando siempre
+              cuidar el medioambiente.
             </p>
             <p className="font-display text-xl md:text-2xl opacity-100">DE SEVILLA AL MUNDO</p>
             <h3 className="font-display text-2xl md:text-3xl pt-6">Nuestro Objetivo</h3>
             <p>
-              Somos una marca de ropa hecha con una visión clara: destacar entre las marcas ya establecidas. Ofrecer
-              productos con estilo, calidad y actitud con precios asequibles y sin perder la conexión con quienes somos:
-              una generación que es constante, piensa diferente y quiere dejar huella. Buscamos inspirar a otros jóvenes
-              a apostar por sus ideas y construir algo propio, como hacemos nosotros. Queremos diferenciarnos de otras
-              marcas y usar este proyecto para algo más que vender. Tener una identidad, una historia y una misión, por
-              ejemplo ayudando a personas que lo necesiten o creando productos únicos.
+              Somos una marca de ropa hecha con una visión clara: destacar entre las marcas ya
+              establecidas. Ofrecer productos con estilo, calidad y actitud con precios asequibles y
+              sin perder la conexión con quienes somos: una generación que es constante, piensa
+              diferente y quiere dejar huella. Buscamos inspirar a otros jóvenes a apostar por sus
+              ideas y construir algo propio, como hacemos nosotros. Queremos diferenciarnos de otras
+              marcas y usar este proyecto para algo más que vender. Tener una identidad, una
+              historia y una misión, por ejemplo ayudando a personas que lo necesiten o creando
+              productos únicos.
             </p>
             <p className="font-display text-2xl md:text-3xl pt-6">Por y para jóvenes</p>
           </motion.div>
@@ -207,13 +231,20 @@ function BrandPage() {
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
           >
-            <p className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground mb-4">Información</p>
+            <p className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground mb-4">
+              Información
+            </p>
             <h2 className="font-display text-4xl md:text-6xl mb-10 md:mb-14">Información</h2>
           </motion.div>
 
           <div className="divide-y divide-black/15 border-y border-black/15">
             {faqs.map((f) => (
-              <FaqItem key={f.q} q={f.q} a={f.a} historia={f.q === "Historia" ? historia : undefined} />
+              <FaqItem
+                key={f.q}
+                q={f.q}
+                a={f.a}
+                historia={f.q === "Historia" ? historia : undefined}
+              />
             ))}
           </div>
         </div>
@@ -254,7 +285,15 @@ function BrandPage() {
   );
 }
 
-function FaqItem({ q, a, historia }: { q: string; a: string; historia?: { t: string; d: string }[] }) {
+function FaqItem({
+  q,
+  a,
+  historia,
+}: {
+  q: string;
+  a: string;
+  historia?: { t: string; d: string }[];
+}) {
   const [open, setOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(0);
@@ -272,7 +311,12 @@ function FaqItem({ q, a, historia }: { q: string; a: string; historia?: { t: str
         aria-expanded={open}
       >
         <h3 className="font-display text-xl md:text-3xl">{q}</h3>
-        <span className={`text-2xl transition-transform duration-300 ${open ? "rotate-45" : ""}`} aria-hidden="true">+</span>
+        <span
+          className={`text-2xl transition-transform duration-300 ${open ? "rotate-45" : ""}`}
+          aria-hidden="true"
+        >
+          +
+        </span>
       </button>
       <motion.div
         animate={{ height, opacity: open ? 1 : 0 }}
@@ -280,7 +324,10 @@ function FaqItem({ q, a, historia }: { q: string; a: string; historia?: { t: str
         className="overflow-hidden"
         style={{ height: 0 }}
       >
-        <div ref={contentRef} className="pt-5 text-sm md:text-base text-muted-foreground leading-relaxed">
+        <div
+          ref={contentRef}
+          className="pt-5 text-sm md:text-base text-muted-foreground leading-relaxed"
+        >
           <p>{a}</p>
           {historia && (
             <div className="mt-6 space-y-5">
@@ -298,7 +345,21 @@ function FaqItem({ q, a, historia }: { q: string; a: string; historia?: { t: str
   );
 }
 
-function ProductCard({ slug, name, priceCents, front, back, index }: { slug: string; name: string; priceCents: number; front: string; back: string; index: number }) {
+function ProductCard({
+  slug,
+  name,
+  priceCents,
+  front,
+  back,
+  index,
+}: {
+  slug: string;
+  name: string;
+  priceCents: number;
+  front: string;
+  back: string;
+  index: number;
+}) {
   const [hover, setHover] = useState(false);
   return (
     <motion.div
@@ -332,8 +393,12 @@ function ProductCard({ slug, name, priceCents, front, back, index }: { slug: str
           />
         </div>
         <div className="mt-4 flex flex-col items-center gap-1">
-          <h3 className="font-display text-sm md:text-base tracking-tight text-center px-1">{name}</h3>
-          <span className="text-xs md:text-sm tabular-nums text-muted-foreground">{formatEuros(priceCents)}</span>
+          <h3 className="font-display text-sm md:text-base tracking-tight text-center px-1">
+            {name}
+          </h3>
+          <span className="text-xs md:text-sm tabular-nums text-muted-foreground">
+            {formatEuros(priceCents)}
+          </span>
         </div>
       </Link>
     </motion.div>

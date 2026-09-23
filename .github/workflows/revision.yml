@@ -9,9 +9,8 @@
 #   - Un precio mal puesto SÍ lo detecta, desde el 2026-09-22, pero lo cazan las
 #     pruebas, no el compilador: `priceCents: 24` en vez de `2397` es código
 #     válido y construye sin rechistar. Comprobado poniéndolo a mano.
-#   - No ejecuta el linter todavía: hay ~225 avisos de formato pendientes y un
-#     guardia que siempre está en rojo es un guardia al que nadie hace caso.
-#     Cuando se pase `npm run format`, se añade aquí.
+#   - El linter bloquea errores de código y formato. Los avisos de Fast Refresh
+#     del código UI existente se muestran, pero no hacen fallar la revisión.
 
 name: Revisión automática
 
@@ -50,6 +49,9 @@ jobs:
 
       - name: Comprobar tipos
         run: npm run typecheck
+
+      - name: Comprobar código y formato
+        run: npm run lint
 
       - name: Pruebas del catálogo y del envío
         run: npm test

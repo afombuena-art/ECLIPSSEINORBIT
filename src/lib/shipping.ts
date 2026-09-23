@@ -109,8 +109,7 @@ export function totalWeightGrams(items: ShippingItem[]): number {
 }
 
 export type ShippingQuote =
-  | { ok: true; cents: number; free: boolean }
-  | { ok: false; reason: "demasiado-peso" };
+  { ok: true; cents: number; free: boolean } | { ok: false; reason: "demasiado-peso" };
 
 /**
  * Precio del envío para una zona concreta. Devuelve `ok: false` si el pedido

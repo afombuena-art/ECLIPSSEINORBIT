@@ -17,10 +17,15 @@ function getTimeLeft() {
 function Digit({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex flex-col items-center gap-2 md:gap-3">
-      <span className="font-display text-5xl md:text-7xl lg:text-8xl tabular-nums leading-none tracking-tight" suppressHydrationWarning>
+      <span
+        className="font-display text-5xl md:text-7xl lg:text-8xl tabular-nums leading-none tracking-tight"
+        suppressHydrationWarning
+      >
         {String(value).padStart(2, "0")}
       </span>
-      <span className="text-[9px] md:text-[10px] uppercase tracking-[0.35em] text-muted-foreground">{label}</span>
+      <span className="text-[9px] md:text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
+        {label}
+      </span>
     </div>
   );
 }
@@ -45,15 +50,35 @@ export function DropCountdown() {
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
       >
-        <p className="text-[9px] uppercase tracking-[0.45em] text-muted-foreground mb-10">En órbita...</p>
+        <p className="text-[9px] uppercase tracking-[0.45em] text-muted-foreground mb-10">
+          En órbita...
+        </p>
 
-        <div className="flex justify-center gap-6 md:gap-14" style={{ opacity: mounted ? 1 : 0, transition: "opacity 0.3s" }}>
+        <div
+          className="flex justify-center gap-6 md:gap-14"
+          style={{ opacity: mounted ? 1 : 0, transition: "opacity 0.3s" }}
+        >
           <Digit value={time.days} label="días" />
-          <span className="font-display text-4xl md:text-6xl text-black/20 self-start mt-1" aria-hidden="true">:</span>
+          <span
+            className="font-display text-4xl md:text-6xl text-black/20 self-start mt-1"
+            aria-hidden="true"
+          >
+            :
+          </span>
           <Digit value={time.hours} label="horas" />
-          <span className="font-display text-4xl md:text-6xl text-black/20 self-start mt-1" aria-hidden="true">:</span>
+          <span
+            className="font-display text-4xl md:text-6xl text-black/20 self-start mt-1"
+            aria-hidden="true"
+          >
+            :
+          </span>
           <Digit value={time.minutes} label="min" />
-          <span className="font-display text-4xl md:text-6xl text-black/20 self-start mt-1" aria-hidden="true">:</span>
+          <span
+            className="font-display text-4xl md:text-6xl text-black/20 self-start mt-1"
+            aria-hidden="true"
+          >
+            :
+          </span>
           <Digit value={time.seconds} label="seg" />
         </div>
 

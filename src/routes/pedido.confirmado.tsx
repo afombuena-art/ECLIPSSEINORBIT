@@ -48,7 +48,10 @@ function PedidoConfirmadoPage() {
         <p className="mt-6 text-sm md:text-base text-muted-foreground leading-relaxed">
           Stripe ha terminado el proceso de pago y estamos confirmando tu pedido. Recibirás por
           email el justificante del pago. Si tienes cualquier duda, escríbenos a{" "}
-          <a href="mailto:eclipssebrand@gmail.com" className="underline underline-offset-4">eclipssebrand@gmail.com</a>.
+          <a href="mailto:eclipssebrand@gmail.com" className="underline underline-offset-4">
+            eclipssebrand@gmail.com
+          </a>
+          .
         </p>
 
         <div className="mt-10">

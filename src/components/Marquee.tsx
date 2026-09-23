@@ -1,7 +1,11 @@
 export function Marquee({ text }: { text: string }) {
   const items = Array.from({ length: 14 }, (_, i) => i);
   return (
-    <div className="overflow-hidden bg-black text-white py-2.5" role="presentation" aria-hidden="true">
+    <div
+      className="overflow-hidden bg-black text-white py-2.5"
+      role="presentation"
+      aria-hidden="true"
+    >
       <div className="flex marquee-track whitespace-nowrap">
         {[0, 1].map((group) => (
           <div key={group} className="flex shrink-0">

@@ -124,9 +124,7 @@ function ProductPage() {
 
       <section className="mx-auto max-w-7xl px-5 md:px-8 py-10 md:py-16 grid md:grid-cols-2 gap-10 md:gap-16">
         <div>
-          <div
-            className="relative aspect-[4/5] bg-muted overflow-hidden select-none"
-          >
+          <div className="relative aspect-[4/5] bg-muted overflow-hidden select-none">
             <AnimatePresence initial={false} custom={direction} mode="popLayout">
               <motion.img
                 key={active}
@@ -163,17 +161,28 @@ function ProductPage() {
                 className={`cursor-pointer aspect-square overflow-hidden border-2 transition-colors ${active === i ? "border-black" : "border-transparent"}`}
                 aria-label={`Imagen ${i + 1}`}
               >
-                <img src={src} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                <img
+                  src={src}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover"
+                />
               </button>
             ))}
           </div>
         </div>
 
         <div>
-          <Link to="/eclipssebrand" className="text-[11px] uppercase tracking-[0.25em] hover:underline">
+          <Link
+            to="/eclipssebrand"
+            className="text-[11px] uppercase tracking-[0.25em] hover:underline"
+          >
             ← Volver a DROP 008
           </Link>
-          <p className="mt-6 text-[10px] uppercase tracking-[0.4em] text-muted-foreground">{product.category}</p>
+          <p className="mt-6 text-[10px] uppercase tracking-[0.4em] text-muted-foreground">
+            {product.category}
+          </p>
 
           <div className="flex items-start gap-4 mt-2">
             <div className="flex-1">
@@ -185,7 +194,9 @@ function ProductPage() {
                 className="inline-block rotate-[-8deg] border-2 border-black rounded-sm px-2.5 py-1.5 font-display text-[9px] uppercase tracking-[0.2em] leading-tight bg-white shadow-sm"
                 style={{ textAlign: "center", minWidth: "76px" }}
               >
-                Unidades<br />limitadas
+                Unidades
+                <br />
+                limitadas
               </span>
             </div>
           </div>
@@ -199,7 +210,9 @@ function ProductPage() {
                   onClick={() => setSize(s)}
                   aria-pressed={size === s}
                   className={`cursor-pointer min-w-[52px] min-h-[44px] px-4 py-3 text-sm rounded-full border transition-colors ${
-                    size === s ? "bg-black text-white border-black" : "border-black hover:bg-black hover:text-white"
+                    size === s
+                      ? "bg-black text-white border-black"
+                      : "border-black hover:bg-black hover:text-white"
                   }`}
                 >
                   {s}
@@ -282,7 +295,12 @@ function ProductPage() {
                 aria-expanded={sizeGuideOpen}
               >
                 <h2 className="font-display text-lg">Guía de tallas</h2>
-                <span className={`text-xl transition-transform duration-300 ${sizeGuideOpen ? "rotate-45" : ""}`} aria-hidden="true">+</span>
+                <span
+                  className={`text-xl transition-transform duration-300 ${sizeGuideOpen ? "rotate-45" : ""}`}
+                  aria-hidden="true"
+                >
+                  +
+                </span>
               </button>
 
               <motion.div
@@ -297,33 +315,55 @@ function ProductPage() {
                       <tr className="border-b border-border">
                         <th className="text-left py-2 pr-4 text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-normal"></th>
                         {SIZE_GUIDE.map((r) => (
-                          <th key={r.talla} className="py-2 px-3 text-[10px] uppercase tracking-[0.2em] font-display font-semibold text-center">{r.talla}</th>
+                          <th
+                            key={r.talla}
+                            className="py-2 px-3 text-[10px] uppercase tracking-[0.2em] font-display font-semibold text-center"
+                          >
+                            {r.talla}
+                          </th>
                         ))}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
                       <tr>
-                        <td className="py-3 pr-4 text-[11px] uppercase tracking-[0.15em] text-muted-foreground whitespace-nowrap">Ancho pecho</td>
+                        <td className="py-3 pr-4 text-[11px] uppercase tracking-[0.15em] text-muted-foreground whitespace-nowrap">
+                          Ancho pecho
+                        </td>
                         {SIZE_GUIDE.map((r) => (
-                          <td key={r.talla} className="py-3 px-3 text-center text-sm tabular-nums">{r.pecho}</td>
+                          <td key={r.talla} className="py-3 px-3 text-center text-sm tabular-nums">
+                            {r.pecho}
+                          </td>
                         ))}
                       </tr>
                       <tr>
-                        <td className="py-3 pr-4 text-[11px] uppercase tracking-[0.15em] text-muted-foreground whitespace-nowrap">Largo frontal</td>
+                        <td className="py-3 pr-4 text-[11px] uppercase tracking-[0.15em] text-muted-foreground whitespace-nowrap">
+                          Largo frontal
+                        </td>
                         {SIZE_GUIDE.map((r) => (
-                          <td key={r.talla} className="py-3 px-3 text-center text-sm tabular-nums">{r.largo}</td>
+                          <td key={r.talla} className="py-3 px-3 text-center text-sm tabular-nums">
+                            {r.largo}
+                          </td>
                         ))}
                       </tr>
                       <tr>
-                        <td className="py-3 pr-4 text-[11px] uppercase tracking-[0.15em] text-muted-foreground whitespace-nowrap">Manga</td>
+                        <td className="py-3 pr-4 text-[11px] uppercase tracking-[0.15em] text-muted-foreground whitespace-nowrap">
+                          Manga
+                        </td>
                         {SIZE_GUIDE.map((r) => (
-                          <td key={r.talla} className="py-3 px-3 text-center text-sm tabular-nums">{r.manga}</td>
+                          <td key={r.talla} className="py-3 px-3 text-center text-sm tabular-nums">
+                            {r.manga}
+                          </td>
                         ))}
                       </tr>
                     </tbody>
                   </table>
-                  <p className="mt-3 text-[10px] text-muted-foreground">Medidas en cm. Tolerancia de producción ±5%.</p>
-                  <p className="mt-1 text-[10px] text-muted-foreground">Corte <strong className="text-black">oversize</strong> — si dudas entre tallas, elige la menor.</p>
+                  <p className="mt-3 text-[10px] text-muted-foreground">
+                    Medidas en cm. Tolerancia de producción ±5%.
+                  </p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    Corte <strong className="text-black">oversize</strong> — si dudas entre tallas,
+                    elige la menor.
+                  </p>
                 </div>
               </motion.div>
             </div>
@@ -336,7 +376,12 @@ function ProductPage() {
               aria-expanded={careOpen}
             >
               <h2 className="font-display text-lg">Guía de cuidado de ropa</h2>
-              <span className={`text-xl transition-transform duration-300 ${careOpen ? "rotate-45" : ""}`} aria-hidden="true">+</span>
+              <span
+                className={`text-xl transition-transform duration-300 ${careOpen ? "rotate-45" : ""}`}
+                aria-hidden="true"
+              >
+                +
+              </span>
             </button>
 
             <motion.div
@@ -363,7 +408,12 @@ function ProductPage() {
               .filter((p) => p.slug !== product.slug)
               .slice(0, 4)
               .map((p) => (
-                <Link key={p.slug} to="/prendas/$slug" params={{ slug: p.slug }} className="group block text-center">
+                <Link
+                  key={p.slug}
+                  to="/prendas/$slug"
+                  params={{ slug: p.slug }}
+                  className="group block text-center"
+                >
                   <div className="aspect-[4/5] bg-muted overflow-hidden">
                     <img
                       src={p.front}
@@ -375,7 +425,9 @@ function ProductPage() {
                   </div>
                   <div className="mt-3 flex flex-col items-center gap-0.5">
                     <span className="font-display text-sm">{p.name}</span>
-                    <span className="text-xs text-muted-foreground">{formatEuros(p.priceCents)}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {formatEuros(p.priceCents)}
+                    </span>
                   </div>
                 </Link>
               ))}

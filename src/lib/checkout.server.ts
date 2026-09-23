@@ -97,7 +97,8 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     if (!lookup.ok) {
       return {
         ok: false,
-        error: lookup.reason === "fuera-de-cobertura" ? "FUERA_DE_COBERTURA" : "CODIGO_POSTAL_INVALIDO",
+        error:
+          lookup.reason === "fuera-de-cobertura" ? "FUERA_DE_COBERTURA" : "CODIGO_POSTAL_INVALIDO",
       };
     }
 
