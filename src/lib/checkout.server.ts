@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import type Stripe from "stripe";
@@ -112,9 +111,10 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     }
     const shippingCents = quote.cents;
 
-    // Pedido interno con id propio ANTES del pago (CLAUDE.md §5). Sirve de
-    // idempotency key y de referencia para conciliar en el webhook / n8n.
-    const orderRef = randomUUID();
+    // El navegador crea este ID antes de la primera llamada y lo conserva para
+    // los reintentos de la misma operación. El esquema ya ha comprobado que es
+    // un UUID; no concede acceso a datos ni se usa para confiar en importes.
+    const orderRef = data.checkoutAttemptId;
 
     const session = await stripe.checkout.sessions.create(
       {

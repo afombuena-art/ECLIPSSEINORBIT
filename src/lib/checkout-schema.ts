@@ -25,6 +25,7 @@ export const cartItemSchema = z.object({
  * está fijado.
  */
 export const checkoutSchema = z.object({
+  checkoutAttemptId: z.string().uuid("El identificador del intento de compra no es válido"),
   shippingPostalCode: z
     .string()
     .trim()
@@ -68,6 +69,6 @@ export type CheckoutError =
 export type CheckoutResult = { ok: true; url: string } | { ok: false; error: CheckoutError };
 
 /** Esquema del formulario (sin `items`, que se añaden en el submit desde el carrito). */
-export const checkoutFormSchema = checkoutSchema.omit({ items: true });
+export const checkoutFormSchema = checkoutSchema.omit({ checkoutAttemptId: true, items: true });
 
 export type CheckoutFormInput = z.infer<typeof checkoutFormSchema>;

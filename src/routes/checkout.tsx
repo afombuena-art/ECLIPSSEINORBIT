@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -49,6 +49,7 @@ function CheckoutPage() {
   const navigate = useNavigate();
   const { detailedLines, subtotalCents, shippingCents, hydrated } = useCart();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const checkoutAttempt = useRef<{ fingerprint: string; id: string } | null>(null);
 
   useEffect(() => {
     if (hydrated && detailedLines.length === 0) {
@@ -100,7 +101,14 @@ function CheckoutPage() {
         return;
       }
       try {
-        const resultado = await createCheckoutSession({ data: { ...values, items } });
+        const checkoutInput = { ...values, items };
+        const fingerprint = JSON.stringify(checkoutInput);
+        if (checkoutAttempt.current?.fingerprint !== fingerprint) {
+          checkoutAttempt.current = { fingerprint, id: crypto.randomUUID() };
+        }
+        const resultado = await createCheckoutSession({
+          data: { ...checkoutInput, checkoutAttemptId: checkoutAttempt.current.id },
+        });
         if (!resultado.ok) {
           setSubmitError(MENSAJES_DE_ERROR[resultado.error]);
           return;
