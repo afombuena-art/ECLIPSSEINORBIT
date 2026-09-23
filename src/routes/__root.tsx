@@ -14,6 +14,7 @@ import { Logo } from "@/components/Logo";
 import { CookieBanner } from "@/components/CookieBanner";
 import { CartProvider } from "@/lib/cart";
 import { CartSheet } from "@/components/CartSheet";
+import { absoluteSiteUrl } from "@/data/site";
 
 function NotFoundComponent() {
   return (
@@ -87,7 +88,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   content:
     "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
 },
-{ property: "og:url", content: "https://www.eclipssebrand.es/" },
+{ property: "og:url", content: absoluteSiteUrl() },
+{ property: "og:image", content: absoluteSiteUrl("/images/drop008-banner.png") },
 { name: "twitter:card", content: "summary_large_image" },
 { name: "twitter:title", content: "ECLIPSSE™ UNIVERSE | Por y para jóvenes" },
 {
@@ -95,6 +97,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   content:
     "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
 },
+{ name: "twitter:image", content: absoluteSiteUrl("/images/drop008-banner.png") },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -118,7 +121,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   slogan: "Por y para Jóvenes",
   description:
     "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
-  url: "https://www.eclipssebrand.es/",
+  url: absoluteSiteUrl(),
   sameAs: ["https://www.instagram.com/eclipssebrand/"],
   address: {
     "@type": "PostalAddress",

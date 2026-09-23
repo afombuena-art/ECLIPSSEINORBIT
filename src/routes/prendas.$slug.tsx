@@ -9,6 +9,7 @@ import { getProduct, products, type Product } from "@/data/products";
 import { formatEuros } from "@/lib/money";
 import { useCart } from "@/lib/cart";
 import { WHATSAPP_URL } from "@/data/contacto";
+import { absoluteSiteUrl } from "@/data/site";
 
 const SIZE_GUIDE = [
   { talla: "S", pecho: 53, largo: 69, manga: 24 },
@@ -32,10 +33,10 @@ export const Route = createFileRoute("/prendas/$slug")({
       meta: [
         { title: p ? `${p.name} — ECLIPSSE™ UNIVERSE` : "Prenda | ECLIPSSE™ UNIVERSE" },
         { name: "description", content: p?.description ?? "Prenda ECLIPSSE™ UNIVERSE" },
-        ...(p ? [{ property: "og:image" as const, content: p.front }] : []),
-        { property: "og:url", content: `/prendas/${params.slug}` },
+        ...(p ? [{ property: "og:image" as const, content: absoluteSiteUrl(p.front) }] : []),
+        { property: "og:url", content: absoluteSiteUrl(`/prendas/${params.slug}`) },
       ],
-      links: [{ rel: "canonical", href: `/prendas/${params.slug}` }],
+      links: [{ rel: "canonical", href: absoluteSiteUrl(`/prendas/${params.slug}`) }],
     };
   },
   component: ProductPage,

@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/Logo";
+import { absoluteSiteUrl } from "@/data/site";
 
 export const Route = createFileRoute("/")({
  head: () => ({
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/")({
         "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
     },
     { property: "og:type", content: "website" },
-    { property: "og:url", content: "https://www.eclipssebrand.es/" },
+    { property: "og:url", content: absoluteSiteUrl() },
     { name: "twitter:title", content: "ECLIPSSE™ UNIVERSE | Por y para jóvenes" },
     {
       name: "twitter:description",
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/")({
         "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
     },
   ],
-  links: [{ rel: "canonical", href: "https://www.eclipssebrand.es/" }],
+  links: [{ rel: "canonical", href: absoluteSiteUrl() }],
 }),
   component: Landing,
 });

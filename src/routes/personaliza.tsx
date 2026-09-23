@@ -6,6 +6,7 @@ import { ContactCTA } from "@/components/ContactCTA";
 import { SiteFooter } from "@/components/SiteFooter";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { Logo } from "@/components/Logo";
+import { absoluteSiteUrl } from "@/data/site";
 
 export const Route = createFileRoute("/personaliza")({
   head: () => ({
@@ -24,7 +25,11 @@ export const Route = createFileRoute("/personaliza")({
           "Personaliza prendas con ECLIPSSE™ UNIVERSE. Ropa y personalización por y para jóvenes. De Sevilla al mundo.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://www.eclipssebrand.es/personaliza" },
+      { property: "og:url", content: absoluteSiteUrl("/personaliza") },
+      {
+        property: "og:image",
+        content: absoluteSiteUrl("/images/personaliza-hero-wide.png"),
+      },
       { name: "twitter:title", content: "Personaliza tu ropa | ECLIPSSE™ UNIVERSE" },
       {
         name: "twitter:description",
@@ -35,7 +40,7 @@ export const Route = createFileRoute("/personaliza")({
     links: [
       {
         rel: "canonical",
-        href: "https://www.eclipssebrand.es/personaliza",
+        href: absoluteSiteUrl("/personaliza"),
       },
     ],
   }),

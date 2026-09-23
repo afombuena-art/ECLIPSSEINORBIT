@@ -9,6 +9,7 @@ import { products } from "@/data/products";
 import { formatEuros } from "@/lib/money";
 import { DropCountdown } from "@/components/DropCountdown";
 import hero from "@/assets/hero_drop.jpeg.asset.json";
+import { absoluteSiteUrl } from "@/data/site";
 
 export const Route = createFileRoute("/eclipssebrand")({
   head: () => ({
@@ -27,7 +28,8 @@ export const Route = createFileRoute("/eclipssebrand")({
           "Descubre las prendas y drops de ECLIPSSEBRAND. Marca de ropa por y para jóvenes. De Sevilla al mundo.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://www.eclipssebrand.es/eclipssebrand" },
+      { property: "og:url", content: absoluteSiteUrl("/eclipssebrand") },
+      { property: "og:image", content: absoluteSiteUrl(hero.url) },
       { name: "twitter:title", content: "ECLIPSSEBRAND | ECLIPSSE™ UNIVERSE" },
       {
         name: "twitter:description",
@@ -38,7 +40,7 @@ export const Route = createFileRoute("/eclipssebrand")({
     links: [
       {
         rel: "canonical",
-        href: "https://www.eclipssebrand.es/eclipssebrand",
+        href: absoluteSiteUrl("/eclipssebrand"),
       },
     ],
   }),
