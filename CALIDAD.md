@@ -1,16 +1,15 @@
 # CALIDAD — Revisión estática de código de ECLIPSSEINORBIT
 
 **Fecha:** 2026-09-21 · **Rama revisada:** `auditoria-preproduccion` (último commit `b294526`)
-**Revisión complementaria:** 2026-09-21
+**Revisión complementaria:** 2026-09-23, con ejecución local y correcciones verificadas
 **Alcance:** todo `src/` escrito a mano: 40 ficheros y 3.839 líneas físicas, contando
 comentarios y líneas en blanco, y excluyendo `src/components/ui/`, `src/routeTree.gen.ts` y
 `src/assets/`. También se revisaron `package.json`, `tsconfig.json`, `vite.config.ts`,
 `eslint.config.js`, `.gitignore`, `.env.example`, `.githooks/` y `scripts/`.
 **Fuera de alcance:** `src/components/ui/` (48 ficheros de shadcn sin tocar), `src/routeTree.gen.ts` (generado), `node_modules/`, el workflow de n8n y la configuración real de Vercel y Stripe, que no se pueden leer desde aquí.
 
-**No se ha modificado código ni configuración; solo se ha ampliado este informe.** Todo
-hallazgo de aquí está verificado leyendo el código citado; cuando algo no se ha podido
-comprobar, se dice expresamente.
+La revisión original fue estática. Las correcciones posteriores sí modificaron código y se
+verificaron con tipos, tests, lint, build y una comprobación local parcial en navegador.
 
 ---
 
@@ -24,15 +23,16 @@ comprobar, se dice expresamente.
 
 Está comprobado que los importes se recalculan en el servidor, el webhook verifica firma,
 hay CSRF en las server functions y no se han encontrado secretos en el repositorio. No debe
-concluirse por ello que no quedan problemas de arquitectura: `SEGURIDAD.md` documenta
-pendientes de idempotencia, deduplicación, validación del origen del pedido y operación en
-producción. Este informe se limita a calidad de código y experiencia visible.
+concluirse por ello que no quedan problemas de arquitectura: `SEGURIDAD.md` mantiene
+pendientes la deduplicación atómica y varios controles de operación en producción. Este
+informe se limita a calidad de código y experiencia visible.
 
 ---
 
-## 🔧 Estado de corrección — 2026-09-22
+## 🔧 Estado de corrección — actualizado el 2026-09-23
 
-Sesión de corrección por orden de severidad, un commit por arreglo, con
+Sesión de corrección por orden de severidad, con las correcciones registradas en commits
+identificados y
 `npx tsc --noEmit` tras cada cambio y `npm run build` al final (✅ pasa).
 
 | # | Estado | Nota |
@@ -43,36 +43,34 @@ Sesión de corrección por orden de severidad, un commit por arreglo, con
 | **M-3** errores del checkout | ✅ **Resuelto** | El servidor devuelve códigos estables (`PRODUCTO_NO_DISPONIBLE`, `TALLA_NO_DISPONIBLE`, `FUERA_DE_COBERTURA`, `CODIGO_POSTAL_INVALIDO`, `DEMASIADO_PESO`) y el cliente los traduce. Los fallos imprevistos siguen dando el mensaje genérico. Commit `028f5e2`. |
 | **M-4** talla obsoleta | ✅ **Resuelto** | `readStorage` y `add` descartan tallas que ya no están en el catálogo. Commit `6f18410`. |
 | **M-5** contador caducado | ⛔ **Pendiente — decisión de Ana** | Hacen falta dos datos: qué fecha va ahí y qué debe mostrarse cuando venza. Está también en `main`. |
-| **M-6** dominio a mano ×8 | ⛔ **Pendiente — bloqueado** | Depende del dato que bloquea todo el proyecto. Va junto con `SITE_URL` (M3 de `SEGURIDAD.md`). |
-| **M-7** `og:image` | ⛔ **Pendiente — bloqueado** | Una URL absoluta necesita el dominio. Se arregla a la vez que M-6. |
+| **M-6** dominio a mano ×8 | ✅ **Resuelto** | Dominio público centralizado en `src/data/site.ts`; canonicals y `og:url` se construyen desde una sola fuente. Commit `3072a63`. |
+| **M-7** `og:image` | ✅ **Resuelto en código** | Imágenes sociales generales, de marca, personalización y producto con URL absoluta. Falta comprobar las tarjetas contra una URL publicada. Commit `3072a63`. |
 | **M-8** banner pegado | ✅ **Resuelto** | Las dos escrituras de `localStorage` van en `try/catch`; el banner se cierra siempre. Commit `2a919e4`. |
 | **M-9** 5 camisetas vs 4 | ⛔ **Pendiente — pregunta a Jacobo** | O falta dar de alta la camiseta granate, o sobra el «5» del texto. Está también en `main`. |
 | **B-1** consentimiento sin efecto | ⛔ **Pendiente** | Decisión de negocio y cumplimiento, no un fallo técnico. |
 | **B-2** Google Fonts | ⛔ **Pendiente** | Alojar las fuentes en `/public` cambia la carga de la web; se propone, no se aplica. |
-| **B-3** `front`/`back` cruzados | ⛔ **Pendiente — comprobación visual** | Nadie ha mirado todavía si se está enseñando la espalda como foto principal. No se toca a ciegas. |
+| **B-3** `front`/`back` cruzados | ⛔ **Pendiente — decisión** | Comprobado visualmente el 2026-09-23: la imagen principal de las cuatro camisetas es el archivo `_back`. Falta decidir si es intencional o debe mostrarse el frontal. |
 | **B-4** código muerto en envío | ✅ **Resuelto** | El tramo de respaldo cobraba el precio más barato; ahora rechaza. Commit `6d0c49b`. |
 | **B-5** contacto duplicado | ✅ **Resuelto** | Nuevo `src/data/contacto.ts`. Los textos legales mantienen el email a mano a propósito. Commit `2a701c4`. |
 | **B-6** log en el render | ✅ **Resuelto** | Movido a un efecto. Commit `47af3c8`. |
 | **B-7** `setTimeout` sin limpiar | ✅ **Resuelto** | Los dos, en efectos con `clearTimeout`. Commit `47af3c8`. |
 | **B-8** CP en los logs | ⛔ **Pendiente** | Es una decisión de retención, no un arreglo de código. |
 | **B-9** aserción de tipo | ✅ **Resuelto** | El filtro de eventos es ahora una guarda de tipo; añadir un evento de otro tipo da error al compilar. Commit `77002bc`. |
-| **B-10** sin tests | ⛔ **Pendiente — bloqueado** | Instalar `vitest` toca dependencias (`CLAUDE.md` §11). |
+| **B-10** sin tests | ✅ **Resuelto** | Vitest instalado con autorización: 66 pruebas actuales (catálogo, envío y validación del intento de checkout). Commits `452dcd7` y `68ee82c`. |
 | **B-11** página de error en inglés | ✅ **Resuelto** | Commit `8104817`. |
 | **B-12** enlace con recarga | ✅ **Resuelto** | Commit `70cd896`. |
 
-**Resumen: 12 resueltos, 2 parciales, 8 pendientes.** Ninguno de los pendientes
-es un arreglo que se pueda hacer sin una decisión de Ana, un dato que falta o
-permiso para tocar dependencias o despliegue.
+**Resumen: 15 resueltos, 2 parciales y 5 pendientes.** Los pendientes requieren una
+decisión de contenido/cumplimiento o una comprobación externa; no se resuelven a ciegas.
 
 ⚠️ **Lo corregido no ha tocado el diseño ni las reglas de negocio.** Las tarifas
 de envío, las zonas, los precios, el catálogo y qué pedidos se aceptan o rechazan
 siguen exactamente igual: solo cambia cómo se comunica y cuándo se valida.
 
-⚠️ **Sigue sin hacerse la QA visual y funcional** de la sección «No comprobado en
-esta revisión». Los cambios de esta sesión tocan carrito, checkout, banner de
-cookies y página de confirmación: **hay que verlos en un navegador de verdad**
-antes de dar nada por bueno. `npm run build` pasa, pero un build que compila no
-es una tienda probada.
+⚠️ **La QA visual y funcional completa sigue pendiente.** El 2026-09-23 se comprobó
+en navegador local la navegación básica, banner, carrito, checkout, contador y ficha
+de producto, sin errores de consola. No cubre compra, responsive completo,
+accesibilidad, navegadores ni servicios externos.
 
 ---
 
@@ -185,7 +183,7 @@ Si el despliegue acaba sirviéndose desde otro dominio —un `*.vercel.app`, o e
 
 El mismo dato vive además en `SITE_URL` (env). Debería salir de un solo sitio. Cuando se sepa el dominio, revisar los ocho puntos a la vez.
 
-### M-7 · Las imágenes de vista previa al compartir no funcionan
+### M-7 · Las imágenes de vista previa no funcionaban en la versión auditada
 
 **Fichero:** [src/routes/prendas.$slug.tsx:36-39](src/routes/prendas.$slug.tsx#L36-L39)
 
@@ -248,7 +246,7 @@ No es un descuadre de redacción: en `src/assets/` están los tres ficheros `cam
 
 **B-9 · Un `as` que el compilador no puede verificar.** [api.stripe-webhook.ts:71](src/routes/api.stripe-webhook.ts#L71) — `event.data.object as Stripe.Checkout.Session`. En la práctica es seguro porque va después del filtro `RELEVANT_EVENTS`, que solo deja pasar eventos de sesión; pero si mañana alguien añade un tipo de evento a ese `Set` sin mirar, la aserción deja de ser cierta y el fallo aparece en tiempo de ejecución, en producción, dentro del webhook. Un `switch` sobre `event.type` daría el estrechamiento de tipo gratis.
 
-**B-10 · No hay tests automáticos ni scripts `test` o `typecheck`.** [package.json:6-13](package.json#L6-L13) — hay `dev`, `build`, `preview`, `lint` y `format`; no hay `test` ni `typecheck`, y no existe ningún fichero de prueba en el proyecto. `zoneFromPostalCode` y `quoteShipping` son lógica pura y buenos primeros candidatos. `webhook-dedup.server.ts` también debe probarse, pero requiere controlar estado en memoria y simular Stripe; no se presupone aquí el tiempo necesario.
+**B-10 · Tests y scripts ausentes en la versión auditada — resuelto.** [package.json](package.json) incluye ahora `test` y `typecheck`, y el proyecto tiene **66 pruebas** para catálogo, envío, checkout y utilidades relacionadas. Ambas órdenes pasan el 2026-09-23. La deduplicación atómica entre dos eventos distintos para la misma sesión continúa pendiente y debe tener su prueba específica cuando se implemente.
 
 **B-11 · La página de error está en inglés.** [error-page.ts:6-22](src/lib/error-page.ts#L6-L22) — *«This page didn't load / Something went wrong on our end»*, con los botones *Try again* y *Go home*, en una tienda íntegramente en español. Se sirve desde [server.ts:34](src/server.ts#L34) y [start.ts:18](src/start.ts#L18), o sea en el peor momento posible: cuando algo ya ha fallado.
 
@@ -261,9 +259,8 @@ No es un descuadre de redacción: en `src/assets/` están los tres ficheros `cam
 Este documento es una revisión estática. No equivale a QA funcional, visual ni de
 producción. Antes de declarar la tienda lista faltan evidencias de:
 
-- **Build y tipos:** no se ha ejecutado `npm run build` ni un `tsc --noEmit` documentado.
-  No existe script `typecheck` y `npm run lint` está roto por los `overrides` descritos en
-  `SEGURIDAD.md` y `00_ESTADO_PROYECTO.md`.
+- **Build, tipos, tests y lint:** verificados el 2026-09-23. Pasan build, `typecheck`,
+  66 pruebas y lint sin errores; quedan 7 avisos no bloqueantes de Fast Refresh.
 - **Pruebas funcionales actuales:** carrito, cantidades límite, talla retirada, código
   postal inválido, pérdida de red, doble clic, retorno desde Stripe y errores de n8n en un
   preview que contenga exactamente el código candidato a producción.
@@ -319,10 +316,11 @@ Tres decisiones del código que están mejor de lo habitual y que **conviene no 
 no se suman al recuento de esta revisión para evitar duplicarlos, pero varios también afectan
 a la calidad del producto:
 
-- La clave de idempotencia cambia en cada intento: un reintento puede crear otra sesión.
+- La idempotencia usa ya un UUID estable por intento y validado en servidor.
 - La deduplicación cubre el mismo `event.id`, no dos Event distintos para la misma sesión.
-- El webhook no exige una marca que demuestre que la sesión pertenece a esta tienda.
-- `/pedido/confirmado` afirma que el pago se recibió sin comprobarlo.
+- El webhook exige ya una marca que demuestra que la sesión pertenece a esta tienda.
+- `/pedido/confirmado` ya no afirma que el pago esté confirmado; la consulta completa de
+  estado sigue siendo una mejora pendiente.
 - Las notas libres se copian a metadata de Stripe sin advertencia de minimización.
 
 Por ello, este informe no puede concluir que los problemas restantes sean solo cosméticos o
@@ -335,17 +333,11 @@ de casos límite. Para una decisión de producción deben leerse juntos `CALIDAD
 
 0. **Resolver primero los bloqueantes de `SEGURIDAD.md`.** Este orden solo prioriza los
    hallazgos de calidad; no autoriza producción por sí mismo.
-1. **M-6**, cuando se sepa el dominio: `SITE_URL`, las ocho etiquetas y el alta del endpoint
-   de Stripe en modo live salen todos del mismo dato. Es lo que desbloquea la publicación.
-2. **M-5** — el contador a cero es visible en la portada. Hay que decidir fecha y conducta al
+1. **M-5** — el contador a cero es visible en la portada. Hay que decidir fecha y conducta al
    vencer, no sustituirla por otra fecha inventada.
-3. **M-10 + M-3 + M-4** — los tres son el mismo tema: qué ve el cliente cuando el carrito no
+2. **M-10 + M-3 + M-4** — los tres son el mismo tema: qué ve el cliente cuando el carrito no
    se puede procesar.
-4. **M-9, M-7, M-8** — contenido, compartición y cierre del banner.
-5. **Recuperar lint, añadir typecheck y decidir tests** de `shipping.ts`; después cubrir la
-   deduplicación con dobles y concurrencia controlada.
-6. **Ejecutar la matriz funcional, visual, responsive, accesible y de navegadores** de la
+3. **M-9 y B-3** — confirmar cuántas camisetas hay y qué cara debe ser la imagen principal.
+4. **B-1, B-2 y B-8** — consentimiento, fuentes externas y conservación de logs.
+5. **Ejecutar la matriz funcional, visual, responsive, accesible y de navegadores** de la
    sección «No comprobado» sobre un preview candidato a producción.
-
-`CALIDAD.md` y `SEGURIDAD.md` siguen sin versionar en esta rama. Este informe no sustituye
-las pruebas pendientes ni actualiza el estado oficial del proyecto.

@@ -1,10 +1,10 @@
 # Auditoría de seguridad · ECLIPSSEINORBIT
 
 **Fecha:** 2026-09-21
-**Revisión complementaria:** 2026-09-21
-**Rama auditada:** `auditoria-preproduccion` (commit `bb3f74c`)
+**Revisión complementaria:** 2026-09-23
+**Rama auditada:** `auditoria-preproduccion` (hasta el commit `ea57e99`)
 **Alcance:** abuso y rotura del flujo de compra, no el flujo feliz. Revisión de código en
-solo lectura. **No se ha modificado código ni configuración; solo se ha ampliado este informe.**
+solo lectura el 2026-09-21, seguida de correcciones locales verificadas el 2026-09-22 y 23.
 **Estado del proyecto:** no está en producción todavía.
 
 ---
@@ -29,23 +29,24 @@ integridad del flujo de compra y de los pedidos.
 
 ---
 
-## 🔧 Estado de corrección — 2026-09-22
+## 🔧 Estado de corrección — actualizado el 2026-09-23
 
-Sesión de corrección por orden de severidad, un commit por arreglo, con
+Sesión de corrección por orden de severidad, con las correcciones registradas en commits
+identificados y
 `npx tsc --noEmit` tras cada cambio y `npm run build` al final (✅ pasa).
 
 | # | Estado | Nota |
 |---|---|---|
-| **A1** rate limiting | ⛔ **Pendiente, pero ya sin excusa técnica** | Verificado en la documentación de Vercel el 2026-09-22: **el rate limiting del WAF está incluido en el plan gratuito (Hobby)** — 1 regla por proyecto, por IP, ventana de 10 s a 10 min, con 1.000.000 de peticiones permitidas incluidas. Se configura con clicks en Firewall → New Rule → Rate Limit, sin tocar código. **Solo hace falta acceso al proyecto en Vercel, que está en la cuenta de Jacobo.** |
+| **A1** rate limiting | ⛔ **Pendiente** | Debe resolverse con un control persistente o de plataforma antes de producción. La capacidad exacta y el plan aplicable deben comprobarse en la cuenta de alojamiento; el plan Hobby figura además como no apto para uso comercial en el estado oficial. |
 | **M1** cabeceras | ⛔ **Pendiente — bloqueado** | `vercel.json` es configuración de despliegue (§11). La propuesta de este informe sigue vigente, con la CSP en `Report-Only` primero. |
 | **M2** tope de `items` | ✅ **Resuelto** | `.max(20)` en el esquema y agrupación por producto+talla antes de construir la sesión. Commit `61aa680`. |
-| **M3** origen por Host | ⛔ **Pendiente — bloqueado** | Exigir `SITE_URL` sin confirmar antes que está en Vercel dejaría la tienda sin vender. Va junto con el dato del dominio. |
+| **M3** origen por Host | ✅ **Resuelto en código** | En producción `SITE_URL` es obligatoria y ya no se acepta el origen de la petición. En desarrollo se conserva el respaldo local. Falta cargar y verificar el valor en el alojamiento. Commit `ddf2102`. |
 | **M4** desajuste de CP | 🟡 **Sin cambios, riesgo asumido** | Decisión previa de Ana. Sigue pendiente lo que añadía este informe: que la columna «Aviso envío» se vea sin buscarla. |
-| **M5** `overrides` | ✅ **Resuelto el 2026-09-22** | Ana dio el OK. Quitados los tres: **`npm audit` pasa de 10 vulnerabilidades (6 altas, 4 moderadas) a 0**, y `npm run lint` vuelve a funcionar. Confirmado que las notas *causaban* el problema en vez de taparlo. Commit `60ddef1`. |
-| **M6** idempotencia | ⛔ **Pendiente** | Necesita un identificador estable del intento de compra, o sea persistencia o un id del navegador. Es una decisión de diseño, no un arreglo mecánico. |
+| **M5** `overrides` | ✅ **Resuelto** | Ana dio el OK. Quitados los tres: **`npm audit` pasa de 10 vulnerabilidades (6 altas, 4 moderadas) a 0**. El formateo pendiente se corrigió después y `npm run lint` termina con 0 errores. Commits `60ddef1` y `ea57e99`. |
+| **M6** idempotencia | ✅ **Resuelto en código** | El navegador crea un UUID por operación, lo reutiliza al reintentar la misma entrada y el servidor lo valida y usa como `orderRef` y clave de Stripe. Dos pruebas nuevas cubren la validación. Commit `68ee82c`. |
 | **M7** validar el pedido | ✅ **Resuelto** | Marca `source` en la metadata al crear la sesión; el webhook la exige y valida `mode`, moneda, formato de `orderRef` y que el pago conste cobrado. Commit `a29f487`. |
 | **M8** deduplicación | 🟡 **Parcial — documentado, no cerrado** | El arreglo real (clave de negocio persistente y atómica, más prueba con dos Event distintos) sigue pendiente y toca Airtable. Lo que sí se hizo: el código ya no describe como «cerrojo» algo que en concurrencia no lo es, y enumera los dos casos que no cubre. Commit `2bc21f0`. |
-| **M9** confirmación de pago | 🟡 **Mínimo aplicado** | La página ya no afirma un pago que no comprueba, y se quitó la promesa del email que hoy nadie manda. **Falta la solución completa:** verificar la sesión en servidor y mostrar confirmado / pendiente / no confirmado. Commit `2ba23d1`. |
+| **M9** confirmación de pago | 🟡 **Mínimo aplicado** | La página ya no afirma un pago que no comprueba. El recibo depende de la configuración automática de Stripe, no de esta página. **Falta la solución completa:** verificar la sesión en servidor y mostrar confirmado / pendiente / no confirmado. Commits `2ba23d1` y `ffa3ec8`. |
 | **M10** notas libres | 🟡 **Mínimo aplicado** | Aviso junto al campo de no escribir datos sensibles. **Falta decidir** si las notas deben existir también en Stripe y comprobar la retención de payloads en n8n. Commit `6b42e27`. |
 | **B1** CSV en Airtable | ✅ **Resuelto** | Notas, nombre y dirección pasan por un prefijo de apóstrofo si empiezan por `=`, `+`, `-`, `@`, tabulador o retorno. Commit `dcaa297`. |
 | **B2** `typecast` | 🟡 **Sin cambios, a propósito** | Riesgo aceptado y documentado. Revisar si algún día se mapea texto del comprador a un campo de selección. |
@@ -53,32 +54,13 @@ Sesión de corrección por orden de severidad, un commit por arreglo, con
 | **B4** carrito manipulable | ✅ **Sin acción — estaba bien** | Verificado de nuevo. |
 | **B5** Nitro beta | ⛔ **Pendiente** | Actualizar dependencias (§11). |
 
-⚠️ **Nada de lo corregido toca la configuración de producción, las dependencias
-ni las reglas de negocio.** Los bloqueantes 1, 2, 5 y 6 de la lista del final
-siguen abiertos; el 3 está cerrado, el 4 solo documentado, y el 7 resuelto.
+⚠️ **Las correcciones locales no cambian tarifas, precios, catálogo ni configuración
+de producción.** Siguen abiertos el rate limiting, las cabeceras, la deduplicación
+por operación de negocio y las comprobaciones de los servicios externos.
 
-🔹 **Hallazgo nuevo de esta sesión, que no estaba en ningún informe:** `npx tsc
---noEmit` devolvía **6 errores de tipos preexistentes**, ninguno introducido por
-esta sesión. **Quedan 1 de 6.**
-
-- ✅ **5 en `src/components/ContactCTA.tsx`** — las animaciones estaban en una
-  constante sin tipo, así que TypeScript deducía `number[]` para `ease`, donde
-  `framer-motion` exige exactamente cuatro números (una curva de Bézier).
-  Resueltos anotando las constantes con el tipo `Variants`. En el resto del
-  proyecto no pasaba porque esas animaciones van escritas dentro del JSX, donde
-  el tipo del atributo ya impone la forma.
-- ⛔ **1 en `src/routes/prendas.$slug.tsx`** — `Property 'product' does not exist
-  on type 'undefined'`. Es una **limitación de inferencia de TanStack Router**,
-  no un fallo del código: el tipo de `Route` depende de su `component`, y el
-  componente pregunta por el tipo de `Route`; TypeScript rompe ese círculo
-  dando `undefined`. **No afecta a la ejecución:** el loader devuelve el
-  producto y la página funciona. Probado y descartado: anotar el tipo de retorno
-  del loader y `getRouteApi()`. Lo único que lo silenciaría es una aserción de
-  tipo, que taparía el problema. Se deja visible, con el porqué escrito en el
-  propio fichero.
-
-⚠️ Mientras quede ese error, un futuro script `typecheck` en CI fallaría. Si se
-añade, hay que decidir antes si se acepta esa única excepción.
+✅ **Tipos y automatización:** los seis errores encontrados durante la primera sesión
+están resueltos. `npm run typecheck`, 66 pruebas, lint sin errores y build pasan; la
+revisión automática incluye ahora el linter, aunque esos commits aún no se han subido.
 
 ### ⚠️ Límites de esta auditoría — léelos antes de fiarte del informe
 
@@ -275,6 +257,10 @@ Stripe.
 **Archivo:** [src/lib/checkout.server.ts:10-14](src/lib/checkout.server.ts#L10-L14)
 **Severidad:** media
 
+**Estado actual:** resuelto en código por `ddf2102`. El fragmento siguiente describe la
+versión auditada originalmente; ahora producción exige una `SITE_URL` válida y solo el
+entorno de desarrollo conserva el respaldo del origen de la petición.
+
 ```ts
 function resolveOrigin(): string {
   const fromEnv = process.env.SITE_URL?.replace(/\/$/, "");
@@ -297,7 +283,7 @@ es del propio atacante, así que no se filtran datos ajenos.
 Se incluye porque **depender de una cabecera que manda el cliente para construir una URL de
 pago es frágil por construcción**, y porque el arreglo cuesta un minuto.
 
-**Cómo se arregla**
+**Arreglo aplicado**
 
 Exigir la variable en vez de adivinar:
 
@@ -309,9 +295,9 @@ function resolveOrigin(): string {
 }
 ```
 
-⚠️ **Antes de hacer ese cambio hay que confirmar que `SITE_URL` está definida en Vercel**,
-o la tienda deja de vender. No se ha podido comprobar desde aquí (ni acceso a Vercel ni
-lectura del `.env`).
+⚠️ **Antes de publicar hay que confirmar que `SITE_URL` está definida en el alojamiento**,
+o la tienda rechazará el checkout. No se ha comprobado desde aquí (ni acceso al alojamiento
+ni lectura del `.env`).
 
 ---
 
@@ -385,9 +371,8 @@ metiendo una versión mayor dentro de `xmlbuilder2@4.0.3`, que no está escrito 
 ```
 GHSA-rgw5-rvv9-x895 (alta) afecta a **< 5.0.9**: también sigue vulnerable. Y hay un efecto
 secundario concreto: `minimatch@3.1.5` espera la API de `brace-expansion` 1.x. **Esta es la
-causa exacta del `TypeError: expand is not a function` que tiene `npm run lint` roto**, un
-problema que el estado del proyecto arrastra como «preexistente, sin arreglar» desde hace
-semanas. Hoy el proyecto **no tiene análisis estático** por culpa de este override.
+causa exacta del `TypeError: expand is not a function` que tenía `npm run lint` roto** en la
+versión auditada.
 
 **`undici` → forzado a `7.28.0`**
 `npm ls undici` devuelve vacío. **Nada lo usa.** Override muerto.
@@ -397,12 +382,11 @@ y **toda la cadena es de build y desarrollo** (ESLint, el plugin de TanStack). N
 superficie de ataque en el runtime de la tienda: ningún usuario le puede mandar YAML a la
 web. El riesgo real es de mantenimiento y suministro, no de explotación remota.
 
-**Cómo se arregla**
+**Arreglo aplicado**
 
-Quitar los tres overrides, `npm install`, `npm audit fix`, y comprobar que **`npm run lint`
-vuelve a funcionar** y que `npm run build` sigue pasando. Si `npm audit` deja algo abierto
-después, se fija esa dependencia concreta a una versión **parcheada de verdad**
-(`js-yaml ≥ 5.2.2`, `brace-expansion ≥ 5.0.9`), no a una que ya está en el rango afectado.
+Se quitaron los tres overrides y se verificaron instalación, auditoría y build en `60ddef1`.
+El formateo pendiente se corrigió en `ea57e99`: `npm run lint` termina con 0 errores y 7
+avisos no bloqueantes; `npm audit` devuelve 0 vulnerabilidades.
 
 ---
 
@@ -411,6 +395,10 @@ después, se fija esa dependencia concreta a una versión **parcheada de verdad*
 **Archivo:** [src/lib/checkout.server.ts:80-82](src/lib/checkout.server.ts#L80-L82) ·
 [src/lib/checkout.server.ts:121](src/lib/checkout.server.ts#L121)
 **Severidad:** media
+
+**Estado actual:** resuelto en código por `68ee82c`. El texto siguiente describe la versión
+auditada originalmente. Ahora el navegador crea un UUID por operación, lo reutiliza al
+reintentar la misma entrada y el servidor lo valida antes de usarlo en Stripe.
 
 El código crea `orderRef` con `randomUUID()` dentro de cada ejecución del handler y usa
 `checkout:${orderRef}` como clave de idempotencia. La clave es única, pero no es estable:
@@ -646,11 +634,9 @@ informe para que «no revisado» no se interprete como «correcto»:
 Hasta obtener esas evidencias, el resultado solo cubre el código y las configuraciones
 visibles; no cubre la seguridad completa del servicio en producción.
 
-🔹 **Hay una contradicción documental que debe resolverse.** `00_ESTADO_PROYECTO.md` dice que
-el desarrollo está terminado y que solo falta desplegar, mientras este informe identifica
-bloqueantes de código y configuración. El archivo de estado es la fuente oficial del proyecto:
-antes de autorizar producción debe actualizarse para reflejar los bloqueantes que Ana decida
-corregir y los riesgos que acepte expresamente. Este informe no modifica ese archivo.
+✅ **Contradicción documental resuelta el 2026-09-23.** `00_ESTADO_PROYECTO.md`, que es la
+fuente oficial, ya refleja que la producción continúa bloqueada y enumera los controles y
+decisiones pendientes.
 
 ---
 
@@ -671,9 +657,9 @@ No es relleno: si alguien retoca este proyecto, esto es lo que **no** puede romp
   error.
 - `GET` al webhook → 405. Solo `POST`.
 
-**Idempotencia de creación** — existe una cabecera de idempotencia en
-[checkout.server.ts:121](src/lib/checkout.server.ts#L121), pero **no se incluye entre lo que
-está bien** porque cambia en cada ejecución. Ver M6.
+**Idempotencia de creación** — el identificador nace en el navegador, se conserva para los
+reintentos de la misma entrada, se valida en el servidor y se usa como clave estable al crear
+la sesión de Stripe. Dos pruebas automáticas cubren su presencia y formato. Ver M6.
 
 **Deduplicación** — las tres barreras están verificadas para reenvíos del **mismo
 `event.id`** (ver `00_ESTADO_PROYECTO.md`): caché en memoria, marca persistente en la metadata
@@ -730,29 +716,20 @@ Por orden:
 1. **Rate limit persistente o de plataforma en `createCheckoutSession`** (A1). Lo exige el
    propio `CLAUDE.md` §7 y es lo único alto del informe. Un `Map` por instancia no basta como
    control definitivo en serverless.
-2. **Idempotencia estable entre reintentos** (M6). La clave actual cambia en cada llamada y
-   no cumple el objetivo descrito por el propio proyecto.
-3. **Validar que cada sesión recibida pertenece a esta tienda y está en un estado permitido**
-   antes de enviarla a n8n (M7).
-4. **Deduplicar también por sesión/operación de negocio**, no solo por `event.id`, y probar
+2. **Deduplicar también por sesión/operación de negocio**, no solo por `event.id`, y probar
    dos Event distintos para la misma sesión y tipo (M8).
-5. **`vercel.json` con las cabeceras de seguridad** (M1), desplegando primero la CSP en modo
+3. **Cabeceras de seguridad en el alojamiento** (M1), desplegando primero la CSP en modo
    `Report-Only`; HSTS sin `preload` hasta verificar dominio y subdominios.
-6. **`SITE_URL` definida en Vercel** y obligatoria en el código (M3).
-7. **`.max()` y deduplicación en `items`** (M2).
-8. **Dar de alta el endpoint del webhook en modo live en Stripe** y poner su `whsec_` nuevo
+4. **Cargar y comprobar `SITE_URL` y el resto de variables de producción**. El código ya
+   rechaza la ausencia de `SITE_URL` en producción (M3).
+5. **Dar de alta el endpoint del webhook en modo live en Stripe** y poner su `whsec_` nuevo
    en `STRIPE_WEBHOOK_SECRET` de producción. Ya está en `00_ESTADO_PROYECTO.md`; se repite
    aquí porque es el fallo más caro de todos: **la tienda cobraría y ningún pedido llegaría
    a Airtable**.
-9. **Limpiar los `overrides` y recuperar `npm run lint`** (M5). Mientras el linter esté
-   roto, el proyecto va a ciegas.
-10. **Corregir la confirmación incondicional de pago** (M9) y decidir qué pasa con el email
-    que la web ya le promete al comprador.
-11. **Minimizar y advertir sobre las notas libres** (M10), y comprobar la retención de
-    payloads en las ejecuciones de n8n.
-12. **Obtener evidencia de los controles operativos esenciales:** MFA y accesos, separación
-    de secretos por entorno, alertas de fallos, conciliación de cobros/pedidos, copia
-    recuperable e instrucciones mínimas de incidente.
+6. **Comprobar la retención de notas y payloads** en Stripe, n8n y Airtable (M10).
+7. **Obtener evidencia de los controles operativos esenciales:** MFA y accesos, separación
+   de secretos por entorno, alertas de fallos, conciliación de cobros/pedidos, copia
+   recuperable e instrucciones mínimas de incidente.
 
 **No bloquean, pero conviene hacerlos pronto:** B1 (prefijo anti-CSV), B3 (borrar
 `chart.tsx` y `recharts`), vigilar el riesgo aceptado de `typecast` (B2), la vista de Airtable
@@ -780,18 +757,19 @@ git grep -I -E "(sk_(live|test)_[A-Za-z0-9]{16,}|whsec_[A-Za-z0-9]{16,})" $(git 
 grep -rniE "content-security-policy|strict-transport|x-frame-options|referrer-policy" \
   --include="*.ts" --include="*.json" --exclude-dir=node_modules .
 
-# La clave de idempotencia nace de un UUID nuevo en cada ejecución
-grep -n "randomUUID\|idempotencyKey" src/lib/checkout.server.ts
+# La clave de idempotencia llega validada desde el intento estable del navegador
+grep -rn "checkoutAttemptId\|idempotencyKey" src/lib/checkout-schema.ts \
+  src/routes/checkout.tsx src/lib/checkout.server.ts
 
 # La deduplicación actual se apoya en event.id
 grep -rn "event.id\|eventId" src/lib/webhook-dedup.server.ts src/routes/api.stripe-webhook.ts
 
-# La validación del webhook no exige hoy una marca propia de origen
+# La validación del webhook exige una marca propia de origen
 grep -n "session.metadata\|session.mode\|session.currency\|session.payment_status" \
   src/routes/api.stripe-webhook.ts
 
-# La página afirma que el pago se recibió sin consultar estado
-grep -n "Hemos recibido tu pago\|session_id" src/routes/pedido.confirmado.tsx
+# La página no afirma un pago que no comprueba; la verificación completa sigue pendiente
+grep -n "estamos confirmando\|session_id" src/routes/pedido.confirmado.tsx
 
 # Las notas libres se copian a metadata de Stripe
 grep -rn "orderNotes\|notes:" src/routes/checkout.tsx src/lib/checkout.server.ts

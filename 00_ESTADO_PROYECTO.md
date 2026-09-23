@@ -1,8 +1,8 @@
 # Estado del proyecto · ECLIPSSEINORBIT
 
-**Última actualización:** 2026-09-22
+**Última actualización:** 2026-09-23
 **Tipo:** integración de Stripe para tienda online
-**Estado:** activo — **el código está terminado, revisado y corregido; falta desplegar a producción**
+**Estado:** activo — **correcciones locales verificadas; todavía no apto para producción**
 **Ingresos confirmados:** no confirmados
 **Compromiso o fecha:** ninguno confirmado
 
@@ -10,16 +10,46 @@
 >
 > **Ana trabaja este proyecto con varias herramientas (Claude Code y Codex).** Este archivo es el punto de encuentro: debe entenderse sin haber visto ninguna conversación previa. Quien lo lea, lo lee entero antes de tocar nada.
 
+## Revisión independiente del 2026-09-23
+
+Codex revisó el trabajo del 2026-09-22 y corrigió cuatro puntos locales, cada uno
+verificado antes de documentarlo, más un quinto commit para alinear los informes y este
+estado oficial:
+
+- `ddf2102`: `SITE_URL` es obligatoria en producción; ya no se confía en el Host.
+- `68ee82c`: idempotencia estable por intento de checkout, validada en servidor.
+- `3072a63`: dominio canónico centralizado e imágenes sociales con URL absoluta.
+- `ea57e99`: lint sin errores y añadido a la revisión automática.
+
+Verificación local actual: `npm run typecheck` pasa, **66 pruebas** pasan, `npm run
+lint` termina con 0 errores y 7 avisos no bloqueantes, `npm run build` pasa y
+`npm audit` devuelve 0 vulnerabilidades. Los cinco commits del 2026-09-23 están solo en
+local: **no se han subido ni desplegado**.
+
+⚠️ El hook local de pre-commit no logra ejecutar Gitleaks desde Git Bash en este equipo
+(`Permission denied`). Cada commit nuevo se comprobó manualmente con el mismo ejecutable y
+sin secretos detectados, pero el hook debe repararse antes de considerar fiable el control
+automático.
+
+⛔ **Sigue bloqueada la producción** hasta resolver o aceptar expresamente:
+
+1. Rate limiting persistente o de plataforma para crear sesiones de Checkout.
+2. Cabeceras de seguridad y CSP en el alojamiento.
+3. Deduplicación atómica por sesión y tipo de evento, no solo por `event.id`.
+4. Alta y prueba del webhook live, variables de producción y controles operativos.
+5. Decisiones visibles: fecha/comportamiento del contador, 4 o 5 camisetas y si la
+   espalda debe ser la imagen principal.
+
 ## Qué pasó el 2026-09-22 (sesión larga, resumen para retomar)
 
 ✅ **Hecho y verificado:**
 - **Dominio confirmado** y el bloqueo principal levantado. Ver abajo.
-- **20 hallazgos corregidos** de `CALIDAD.md` y `SEGURIDAD.md`, un commit cada uno.
+- **20 hallazgos tratados** de `CALIDAD.md` y `SEGURIDAD.md`; varios quedaron parciales o pendientes.
 - **Dependencias: de 10 vulnerabilidades (6 altas) a 0.** Los tres `overrides`
   las causaban, no las tapaban. `npm run lint` vuelve a funcionar, y de minutos
   pasa a 5 segundos.
 - **Tipos: de 6 errores a 0.** Nuevo `npm run typecheck`.
-- **64 pruebas** (`npm test`) del catálogo y del cálculo de envío. Probadas de
+- **66 pruebas** (`npm test`) del catálogo, cálculo de envío y esquema de checkout. Probadas de
   verdad: poniendo `priceCents: 24` a mano, los tipos y el build pasan y **la
   prueba falla**. Es el fallo que más caro salía.
 - **Revisión automática en GitHub Actions**, en verde: tipos, tests, build y
@@ -29,11 +59,11 @@
 - **Stripe configurado por Ana**: recibos automáticos y política de devoluciones.
 - **n8n ajustado por Ana**: deja de guardar datos personales de cada pedido.
 
-⛔ **Lo que queda ya no es código.** Ver «Próxima acción».
+⛔ **Quedan código, configuración externa, pruebas y decisiones de contenido.** Ver la revisión del 2026-09-23 y «Próxima acción».
 
 ## Si retomas aquí, lee esto primero
 
-**Lo técnico está hecho y probado con compras reales en modo test.** Lo único que queda es **el despliegue a producción**, que no es programar: ver «Cómo pasar a producción».
+**Hay compras reales en modo test ya documentadas, pero eso no cierra los bloqueantes actuales.** No desplegar hasta completar la lista de la revisión del 2026-09-23.
 
 ✅ **DESBLOQUEADO el 2026-09-22.** Ana confirmó el dominio y se comprobó en vivo:
 la web **está publicada en `https://www.eclipssebrand.es/`**. De ahí salen
@@ -48,21 +78,23 @@ la web **está publicada en `https://www.eclipssebrand.es/`**. De ahí salen
   para cualquiera que entre hoy. No es una hipótesis del informe de calidad: está
   pasando en la web real.
 
-⚠️ **Los ocho `og:url` y `canonical` del código apuntan ya a
-`https://www.eclipssebrand.es/`, que es el dominio correcto.** El hallazgo M-6 de
-`CALIDAD.md` queda cerrado sin tocar nada: el riesgo era publicar en otra
-dirección, y no ha ocurrido.
+✅ **Dominio canónico centralizado el 2026-09-23.** `og:url`, canonicals y las
+imágenes sociales absolutas se construyen desde `src/data/site.ts`.
 
-⚠️ **La rama buena es ahora `auditoria-preproduccion`**, no `feature/stripe-integration`. Contiene todo lo de esa rama más un commit, y va **39 por delante de `main`** sin nada por detrás (comprobado el 2026-09-21: el merge a `main` sería directo). En `main` está la web antigua, sin tienda. El repositorio remoto es `github.com/afombuena-art/ECLIPSSEINORBIT` y `main` lo sigue.
+⚠️ **La rama buena es ahora `auditoria-preproduccion`**, no `feature/stripe-integration`.
+El 2026-09-23 va **79 commits por delante de `main` y 0 por detrás**; los cinco commits de
+esta revisión están todavía solo en local. En `main` está la web antigua, sin
+tienda. El repositorio remoto es `github.com/afombuena-art/ECLIPSSEINORBIT` y `main` lo sigue.
 
-⚠️ **Dos cosas quedaron sin decidir**, ambas explicadas abajo: si se añaden tests automáticos, y cómo va a mantener Jacobo el catálogo de prendas sin romper los precios.
+⚠️ **Decisiones todavía abiertas:** contador, 4 o 5 camisetas, imagen principal de
+las camisetas y cómo mantendrá Jacobo el catálogo sin romper precios.
 
-🔹 **Hay dos informes de revisión sin versionar en la carpeta**, `CALIDAD.md` y `SEGURIDAD.md`. No son trabajo pendiente: son el diagnóstico de lo que falta pulir. Léelos antes de tocar código.
+🔹 `CALIDAD.md` y `SEGURIDAD.md` están versionados y actualizados con el estado real.
 
 ## Situación
 
 Convertir la web en tienda online integrando Stripe. Stack: **TanStack + Vite 8**, `stripe ^22.6.0`.
-Rama de trabajo: **`feature/stripe-integration`** (nunca se hace push directo a `main`).
+Rama de trabajo: **`auditoria-preproduccion`** (nunca se hace push directo a `main`).
 
 El proyecto tiene **su propio repositorio git**, excluido del de la oficina.
 
@@ -150,9 +182,8 @@ Si volviera a fallar la escritura en `Documentos` desde Node (`ENOENT` o `EPERM`
 
 ⚠️ Contrapartida asumida por Ana: con Node autorizado, **un paquete malicioso de npm puede escribir en `Documentos` durante un `npm install`**. Mitigación acordada: no instalar dependencias sin su visto bueno (ya está en `CLAUDE.md` §11), usar `npm ci` cuando el `package-lock.json` sirva, y mantener al día la copia en el disco externo.
 
-⚠️ **ESLint está roto en todo el proyecto**, esto sí es independiente del antivirus: `TypeError: expand is not a function` en `minimatch`. **`npm run lint` no funciona.** Preexistente, sin arreglar.
-
-⚠️ **ESLint está roto en todo el proyecto**, no solo en los archivos tocados: `TypeError: expand is not a function` en `minimatch`. **`npm run lint` no funciona.** Es preexistente y no se ha arreglado.
+✅ **ESLint reparado el 2026-09-23.** `npm run lint` termina con 0 errores y 7 avisos no
+bloqueantes, y la revisión automática ya incluye este paso (`ea57e99`).
 
 ## Pendiente antes de pasar a producción
 
@@ -165,9 +196,14 @@ Si volviera a fallar la escritura en `Documentos` desde Node (`ENOENT` o `EPERM`
    - `stripe events resend evt_XXXX` → debe responder `duplicado` y **en Airtable debe seguir habiendo una sola fila**.
    - ⚠️ La CLI de Stripe **no estaba conectada a ninguna cuenta** el 2026-09-20 (pedía `stripe login`). Al hacerlo, elegir la cuenta de ECLIPSSE.
 3. **Diagnosticar el bug de n8n** (sigue abierto, ver abajo). El arreglo en código lo tapa, pero el nodo sigue mal.
-4. **Pasar la checklist de pruebas manuales de `CLAUDE.md` §10** (5 pruebas). Ninguna está pasada con el código actual.
-5. **Cero tests automáticos.** Sin script `test` en `package.json`, sin archivos `.test.` ni `.spec.`. Añadirlos requiere una dependencia nueva (vitest) → `CLAUDE.md` §11 obliga a preguntar a Ana antes.
-6. Mergear `feature/stripe-integration` → `main`, configurar claves **live** y el endpoint del webhook en modo live (el signing secret es distinto), y cargar las variables de entorno en Vercel (`.vercel` está vacío: no hay despliegue configurado).
+4. **Completar la checklist de pruebas manuales de `CLAUDE.md` §10.** La revisión local del
+   2026-09-23 comprobó portada, banner, carrito y entrada al checkout, pero no un pago test
+   completo ni los servicios externos.
+5. ✅ **Tests automáticos disponibles:** `npm test` ejecuta 66 pruebas y `npm run typecheck`
+   comprueba tipos. Ambos pasan el 2026-09-23.
+6. Cuando todos los bloqueantes estén cerrados y Ana autorice publicar: integrar
+   `auditoria-preproduccion` en `main`, configurar claves **live** y el endpoint del webhook
+   en modo live, y cargar las variables de entorno en el alojamiento.
 
 ### B · Depende del cliente — ⚠️ pedírselo cuanto antes, es lo que más tarda
 
@@ -269,7 +305,9 @@ Nada. Los datos fiscales y las tarifas de envío llegaron el 2026-09-20 y ya est
 
 Se hizo una **revisión estática** de todo el código escrito a mano (`src/`, excluyendo los 48 ficheros de shadcn y lo generado), más la configuración del proyecto. Resultado en **`CALIDAD.md`**, en esta misma carpeta: **22 hallazgos con fichero y línea — 0 altos, 10 medios, 12 bajos.**
 
-Es solo diagnóstico: **no se tocó ni una línea de código ni de configuración.**
+En esa revisión del 2026-09-21 solo hubo diagnóstico: **no se tocó ni una línea de código ni
+de configuración.** Las correcciones y verificaciones posteriores constan al inicio de este
+archivo y en los propios informes.
 
 ✅ **Confirmado de nuevo, leyendo el código:** los importes se recalculan en el servidor, el webhook verifica firma, hay CSRF en las server functions, no hay ningún secreto en el repositorio, ningún `TODO`/`FIXME`, ningún `localhost` en `src/`, ningún `any` escrito a mano, y el hook de gitleaks está activo. Las cinco variables de entorno están correctamente declaradas en `.env` y en `.env.example`.
 
@@ -277,11 +315,14 @@ Es solo diagnóstico: **no se tocó ni una línea de código ni de configuració
 
 1. **La cuenta atrás de la portada marca `00:00:00:00`.** `DropCountdown.tsx:4` apunta al 2026-09-01, que ya pasó. Hay que decidir dos cosas: qué fecha va ahí y qué debe mostrarse cuando venza (ahora no hay ninguna previsión para ese caso).
 2. **La tienda anuncia 5 camisetas del DROP 008 y el catálogo tiene 4.** En `src/assets/` están las imágenes de la camiseta granate sin ningún producto que las use. O falta darla de alta, o sobra el «5» del texto. **Es una pregunta para Jacobo.**
-3. **Compartir la web por WhatsApp no muestra imagen.** No hay `og:image` general, y el de las fichas de producto es una ruta relativa, que ni WhatsApp ni Instagram resuelven. Para una marca que vende por ahí, no es menor.
+3. ✅ **Imágenes sociales corregidas el 2026-09-23.** Hay `og:image` general y las fichas
+   usan URLs absolutas construidas desde el dominio canónico (`3072a63`).
 
-⚠️ **Lo que enlaza con el bloqueo del dominio:** el dominio `www.eclipssebrand.es` está escrito a mano en **8 etiquetas** (`og:url`, `canonical` y el JSON-LD) repartidas por cuatro archivos. No es solo `SITE_URL`. Si se publica en otra dirección y no se cambian, cada página le dirá a Google que la versión buena está en otro sitio.
+✅ **Dominio canónico centralizado el 2026-09-23:** las etiquetas `og:url`, canonical,
+JSON-LD e imágenes sociales usan `src/data/site.ts` (`3072a63`).
 
-🔹 **Refuerza dos cosas ya abiertas en este archivo, no las sustituye:** la conveniencia de tests para `shipping.ts` (ver «Tests automáticos») y los pendientes de idempotencia y deduplicación que documenta `SEGURIDAD.md`.
+🔹 **Estado actual:** los tests de envío y la idempotencia de creación están resueltos. La
+deduplicación atómica por sesión y tipo de evento continúa pendiente en `SEGURIDAD.md`.
 
 ## ⚠️ Riesgo nuevo detectado el 2026-09-22 · El plan de Vercel no permite vender
 
@@ -534,7 +575,11 @@ merge llegue a GitHub, Vercel desplegará y **la tienda estará abierta al
 público**. Todo lo demás de esta lista tiene que estar hecho ANTES de ese merge,
 no después.
 
-**1 · Mergear `auditoria-preproduccion` → `main`.** ⚠️ **Ojo, cambió la rama:** `auditoria-preproduccion` contiene todo lo de `feature/stripe-integration` más un commit, y el 2026-09-21 iba **39 por delante de `main` y 0 por detrás**, así que el merge es directo. Todo el trabajo de Stripe, envíos, textos legales y RGPD vive solo ahí. En `main` está la web antigua. ⚠️ `CLAUDE.md` §9 prohíbe `git push` directo a `main`.
+**1 · Integrar `auditoria-preproduccion` en `main` solo tras cerrar los bloqueantes y recibir
+autorización expresa.** El 2026-09-23 la rama va **79 commits por delante de `main` y 0 por
+detrás**; cinco de esos commits siguen solo en local. Todo el trabajo de Stripe, envíos,
+textos legales y RGPD vive ahí. En `main` está la web antigua. ⚠️ `CLAUDE.md` §9 prohíbe
+`git push` directo a `main`.
 
 **2 · Dar de alta el webhook en Stripe modo live**, apuntando a `https://<dominio>/api/stripe-webhook`. **No existe ninguno** (comprobado). ⚠️ Genera un **signing secret distinto** del de `stripe listen`.
 
@@ -542,7 +587,9 @@ no después.
 
 ⚠️ **`SITE_URL` no es un detalle.** De ahí salen las URLs de «pedido confirmado» y **las imágenes de producto que el cliente ve en la pantalla de pago de Stripe**. Si apunta a `localhost`, el comprador paga sin ver las fotos.
 
-⚠️ **Y no basta con `SITE_URL`.** La revisión del 2026-09-21 encontró el dominio `www.eclipssebrand.es` escrito a mano en **8 etiquetas más** (`og:url`, `canonical` y el JSON-LD) en `index.tsx`, `eclipssebrand.tsx`, `personaliza.tsx` y `__root.tsx`. Si el dominio real acaba siendo otro, hay que cambiarlas todas a la vez o la web le dirá a Google que la versión buena está en una dirección que no existe. Detalle en `CALIDAD.md`, hallazgo M-6.
+✅ **Metadatos centralizados el 2026-09-23.** `SITE_URL` sigue siendo una variable separada
+para el checkout, pero las etiquetas públicas `og:url`, canonical, JSON-LD e imágenes
+sociales salen de `src/data/site.ts`. Detalle en `CALIDAD.md`, hallazgos M-6 y M-7.
 
 **4 · Limpiar Airtable.** Las compras de prueba del 2026-09-20 y 21 (a nombre de «ana» y «pepe rodriguez») están en **la tabla real**, la misma que usará la tienda. Borrarlas antes de abrir.
 
