@@ -9,8 +9,20 @@ import { getStripe } from "@/lib/stripe.server";
 
 function resolveOrigin(): string {
   const fromEnv = process.env.SITE_URL?.replace(/\/$/, "");
-  if (fromEnv) return fromEnv;
-  return new URL(getRequest().url).origin;
+  if (fromEnv) {
+    const configured = new URL(fromEnv);
+    if (configured.pathname !== "/" || configured.search || configured.hash) {
+      throw new Error("SITE_URL debe contener solo el origen, sin ruta, query ni fragmento");
+    }
+    return configured.origin;
+  }
+
+  // El origen de la petición es cómodo en local, pero en producción puede venir
+  // de una cabecera Host manipulada. Allí SITE_URL es obligatoria.
+  if (process.env.NODE_ENV !== "production") {
+    return new URL(getRequest().url).origin;
+  }
+  throw new Error("SITE_URL no está definida en producción");
 }
 
 /**
