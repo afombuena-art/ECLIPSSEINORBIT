@@ -154,3 +154,50 @@ export function calcShippingCents(
   const quote = quoteShipping(items, subtotalCents, zone);
   return quote.ok ? quote.cents : null;
 }
+
+/** Código estable sin datos personales, para logs de servidor (CALIDAD B-8). */
+export type AvisoEnvioCodigo = "fuera_de_cobertura" | "cp_entrega_invalido" | "zona_no_coincide";
+
+export type AvisoEnvio = { mensaje: string; codigo: AvisoEnvioCodigo } | null;
+
+/**
+ * Compara la zona con la que se cobró el envío (nuestro checkout) contra la
+ * dirección de entrega real que acaba recogiendo Stripe. `null` si todo
+ * cuadra o si faltan datos para comparar.
+ *
+ * Devuelve dos cosas separadas a propósito: `mensaje` es el texto completo,
+ * con códigos postales, listo para la columna «Aviso envío» de Airtable;
+ * `codigo` es un identificador corto sin ningún dato personal, pensado para
+ * quien llama y solo quiere registrar la incidencia en un log de servidor sin
+ * volcar el CP del cliente (CALIDAD B-8).
+ */
+export function compararEnvioCobradoConEntrega(
+  cobradoZona: string | null,
+  cobradoPostalCode: string | null,
+  entregaPostalCode: string | null,
+): AvisoEnvio {
+  if (entregaPostalCode === null || cobradoZona === null) return null;
+
+  const zonaEntrega = zoneFromPostalCode(entregaPostalCode);
+  if (!zonaEntrega.ok) {
+    if (zonaEntrega.reason === "fuera-de-cobertura") {
+      return {
+        codigo: "fuera_de_cobertura",
+        mensaje: `NO ENVIAR — la dirección de entrega (CP ${entregaPostalCode}) está en Canarias, Ceuta o Melilla, donde no enviamos. Se cobró como ${cobradoZona} (CP ${cobradoPostalCode}). Contactar con el cliente y devolver o regularizar.`,
+      };
+    }
+    return {
+      codigo: "cp_entrega_invalido",
+      mensaje: `REVISAR — el CP de entrega (${entregaPostalCode}) no es un código postal español válido. Se cobró como ${cobradoZona} (CP ${cobradoPostalCode}).`,
+    };
+  }
+
+  if (zonaEntrega.zone !== cobradoZona) {
+    return {
+      codigo: "zona_no_coincide",
+      mensaje: `REVISAR — se cobró envío de ${cobradoZona} (CP ${cobradoPostalCode}) pero la entrega es en ${zonaEntrega.zone} (CP ${entregaPostalCode}). Puede faltar diferencia de portes.`,
+    };
+  }
+
+  return null;
+}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   calcShippingCents,
+  compararEnvioCobradoConEntrega,
   MAX_SHIPPABLE_GRAMS,
   quoteShipping,
   SHIPPING_TABLE,
@@ -170,5 +171,49 @@ describe("calcShippingCents", () => {
 
   it("sin zona, estima península", () => {
     expect(calcShippingCents([{ id: "camiseta-azul", qty: 1 }], 2397)).toBe(499);
+  });
+});
+
+describe("compararEnvioCobradoConEntrega", () => {
+  it("sin aviso cuando la zona de entrega coincide con la cobrada", () => {
+    expect(compararEnvioCobradoConEntrega("sevilla", "41001", "41010")).toBeNull();
+  });
+
+  it("sin aviso si faltan datos para comparar", () => {
+    expect(compararEnvioCobradoConEntrega(null, "41001", "41010")).toBeNull();
+    expect(compararEnvioCobradoConEntrega("sevilla", "41001", null)).toBeNull();
+  });
+
+  it("avisa con fuera_de_cobertura cuando la entrega es Canarias/Ceuta/Melilla", () => {
+    const aviso = compararEnvioCobradoConEntrega("sevilla", "41001", "35007");
+    expect(aviso?.codigo).toBe("fuera_de_cobertura");
+    expect(aviso?.mensaje).toContain("35007");
+  });
+
+  it("avisa con cp_entrega_invalido cuando el CP de entrega no es válido", () => {
+    const aviso = compararEnvioCobradoConEntrega("sevilla", "41001", "9999");
+    expect(aviso?.codigo).toBe("cp_entrega_invalido");
+  });
+
+  it("avisa con zona_no_coincide cuando se cobró una zona y se entrega en otra", () => {
+    const aviso = compararEnvioCobradoConEntrega("sevilla", "41001", "08001");
+    expect(aviso?.codigo).toBe("zona_no_coincide");
+    expect(aviso?.mensaje).toContain("41001");
+    expect(aviso?.mensaje).toContain("08001");
+  });
+
+  it("CALIDAD B-8: el código nunca contiene el código postal (solo el mensaje lo lleva)", () => {
+    // El log de servidor solo debe volcar `codigo`, nunca `mensaje`. Esta
+    // prueba fija esa garantía: ningún valor posible de `codigo` tiene
+    // dígitos, así que no puede filtrar un CP aunque alguien lo loguee.
+    const casos = [
+      compararEnvioCobradoConEntrega("sevilla", "41001", "35007"),
+      compararEnvioCobradoConEntrega("sevilla", "41001", "9999"),
+      compararEnvioCobradoConEntrega("sevilla", "41001", "08001"),
+    ];
+    for (const aviso of casos) {
+      expect(aviso).not.toBeNull();
+      expect(aviso?.codigo).toMatch(/^[a-z_]+$/);
+    }
   });
 });

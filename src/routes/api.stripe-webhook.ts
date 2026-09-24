@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe.server";
 import { alreadyForwarded, markForwarded, seenInMemory } from "@/lib/webhook-dedup.server";
-import { zoneFromPostalCode } from "@/lib/shipping";
+import { zoneFromPostalCode, compararEnvioCobradoConEntrega } from "@/lib/shipping";
 import { ORIGEN_PEDIDO } from "@/lib/checkout-schema";
 
 const N8N_TIMEOUT_MS = 12_000;
@@ -230,22 +230,18 @@ export const Route = createFileRoute("/api/stripe-webhook")({
         const zonaRealEntrega = zonaEntrega?.ok ? zonaEntrega.zone : null;
 
         // Un solo texto listo para volcar en una columna de Airtable: quien
-        // prepara el pedido tiene que verlo sin interpretar nada.
-        let avisoEnvio: string | null = null;
-        if (entregaEn !== null && cobradoZona !== null) {
-          if (zonaEntrega && !zonaEntrega.ok) {
-            avisoEnvio =
-              zonaEntrega.reason === "fuera-de-cobertura"
-                ? `NO ENVIAR — la dirección de entrega (CP ${entregaEn}) está en Canarias, Ceuta o Melilla, donde no enviamos. Se cobró como ${cobradoZona} (CP ${cobradoPor}). Contactar con el cliente y devolver o regularizar.`
-                : `REVISAR — el CP de entrega (${entregaEn}) no es un código postal español válido. Se cobró como ${cobradoZona} (CP ${cobradoPor}).`;
-          } else if (zonaRealEntrega !== cobradoZona) {
-            avisoEnvio = `REVISAR — se cobró envío de ${cobradoZona} (CP ${cobradoPor}) pero la entrega es en ${zonaRealEntrega} (CP ${entregaEn}). Puede faltar diferencia de portes.`;
-          }
-        }
+        // prepara el pedido tiene que verlo sin interpretar nada. El texto
+        // completo (con códigos postales) va solo al payload de n8n/Airtable;
+        // el log de servidor usa el código corto, sin datos personales
+        // (CALIDAD B-8).
+        const avisoEnvioResult = compararEnvioCobradoConEntrega(cobradoZona, cobradoPor, entregaEn);
+        const avisoEnvio = avisoEnvioResult?.mensaje ?? null;
         const revisarEnvio = avisoEnvio !== null;
 
-        if (avisoEnvio) {
-          console.warn(`stripe-webhook: pedido ${session.id} — ${avisoEnvio}`);
+        if (avisoEnvioResult) {
+          console.warn(
+            `stripe-webhook: aviso de envío (${avisoEnvioResult.codigo}) en la sesión ${session.id}`,
+          );
         }
 
         const orderPayload = {
