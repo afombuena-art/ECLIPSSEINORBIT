@@ -62,6 +62,55 @@ const rateLimitMiddleware = createMiddleware().server(async ({ next, handlerType
   return await next();
 });
 
+/**
+ * Cabeceras de seguridad (SEGURIDAD.md, M1). Se aplican a toda respuesta que
+ * pase por el Worker (páginas SSR, server functions, el webhook). Los
+ * archivos estáticos de `public/` no pasan por aquí — Cloudflare los sirve
+ * directamente desde el binding de assets; esos llevan las suyas en
+ * `public/_headers`.
+ *
+ * CSP en `Report-Only` a propósito: TanStack Start inyecta scripts inline en
+ * el HTML y no se ha probado en un despliegue real qué necesita exactamente
+ * (`'unsafe-inline'` o nonces). Activar una CSP estricta sin probarla antes
+ * puede dejar la tienda en blanco. Sin `script-src` explícito: se hereda de
+ * `default-src`, y así no bloquea nada mientras se recogen violaciones. Nadie
+ * mira esta cabecera si no se configura un colector de reportes: por ahora
+ * hay que revisar la consola del navegador a mano en cada QA.
+ *
+ * HSTS sin `preload`: activarlo exige confirmar antes que el dominio y todos
+ * los subdominios funcionan siempre por HTTPS, y revertirlo no es inmediato.
+ */
+function applySecurityHeaders(headers: Headers): void {
+  headers.set("X-Content-Type-Options", "nosniff");
+  headers.set("X-Frame-Options", "DENY");
+  headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), interest-cohort=()");
+  headers.set("Strict-Transport-Security", "max-age=31536000");
+  headers.set(
+    "Content-Security-Policy-Report-Only",
+    [
+      "default-src 'self'",
+      "img-src 'self' data: https://*.stripe.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "connect-src 'self' https://api.stripe.com",
+      "frame-ancestors 'none'",
+      "form-action 'self' https://checkout.stripe.com",
+      "base-uri 'self'",
+      "object-src 'none'",
+    ].join("; "),
+  );
+}
+
+const securityHeadersMiddleware = createMiddleware().server(async ({ next }) => {
+  const result = await next();
+  const response = result instanceof Response ? result : result?.response;
+  if (response instanceof Response) {
+    applySecurityHeaders(response.headers);
+  }
+  return result;
+});
+
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {
     return await next();
@@ -78,5 +127,10 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
 });
 
 export const startInstance = createStart(() => ({
-  requestMiddleware: [csrfMiddleware, rateLimitMiddleware, errorMiddleware],
+  requestMiddleware: [
+    securityHeadersMiddleware,
+    csrfMiddleware,
+    rateLimitMiddleware,
+    errorMiddleware,
+  ],
 }));
