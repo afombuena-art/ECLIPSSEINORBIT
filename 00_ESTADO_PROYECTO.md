@@ -1,6 +1,6 @@
 # Estado del proyecto · ECLIPSSEINORBIT
 
-**Última actualización:** 2026-09-23
+**Última actualización:** 2026-09-24
 **Tipo:** integración de Stripe para tienda online
 **Estado:** activo — **correcciones locales verificadas; todavía no apto para producción**
 **Ingresos confirmados:** no confirmados
@@ -23,8 +23,15 @@ estado oficial:
 
 Verificación local actual: `npm run typecheck` pasa, **66 pruebas** pasan, `npm run
 lint` termina con 0 errores y 7 avisos no bloqueantes, `npm run build` pasa y
-`npm audit` devuelve 0 vulnerabilidades. Los cinco commits del 2026-09-23 están solo en
-local: **no se han subido ni desplegado**.
+`npm audit` devuelve 0 vulnerabilidades. Con la actualización de esta decisión habrá seis
+commits locales de la revisión del 2026-09-23 y 24: **no se han subido ni desplegado**.
+
+✅ **Decisión de alojamiento del 2026-09-24:** Ana descarta continuar en Vercel y elige
+**Cloudflare** como destino. Ana lo ha denominado «Cloudflare Pages». Antes de implementar,
+debe resolverse la forma técnica exacta: la guía oficial actual de Cloudflare para una
+aplicación TanStack Start completa usa **Cloudflare Workers**, `@cloudflare/vite-plugin` y
+`wrangler`; una exportación React estática en Pages no conservaría las server functions, el
+checkout ni el webhook. La migración todavía no se ha implementado ni desplegado.
 
 ⚠️ El hook local de pre-commit no logra ejecutar Gitleaks desde Git Bash en este equipo
 (`Permission denied`). Cada commit nuevo se comprobó manualmente con el mismo ejecutable y
@@ -33,11 +40,14 @@ automático.
 
 ⛔ **Sigue bloqueada la producción** hasta resolver o aceptar expresamente:
 
-1. Rate limiting persistente o de plataforma para crear sesiones de Checkout.
-2. Cabeceras de seguridad y CSP en el alojamiento.
-3. Deduplicación atómica por sesión y tipo de evento, no solo por `event.id`.
-4. Alta y prueba del webhook live, variables de producción y controles operativos.
-5. Decisiones visibles: fecha/comportamiento del contador, 4 o 5 camisetas y si la
+1. Migración técnica verificada a Cloudflare, manteniendo SSR, server functions y body crudo
+   del webhook.
+2. Rate limiting de Cloudflare solo para crear sesiones de Checkout.
+3. Cabeceras de seguridad y CSP en el nuevo alojamiento.
+4. Deduplicación atómica por sesión y tipo de evento, no solo por `event.id`.
+5. Alta y prueba del webhook live, secretos de Cloudflare y controles operativos.
+6. Sustituir Vercel por Cloudflare en privacidad y documentación antes de publicar.
+7. Decisiones visibles: fecha/comportamiento del contador, 4 o 5 camisetas y si la
    espalda debe ser la imagen principal.
 
 ## Qué pasó el 2026-09-22 (sesión larga, resumen para retomar)
@@ -82,8 +92,8 @@ la web **está publicada en `https://www.eclipssebrand.es/`**. De ahí salen
 imágenes sociales absolutas se construyen desde `src/data/site.ts`.
 
 ⚠️ **La rama buena es ahora `auditoria-preproduccion`**, no `feature/stripe-integration`.
-El 2026-09-23 va **79 commits por delante de `main` y 0 por detrás**; los cinco commits de
-esta revisión están todavía solo en local. En `main` está la web antigua, sin
+Tras registrar la decisión de Cloudflare, la rama queda **80 commits por delante de `main`
+y 0 por detrás**; seis commits están todavía solo en local. En `main` está la web antigua, sin
 tienda. El repositorio remoto es `github.com/afombuena-art/ECLIPSSEINORBIT` y `main` lo sigue.
 
 ⚠️ **Decisiones todavía abiertas:** contador, 4 o 5 camisetas, imagen principal de
@@ -157,9 +167,13 @@ El grueso es n8n↔Airtable y no se puede bajar más sin romper el contrato de �
 
 ✅ **Resuelto el 2026-09-21: no hay camino paralelo.** El `pending_webhooks: 2` del evento reenviado hizo sospechar de un segundo destino. Comprobado en el panel (Workbench → Webhooks → Destinos de eventos): el único oyente era el `stripe listen` local (`JACOBO_HP → localhost:5000/api/stripe-webhook`) y **«No se han añadido destinos»**. Cero endpoints configurados. El único camino hacia Airtable es el del código, y está deduplicado.
 
-⚠️ **Consecuencia para producción, no olvidar:** como no hay ningún endpoint dado de alta, **al pasar a modo live hay que crearlo a mano** apuntando a la URL de Vercel (`https://<dominio>/api/stripe-webhook`). Ese endpoint genera un **signing secret distinto** del de `stripe listen`, y es el que debe ir en `STRIPE_WEBHOOK_SECRET` de producción. Si se olvida, la tienda **cobrará pero ningún pedido llegará a Airtable**.
-- ✅ `npx tsc --noEmit` pasa limpio en los dos archivos.
-- Los errores de tipos que aparecen en `src/components/ContactCTA.tsx` y `src/routes/prendas.$slug.tsx` son **preexistentes** (framer-motion), no los introdujo este cambio.
+⚠️ **Consecuencia para producción, no olvidar:** como no hay ningún endpoint dado de alta,
+al pasar a modo live hay que crearlo a mano apuntando al dominio servido por Cloudflare
+(`https://<dominio>/api/stripe-webhook`). Ese endpoint genera un signing secret distinto
+del de `stripe listen`, y es el que debe ir en `STRIPE_WEBHOOK_SECRET` de producción. Si se
+olvida, la tienda cobrará pero ningún pedido llegará a Airtable.
+
+✅ `npm run typecheck` pasa sin errores en todo el proyecto.
 
 ## Entorno local — ✅ desbloqueado el 2026-09-20 (sin verificar todavía)
 
@@ -191,7 +205,7 @@ bloqueantes, y la revisión automática ya incluye este paso (`ea57e99`).
 
 1. ✅ **Autorizar `node.exe`** — hecho el 2026-09-20. Falta comprobar que `npm run dev` arranca de verdad.
 2. **Probar la deduplicación de punta a punta**, en modo test:
-   - `stripe listen --forward-to localhost:3000/api/stripe-webhook` → da un `whsec_...` que **debe** estar en `STRIPE_WEBHOOK_SECRET` del `.env`, y hay que reiniciar el servidor. Sin esto, todo falla por firma inválida.
+   - `stripe listen --forward-to localhost:5000/api/stripe-webhook` → da un `whsec_...` que **debe** estar en `STRIPE_WEBHOOK_SECRET` del `.env`, y hay que reiniciar el servidor. Sin esto, todo falla por firma inválida.
    - Compra con `4242 4242 4242 4242`.
    - `stripe events resend evt_XXXX` → debe responder `duplicado` y **en Airtable debe seguir habiendo una sola fila**.
    - ⚠️ La CLI de Stripe **no estaba conectada a ninguna cuenta** el 2026-09-20 (pedía `stripe login`). Al hacerlo, elegir la cuenta de ECLIPSSE.
@@ -249,6 +263,11 @@ bloqueantes, y la revisión automática ya incluye este paso (`ea57e99`).
 ### C · Legal y protección de datos — sin revisar
 
 9. ✅ **Política de privacidad corregida el 2026-09-20.** Antes solo nombraba Stripe, Correos y Vercel; ahora declara los seis destinatarios reales: **Stripe, Correos y Packlink PRO, Vercel, iActivaPráctica, Hostinger y Airtable**. Se añadió además un párrafo que dice expresamente que Airtable es estadounidense y que los datos salen del EEE.
+
+   ⚠️ **Cambio pendiente por la decisión del 2026-09-24:** antes de publicar desde
+   Cloudflare hay que sustituir Vercel por Cloudflare en la política y comprobar qué datos,
+   región y condiciones corresponden realmente. No cambiar el texto legal por simple
+   sustitución de nombre sin revisar el tratamiento efectivo.
 
    ⚠️ **Contexto que manda sobre cualquier suposición: Jacobo es el marido de Ana.** Por eso no hay contrato de servicios ni de encargado del tratamiento entre ellos, y no hay que proponerlo. La base de datos de pedidos vive en la **cuenta de Airtable de iActivaPráctica (de Ana)**, decisión consciente del 2026-09-20; se revisará solo si la tienda crece.
 
@@ -324,7 +343,26 @@ JSON-LD e imágenes sociales usan `src/data/site.ts` (`3072a63`).
 🔹 **Estado actual:** los tests de envío y la idempotencia de creación están resueltos. La
 deduplicación atómica por sesión y tipo de evento continúa pendiente en `SEGURIDAD.md`.
 
-## ⚠️ Riesgo nuevo detectado el 2026-09-22 · El plan de Vercel no permite vender
+## ✅ Decisión tomada el 2026-09-24 · Se abandona Vercel y se migra a Cloudflare
+
+Ana elige Cloudflare como alojamiento y descarta pagar Vercel Pro. La investigación de
+Vercel que sigue se conserva como antecedente de la decisión, pero sus instrucciones de
+configuración y rate limiting están **anuladas**. No se debe configurar ni desplegar nada
+nuevo en Vercel.
+
+La documentación oficial consultada el 2026-09-24 recomienda para TanStack Start full-stack
+el runtime de **Cloudflare Workers**, con `@cloudflare/vite-plugin`, `wrangler`,
+`compatibility_flags: ["nodejs_compat"]` y el entrypoint de TanStack. Cloudflare Pages
+Functions se ejecuta sobre Workers, pero Pages solo admite un subconjunto de bindings; el
+binding oficial de Rate Limiting está documentado para Workers. Claude debe confirmar la
+arquitectura exacta antes de editar y no convertir la aplicación en una web estática.
+
+Fuentes oficiales:
+- https://developers.cloudflare.com/workers/framework-guides/web-apps/tanstack-start/
+- https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
+- https://developers.cloudflare.com/pages/functions/bindings/
+
+## Histórico · Riesgo detectado el 2026-09-22 en Vercel Hobby
 
 El despliegue está en **la cuenta de Jacobo, en plan Hobby (gratuito)**, según
 Ana. Texto literal de `vercel.com/docs/limits/fair-use-guidelines`, apartado
@@ -359,17 +397,15 @@ Para una infracción de política, según
 `vercel.com/kb/guide/why-is-my-account-deployment-blocked`, **pausan primero y
 mandan el email después**. No hay plazo de gracia documentado.
 
-🔹 **Qué hay que decidir antes de publicar la tienda** (no es urgente hoy, es
-bloqueante para el día del merge):
-- Pasar el proyecto a **plan Pro** (20 $ por usuario y mes según su web), o
-- Mover el proyecto a una cuenta de empresa con plan de pago.
+✅ **Decisión cerrada el 2026-09-24:** no se contratará Vercel Pro para este proyecto; se
+migrará a Cloudflare.
 
 ⚠️ **No se ha verificado en la cuenta real**: nadie de esta oficina tiene acceso
 al Vercel de Jacobo, y el conector de Vercel no está autorizado. Lo que consta es
 lo que dice la documentación de Vercel y lo que Ana ha dicho del plan. **Hay que
 confirmarlo con Jacobo antes de abrir.**
 
-## Paso a paso · Vercel (pendiente, hace falta la cuenta de Jacobo)
+## Histórico · Paso a paso de Vercel — no ejecutar
 
 ### 1 · El plan — hay que pagarlo antes de abrir la tienda
 
@@ -378,17 +414,14 @@ Vercel a 2026-09-22. Cómo comprobar el plan actual: en el panel de Vercel,
 seleccionar el equipo arriba a la izquierda → **Settings → Billing** → apartado
 **Plan**. Si pone «Hobby», es el gratuito.
 
-Decisión pendiente de Ana y Jacobo: quién paga esa cuenta y a nombre de quién
-queda el proyecto. ⚠️ Está ligado a que **ECLIPSSE es la tienda de Jacobo, no un
-cliente con contrato**: conviene dejar claro antes de pagar nada quién asume ese
-coste recurrente.
+Este paso queda descartado por la decisión de migrar a Cloudflare.
 
 ### 1 bis · ¿Hay alternativa gratuita? Consultado el 2026-09-22
 
 | Sitio | ¿Permite una tienda en su plan gratuito? |
 |---|---|
 | **Vercel Hobby** | ⛔ **No.** Prohíbe el uso comercial, incluido solo anunciar la venta de un producto. |
-| **Cloudflare (Workers/Pages) gratis** | 🟡 **Zona gris.** No prohíbe el uso comercial en general, pero su cláusula 2.2.1(h) prohíbe «procesar o recoger información de tarjetas de crédito en una propiedad web que use los Servicios Gratuitos». Aquí la tarjeta se introduce en `checkout.stripe.com`, no en la web, así que **probablemente cumple**. No es seguro: habría que preguntárselo a su soporte por escrito. |
+| **Cloudflare (Workers/Pages)** | ✅ **Elegido por Ana el 2026-09-24.** La tarjeta seguirá introduciéndose únicamente en Stripe Checkout. Queda confirmar por escrito las condiciones del plan y usar la arquitectura full-stack oficial de TanStack Start. |
 | **Netlify gratis** | 🟡 **Sin verificar del todo.** Su página de precios no impone ninguna restricción comercial como la de Vercel, pero no se han leído sus términos completos. |
 
 ⚠️ **El coste real de cambiar no es el plan, es el trabajo.** Mover el proyecto
@@ -398,14 +431,12 @@ Nitro. A Netlify es más ligero, pero en los dos casos hay que rehacer variables
 de entorno, mover el dominio, dar de alta otra vez el webhook y **volver a
 probar la tienda entera**, que es justo lo que acabamos de dejar verificado.
 
-🔹 **Conclusión que se lleva a Jacobo:** Pro cuesta unos 18 €/mes, menos de una
-camiseta. Migrar cuesta una jornada de trabajo, reabre riesgos ya cerrados y
-deja la tienda en un sitio con una cláusula dudosa. **Pagar sale más barato que
-mudarse**, salvo que Jacobo prefiera mudarse por otros motivos.
+🔹 **Conclusión histórica sustituida:** Ana ha decidido asumir la migración a Cloudflare.
 
-### 2 · Rate limiting — gratis, no hace falta Pro para esto
+### 2 · Rate limiting de Vercel — instrucciones anuladas
 
-Verificado en `vercel.com/docs/vercel-firewall/vercel-waf/rate-limiting`
+Estas instrucciones se conservan como antecedente y **no deben ejecutarse**. Verificado en
+`vercel.com/docs/vercel-firewall/vercel-waf/rate-limiting`
 (2026-09-22): **incluido en el plan Hobby**, 1 regla por proyecto, conteo por IP,
 ventana de 10 s a 10 min, 1.000.000 de peticiones permitidas incluidas.
 
@@ -507,27 +538,17 @@ que las 4 antiguas están borradas.
 
 ## Próxima acción
 
-🔹 **Lo primero, y desbloquea casi todo: una conversación con Jacobo.** Cuatro
-preguntas cortas, todas con la información ya preparada en este archivo:
+🔹 **Lo primero: preparar y verificar localmente la migración a Cloudflare sin desplegar.**
+Claude debe confirmar si el destino correcto es Workers o Pages Functions para conservar
+TanStack Start full-stack. Después, y solo con esa arquitectura confirmada, debe adaptar la
+configuración, Stripe para el runtime `fetch`, variables por petición, cabeceras y rate
+limiting, con un commit separado por corrección. No debe acceder a la cuenta de Cloudflare,
+hacer login, desplegar, cambiar DNS, configurar secretos reales, tocar Stripe live ni hacer
+push.
 
-1. **El plan de Vercel.** Enseñarle la cita literal de arriba. Decidir si se
-   pasa a Pro (~18 €/mes), si prefiere mudarse a otro sitio, y **quién lo paga**.
-   Es su cuenta y su tienda; Ana no debería sostener ese coste.
-2. **El rate limiting.** Diez pasos ya escritos abajo. Hace falta acceso a su
-   Vercel, o que lo haga él siguiéndolos.
-3. **¿El DROP 008 son 4 camisetas o 5?** Están las fotos de la granate sin
-   producto que las use.
-4. **La cuenta atrás de la portada está a cero** desde el 1 de septiembre, y se
-   ve en la web publicada. Qué fecha va, y qué mostrar cuando venza.
-
-⚠️ **Y una comprobación que no ha hecho nadie: abrir la tienda en un navegador.**
-Ni móvil, ni escritorio, ni una compra de prueba de punta a punta con el código
-actual. El build pasa y los tests están en verde, pero eso no es una tienda
-probada. La vista previa que Vercel crea de la rama es el sitio ideal para
-hacerlo sin tocar la web publicada.
-
-**El resto está terminado, probado y corregido. Lo que queda son trámites y
-decisiones, no programación.**
+⚠️ Tras la adaptación local seguirá faltando una vista previa de Cloudflare y una compra de
+prueba completa antes de producción. También siguen abiertas las decisiones visibles sobre
+contador, 4 o 5 camisetas e imagen frontal/trasera.
 
 **1 · ✅ DPA de Airtable — FIRMADO el 2026-09-20.** Ver punto 9.
 
@@ -541,7 +562,8 @@ decisiones, no programación.**
 
 **5 · ✅ Los 7 segundos — resueltos el 2026-09-21** (3749 ms). Ver arriba.
 
-**6 · Puesta en producción — ES LO ÚNICO QUE QUEDA.** Medio día de pasos cuidadosos, sin programar nada. Ver la sección siguiente.
+**6 · Puesta en producción — BLOQUEADA.** Antes hay que migrar y validar el proyecto en
+Cloudflare, cerrar los bloqueantes de seguridad y completar las pruebas externas.
 
 **7 · Activar los recibos automáticos de Stripe** (decisión 1 de arriba). Panel de
 Stripe, en **modo live**. ⚠️ En modo prueba Stripe no manda recibos solos, así que
@@ -558,9 +580,21 @@ Y en la instancia de EasyPanel, activar el purgado por antigüedad
 guarde no se quede para siempre. **Borrar además las 4 ejecuciones de prueba
 que hay ahora.**
 
-**9 · Tres arreglos de la revisión del 2026-09-21 que sí son programar**, pequeños y sin dependencias: el contador caducado de la portada, el `og:image` que falta, y aclarar si el DROP 008 son 4 camisetas o 5. **Sin decidir cuándo se hacen**: ninguno bloquea el paso a producción, pero los tres estarán a la vista el día que se abra la tienda, y los dos primeros ya están en `main`. El resto de los 22 hallazgos está en `CALIDAD.md`, ordenado por prioridad.
+**9 · Decisiones visibles pendientes:** contador caducado, 4 o 5 camisetas e imagen
+frontal/trasera. `og:image` quedó resuelto el 2026-09-23 (`3072a63`).
 
 ## Cómo pasar a producción
+
+⛔ **Esta sección queda sustituida por la migración a Cloudflare. No ejecutar todavía.**
+Primero debe existir una versión de preview comprobada. La secuencia nueva será:
+
+1. Adaptar y probar localmente TanStack Start para el runtime oficial de Cloudflare.
+2. Crear una preview sin secretos live y comprobar SSR, checkout test y webhook con body
+   crudo.
+3. Configurar rate limiting solo en la creación de Checkout, cabeceras y observabilidad.
+4. Cambiar la política de privacidad y documentación de Vercel a Cloudflare.
+5. Configurar secretos, dominio y webhook live solo con autorización expresa.
+6. Desconectar o pausar el despliegue automático de Vercel antes de integrar en `main`.
 
 ✅ **Dato resuelto el 2026-09-22:** la web está publicada en
 `https://www.eclipssebrand.es/` y sirve la rama `main`. El despliegue está
@@ -570,20 +604,22 @@ conectado desde GitHub (el repositorio remoto es
 - `SITE_URL` = `https://www.eclipssebrand.es`
 - URL del webhook en Stripe = `https://www.eclipssebrand.es/api/stripe-webhook`
 
-⚠️ **Mergear a `main` es publicar.** Ya no es un paso interno: en cuanto ese
-merge llegue a GitHub, Vercel desplegará y **la tienda estará abierta al
-público**. Todo lo demás de esta lista tiene que estar hecho ANTES de ese merge,
-no después.
+⚠️ **No integrar todavía en `main`.** Vercel sigue conectado a esa rama y podría desplegar
+automáticamente. Primero hay que preparar Cloudflare y controlar qué proveedor queda
+vinculado a producción.
 
-**1 · Integrar `auditoria-preproduccion` en `main` solo tras cerrar los bloqueantes y recibir
-autorización expresa.** El 2026-09-23 la rama va **79 commits por delante de `main` y 0 por
-detrás**; cinco de esos commits siguen solo en local. Todo el trabajo de Stripe, envíos,
-textos legales y RGPD vive ahí. En `main` está la web antigua. ⚠️ `CLAUDE.md` §9 prohíbe
+**1 · Integrar `auditoria-preproduccion` en `main` solo tras cerrar los bloqueantes, preparar
+Cloudflare y recibir autorización expresa.** Tras registrar esta decisión, la rama va **80
+commits por delante de `main` y 0 por detrás**; seis siguen solo en local. ⚠️ `CLAUDE.md` §9 prohíbe
 `git push` directo a `main`.
 
-**2 · Dar de alta el webhook en Stripe modo live**, apuntando a `https://<dominio>/api/stripe-webhook`. **No existe ninguno** (comprobado). ⚠️ Genera un **signing secret distinto** del de `stripe listen`.
+**2 · Dar de alta el webhook en Stripe modo live**, apuntando al dominio servido por
+Cloudflare cuando esté validado. **No existe ninguno** (comprobado). ⚠️ Genera un signing
+secret distinto del de `stripe listen`.
 
-**3 · Cargar las variables de entorno en Vercel**, cinco: `STRIPE_SECRET_KEY` (ahora `sk_live_`), `STRIPE_WEBHOOK_SECRET` (el del paso 2), `N8N_ORDER_WEBHOOK_URL`, `N8N_ORDER_WEBHOOK_SECRET` y `SITE_URL`.
+**3 · Cargar los secretos y variables en Cloudflare**, cinco: `STRIPE_SECRET_KEY`,
+`STRIPE_WEBHOOK_SECRET`, `N8N_ORDER_WEBHOOK_URL`, `N8N_ORDER_WEBHOOK_SECRET` y `SITE_URL`.
+No guardarlos como texto en el repositorio ni leerlos desde Claude Code.
 
 ⚠️ **`SITE_URL` no es un detalle.** De ahí salen las URLs de «pedido confirmado» y **las imágenes de producto que el cliente ve en la pantalla de pago de Stripe**. Si apunta a `localhost`, el comprador paga sin ver las fotos.
 
@@ -617,17 +653,18 @@ Desactivados: Klarna (decisión de Ana: más comisión y poco sentido en carrito
 
 ⚠️ **Si algún día se reactiva Klarna o cualquier método asíncrono, hay que probar ese camino antes**: una compra de prueba con él, comprobando que el pedido llega a Airtable una sola vez y solo cuando el pago se confirma de verdad. El síntoma de un fallo sería un pedido que no aparece, o que aparece como pagado sin estarlo.
 
-### Tests automáticos: evaluados y aplazados a propósito
+### Tests automáticos — ✅ incorporados
 
-⚠️ **No hay ni un test.** Todo se ha verificado a mano. Si se toca el webhook o el cálculo de envío, hay que repetir las pruebas manuales de abajo.
-
-**Evaluado el 2026-09-21 y descartado por ahora.** Cubrirían `shipping.ts` (zonas por código postal, tramos de peso, los 28 precios de la tabla) y la lógica del aviso de envío — funciones puras, fáciles de probar. **No** cubrirían Stripe, n8n ni Airtable. Requiere instalar **vitest** como dependencia de desarrollo (~30-40 MB sobre los 358 MB que ya ocupa `node_modules`; el espacio nunca fue el problema). `CLAUDE.md` §11 obliga a preguntar a Ana antes.
-
-🔹 **Cuándo replantearlo, y hay un motivo concreto:** el 2026-09-21 Ana comentó que **Jacobo irá añadiendo y quitando prendas y cambiando precios**. En cuanto eso empiece, los tests pasan de lujo a necesidad — ver la sección siguiente.
+El proyecto tiene `vitest`, script `test` y **66 pruebas** para catálogo, envío, checkout y
+utilidades relacionadas. `npm test` y `npm run typecheck` pasan. No sustituyen las pruebas
+reales de Stripe, n8n, Airtable ni el runtime de Cloudflare.
 
 ### ⚠️ Riesgo abierto: Jacobo editando productos
 
-Los productos viven en `src/data/products.ts`, **código TypeScript**, no en un panel. Añadir una prenda son ~25 líneas más tres imágenes con sus `import`. Ana planteó el 2026-09-21 que Jacobo lo hiciera él y subiera los cambios a GitHub para que Vercel desplegara. **No es seguro tal como está.** Cuatro riesgos reales:
+Los productos viven en `src/data/products.ts`, **código TypeScript**, no en un panel. Añadir
+una prenda son ~25 líneas más tres imágenes con sus `import`. Ana planteó el 2026-09-21 que
+Jacobo lo hiciera él y subiera los cambios a GitHub para que el alojamiento desplegara.
+**No es seguro tal como está.** Cuatro riesgos reales:
 
 1. ⚠️ **`priceCents` va en céntimos.** `2397` = 23,97 €. Si escribe `24` pensando en euros, **la tienda cobra 24 céntimos** y nadie se entera hasta que llegue el pedido.
 2. **`weightGrams` decide el envío cobrado.** Mal puesto, se pierde dinero en portes.
