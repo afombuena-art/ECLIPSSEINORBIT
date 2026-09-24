@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as EclipssebrandRouteImport } from './routes/eclipssebrand'
 import { Route as PersonalizaRouteImport } from './routes/personaliza'
+import { Route as ApiPedidoEstadoRouteImport } from './routes/api.pedido-estado'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe-webhook'
 import { Route as LegalAvisoLegalRouteImport } from './routes/legal.aviso-legal'
 import { Route as LegalCookiesRouteImport } from './routes/legal.cookies'
@@ -41,6 +42,11 @@ const EclipssebrandRoute = EclipssebrandRouteImport.update({
 const PersonalizaRoute = PersonalizaRouteImport.update({
   id: '/personaliza',
   path: '/personaliza',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPedidoEstadoRoute = ApiPedidoEstadoRouteImport.update({
+  id: '/api/pedido-estado',
+  path: '/api/pedido-estado',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof CheckoutRoute
   '/eclipssebrand': typeof EclipssebrandRoute
   '/personaliza': typeof PersonalizaRoute
+  '/api/pedido-estado': typeof ApiPedidoEstadoRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/legal/aviso-legal': typeof LegalAvisoLegalRoute
   '/legal/cookies': typeof LegalCookiesRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutRoute
   '/eclipssebrand': typeof EclipssebrandRoute
   '/personaliza': typeof PersonalizaRoute
+  '/api/pedido-estado': typeof ApiPedidoEstadoRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/legal/aviso-legal': typeof LegalAvisoLegalRoute
   '/legal/cookies': typeof LegalCookiesRoute
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/checkout': typeof CheckoutRoute
   '/eclipssebrand': typeof EclipssebrandRoute
   '/personaliza': typeof PersonalizaRoute
+  '/api/pedido-estado': typeof ApiPedidoEstadoRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/legal/aviso-legal': typeof LegalAvisoLegalRoute
   '/legal/cookies': typeof LegalCookiesRoute
@@ -142,6 +151,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/eclipssebrand'
     | '/personaliza'
+    | '/api/pedido-estado'
     | '/api/stripe-webhook'
     | '/legal/aviso-legal'
     | '/legal/cookies'
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/eclipssebrand'
     | '/personaliza'
+    | '/api/pedido-estado'
     | '/api/stripe-webhook'
     | '/legal/aviso-legal'
     | '/legal/cookies'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/eclipssebrand'
     | '/personaliza'
+    | '/api/pedido-estado'
     | '/api/stripe-webhook'
     | '/legal/aviso-legal'
     | '/legal/cookies'
@@ -188,6 +200,7 @@ export interface RootRouteChildren {
   CheckoutRoute: typeof CheckoutRoute
   EclipssebrandRoute: typeof EclipssebrandRoute
   PersonalizaRoute: typeof PersonalizaRoute
+  ApiPedidoEstadoRoute: typeof ApiPedidoEstadoRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   LegalAvisoLegalRoute: typeof LegalAvisoLegalRoute
   LegalCookiesRoute: typeof LegalCookiesRoute
@@ -227,6 +240,13 @@ declare module '@tanstack/react-router' {
       path: '/personaliza'
       fullPath: '/personaliza'
       preLoaderRoute: typeof PersonalizaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/pedido-estado': {
+      id: '/api/pedido-estado'
+      path: '/api/pedido-estado'
+      fullPath: '/api/pedido-estado'
+      preLoaderRoute: typeof ApiPedidoEstadoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/stripe-webhook': {
@@ -300,6 +320,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutRoute: CheckoutRoute,
   EclipssebrandRoute: EclipssebrandRoute,
   PersonalizaRoute: PersonalizaRoute,
+  ApiPedidoEstadoRoute: ApiPedidoEstadoRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   LegalAvisoLegalRoute: LegalAvisoLegalRoute,
   LegalCookiesRoute: LegalCookiesRoute,
