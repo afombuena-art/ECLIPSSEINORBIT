@@ -7,6 +7,9 @@ dist/
 .vercel/
 .nitro/
 
+# Estado local de Cloudflare Workers (caché de wrangler/miniflare, .dev.vars con secretos)
+.wrangler/
+
 # Environment / secrets
 .env
 .env.*
