@@ -1,7 +1,8 @@
 # CALIDAD — Revisión estática de código de ECLIPSSEINORBIT
 
 **Fecha:** 2026-09-21 · **Rama revisada:** `auditoria-preproduccion` (último commit `b294526`)
-**Revisión complementaria:** 2026-09-23, con ejecución local y correcciones verificadas
+**Revisión complementaria:** 2026-09-23, con ejecución local y correcciones verificadas, y
+migración a Cloudflare + más correcciones el 2026-09-24
 **Alcance:** todo `src/` escrito a mano: 40 ficheros y 3.839 líneas físicas, contando
 comentarios y líneas en blanco, y excluyendo `src/components/ui/`, `src/routeTree.gen.ts` y
 `src/assets/`. También se revisaron `package.json`, `tsconfig.json`, `vite.config.ts`,
@@ -54,9 +55,9 @@ identificados y
 | **B-5** contacto duplicado | ✅ **Resuelto** | Nuevo `src/data/contacto.ts`. Los textos legales mantienen el email a mano a propósito. Commit `2a701c4`. |
 | **B-6** log en el render | ✅ **Resuelto** | Movido a un efecto. Commit `47af3c8`. |
 | **B-7** `setTimeout` sin limpiar | ✅ **Resuelto** | Los dos, en efectos con `clearTimeout`. Commit `47af3c8`. |
-| **B-8** CP en los logs | ⛔ **Pendiente** | Es una decisión de retención, no un arreglo de código. |
+| **B-8** CP en los logs | ✅ **Resuelto — 2026-09-24** | El `console.warn` del webhook ya no vuelca el código postal: registra un código corto sin datos personales (`compararEnvioCobradoConEntrega()` en `shipping.ts`). El texto completo con CPs sigue yendo, sin cambios, al payload de Airtable. La retención en Airtable/n8n sigue siendo una decisión aparte, no de código. Commit `a49139c`. Ver SEGURIDAD.md B-8/CALIDAD B-8 (mismo hallazgo). |
 | **B-9** aserción de tipo | ✅ **Resuelto** | El filtro de eventos es ahora una guarda de tipo; añadir un evento de otro tipo da error al compilar. Commit `77002bc`. |
-| **B-10** sin tests | ✅ **Resuelto** | Vitest instalado con autorización: 66 pruebas actuales (catálogo, envío y validación del intento de checkout). Commits `452dcd7` y `68ee82c`. |
+| **B-10** sin tests | ✅ **Resuelto** | Vitest instalado con autorización: 66 pruebas en el momento de este commit (catálogo, envío y validación del intento de checkout). Commits `452dcd7` y `68ee82c`. **Cifra actual: 90** (2026-09-24, tras añadir rate limiting, privacidad de logs del webhook y confirmación de pedido). |
 | **B-11** página de error en inglés | ✅ **Resuelto** | Commit `8104817`. |
 | **B-12** enlace con recarga | ✅ **Resuelto** | Commit `70cd896`. |
 
@@ -242,11 +243,18 @@ No es un descuadre de redacción: en `src/assets/` están los tres ficheros `cam
 
 **B-7 · Dos `setTimeout` sin limpiar.** [index.tsx:43-45](src/routes/index.tsx#L43-L45) (680 ms antes de navegar) y [prendas.$slug.tsx:82-84](src/routes/prendas.$slug.tsx#L82-L84) (50 ms antes de hacer scroll). Si el componente se desmonta antes, el callback corre igual sobre algo que ya no está. En el segundo caso es inocuo (`?.`); en el primero puede provocar una navegación que el usuario ya no quería.
 
-**B-8 · Códigos postales en los logs.** [api.stripe-webhook.ts:138](src/routes/api.stripe-webhook.ts#L138) — `console.warn` vuelca `avisoEnvio`, que incluye el CP cobrado y el de entrega. Los logs de Vercel se conservan y son accesibles a quien tenga el proyecto. Es un dato personal de baja sensibilidad y la traza es útil, pero conviene que esté decidido a propósito y recogido en el plazo de conservación de la política de privacidad, no que aparezca por defecto.
+**B-8 · Códigos postales en los logs — ✅ resuelto el 2026-09-24.** El `console.warn` ya no
+vuelca `avisoEnvio` (el texto con los CPs); registra solo un código corto sin datos
+personales (`fuera_de_cobertura` / `cp_entrega_invalido` / `zona_no_coincide`) y el ID de la
+sesión de Stripe. Commit `a49139c`, con prueba que fija que ningún código posible contiene
+dígitos. El texto completo sigue llegando, sin cambios, al payload de Airtable — la
+retención ahí sigue siendo una decisión de plazos, no de código. Descripción original,
+sobre logs de Vercel: `console.warn` volcaba `avisoEnvio`, que incluía el CP cobrado y el de
+entrega; esos logs se conservaban y eran accesibles a quien tuviera el proyecto.
 
 **B-9 · Un `as` que el compilador no puede verificar.** [api.stripe-webhook.ts:71](src/routes/api.stripe-webhook.ts#L71) — `event.data.object as Stripe.Checkout.Session`. En la práctica es seguro porque va después del filtro `RELEVANT_EVENTS`, que solo deja pasar eventos de sesión; pero si mañana alguien añade un tipo de evento a ese `Set` sin mirar, la aserción deja de ser cierta y el fallo aparece en tiempo de ejecución, en producción, dentro del webhook. Un `switch` sobre `event.type` daría el estrechamiento de tipo gratis.
 
-**B-10 · Tests y scripts ausentes en la versión auditada — resuelto.** [package.json](package.json) incluye ahora `test` y `typecheck`, y el proyecto tiene **66 pruebas** para catálogo, envío, checkout y utilidades relacionadas. Ambas órdenes pasan el 2026-09-23. La deduplicación atómica entre dos eventos distintos para la misma sesión continúa pendiente y debe tener su prueba específica cuando se implemente.
+**B-10 · Tests y scripts ausentes en la versión auditada — resuelto.** [package.json](package.json) incluye ahora `test` y `typecheck`. El 2026-09-23 el proyecto tenía 66 pruebas para catálogo, envío, checkout y utilidades relacionadas; **a 2026-09-24 son 90**, con rate limiting, privacidad de logs del webhook y el estado del pedido confirmado. Ambas órdenes pasan. La deduplicación atómica entre dos eventos distintos para la misma sesión continúa pendiente (M8 de `SEGURIDAD.md`) y debe tener su prueba específica cuando se implemente.
 
 **B-11 · La página de error está en inglés.** [error-page.ts:6-22](src/lib/error-page.ts#L6-L22) — *«This page didn't load / Something went wrong on our end»*, con los botones *Try again* y *Go home*, en una tienda íntegramente en español. Se sirve desde [server.ts:34](src/server.ts#L34) y [start.ts:18](src/start.ts#L18), o sea en el peor momento posible: cuando algo ya ha fallado.
 
@@ -259,8 +267,9 @@ No es un descuadre de redacción: en `src/assets/` están los tres ficheros `cam
 Este documento es una revisión estática. No equivale a QA funcional, visual ni de
 producción. Antes de declarar la tienda lista faltan evidencias de:
 
-- **Build, tipos, tests y lint:** verificados el 2026-09-23. Pasan build, `typecheck`,
-  66 pruebas y lint sin errores; quedan 7 avisos no bloqueantes de Fast Refresh.
+- **Build, tipos, tests y lint:** verificados el 2026-09-23 (66 pruebas) y de nuevo el
+  2026-09-24 tras la migración a Cloudflare (**90 pruebas**). Pasan build, `typecheck` y
+  lint sin errores; quedan los mismos 7 avisos no bloqueantes de Fast Refresh.
 - **Pruebas funcionales actuales:** carrito, cantidades límite, talla retirada, código
   postal inválido, pérdida de red, doble clic, retorno desde Stripe y errores de n8n en un
   preview que contenga exactamente el código candidato a producción.

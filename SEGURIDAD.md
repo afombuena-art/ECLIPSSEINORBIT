@@ -1,7 +1,7 @@
 # Auditoría de seguridad · ECLIPSSEINORBIT
 
 **Fecha:** 2026-09-21
-**Revisión complementaria:** 2026-09-23
+**Revisión complementaria:** 2026-09-23, y migración a Cloudflare + correcciones el 2026-09-24
 **Rama auditada:** `auditoria-preproduccion` (hasta el commit `ea57e99`)
 **Alcance:** abuso y rotura del flujo de compra, no el flujo feliz. Revisión de código en
 solo lectura el 2026-09-21, seguida de correcciones locales verificadas el 2026-09-22 y 23.
@@ -20,7 +20,15 @@ observaciones de endurecimiento o estabilidad, no vulnerabilidades explotables. 
 son problemas de configuración, robustez y operación; cuatro afectan directamente a la
 integridad del flujo de compra y de los pedidos.
 
-| Severidad | Nº | Resumen |
+⚠️ **La tabla siguiente es la fotografía original de la auditoría del 2026-09-21: cuenta
+cuántos hallazgos había, no cuántos siguen abiertos hoy.** El estado real, actualizado, está
+en la sección «🔧 Estado de corrección» justo debajo. A fecha de esta revisión (2026-09-24):
+**A1, M1 y M9 están resueltos**; B3 y B5 también (se borró el código muerto de `chart.tsx` y
+se quitó `nitro`, que era la dependencia en beta). Quedan abiertos M4 (riesgo asumido), M8
+(deduplicación atómica — pendiente de decisión, propuesta en `00_ESTADO_PROYECTO.md`), M10
+(riesgo aceptado) y B2 (`typecast`, riesgo aceptado).
+
+| Severidad | Nº en la auditoría original | Resumen |
 |---|---|---|
 | 🔴 Crítico | 0 | — |
 | 🟠 Alto | 1 | Sin rate limiting en la creación de sesiones de pago |
@@ -46,21 +54,23 @@ identificados y
 | **M6** idempotencia | ✅ **Resuelto en código** | El navegador crea un UUID por operación, lo reutiliza al reintentar la misma entrada y el servidor lo valida y usa como `orderRef` y clave de Stripe. Dos pruebas nuevas cubren la validación. Commit `68ee82c`. |
 | **M7** validar el pedido | ✅ **Resuelto** | Marca `source` en la metadata al crear la sesión; el webhook la exige y valida `mode`, moneda, formato de `orderRef` y que el pago conste cobrado. Commit `a29f487`. |
 | **M8** deduplicación | 🟡 **Parcial — documentado, no cerrado** | El arreglo real (clave de negocio persistente y atómica, más prueba con dos Event distintos) sigue pendiente y toca Airtable. Lo que sí se hizo: el código ya no describe como «cerrojo» algo que en concurrencia no lo es, y enumera los dos casos que no cubre. Commit `2bc21f0`. |
-| **M9** confirmación de pago | 🟡 **Mínimo aplicado** | La página ya no afirma un pago que no comprueba. El recibo depende de la configuración automática de Stripe, no de esta página. **Falta la solución completa:** verificar la sesión en servidor y mostrar confirmado / pendiente / no confirmado. Commits `2ba23d1` y `ffa3ec8`. |
+| **M9** confirmación de pago | ✅ **Resuelto — 2026-09-24** | `/pedido/confirmado` consulta `/api/pedido-estado`, que relee la sesión en Stripe y exige marca de origen, mode, moneda y formato de orderRef (los mismos criterios que el webhook). Solo tres estados visibles (confirmado/pendiente/no_confirmado), sin datos del cliente. No sustituye al webhook. Commit `0e982ad`. |
 | **M10** notas libres | 🟡 **Mínimo aplicado** | Aviso junto al campo de no escribir datos sensibles. **Falta decidir** si las notas deben existir también en Stripe y comprobar la retención de payloads en n8n. Commit `6b42e27`. |
 | **B1** CSV en Airtable | ✅ **Resuelto** | Notas, nombre y dirección pasan por un prefijo de apóstrofo si empiezan por `=`, `+`, `-`, `@`, tabulador o retorno. Commit `dcaa297`. |
 | **B2** `typecast` | 🟡 **Sin cambios, a propósito** | Riesgo aceptado y documentado. Revisar si algún día se mapea texto del comprador a un campo de selección. |
-| **B3** `chart.tsx` muerto | ⛔ **Pendiente** | Borrar el fichero es trivial, pero quitar `recharts` toca dependencias (§11). Se deja entero para no dejar una dependencia huérfana a medias. |
+| **B3** `chart.tsx` muerto | ✅ **Resuelto — 2026-09-24** | Confirmado sin consumidores (grep) y borrado junto con `recharts`. Commit `781313a`. |
 | **B4** carrito manipulable | ✅ **Sin acción — estaba bien** | Verificado de nuevo. |
-| **B5** Nitro beta | ⛔ **Pendiente** | Actualizar dependencias (§11). |
+| **B5** Nitro beta | ✅ **Resuelto — 2026-09-24** | `nitro` ya no se usa (migración a Cloudflare, `@cloudflare/vite-plugin` no pasa por Nitro): confirmado por grep y quitado del todo, no actualizado. Commit `ca76609`. |
 
 ⚠️ **Las correcciones locales no cambian tarifas, precios, catálogo ni configuración
 de producción.** Siguen abiertos el rate limiting, las cabeceras, la deduplicación
 por operación de negocio y las comprobaciones de los servicios externos.
 
 ✅ **Tipos y automatización:** los seis errores encontrados durante la primera sesión
-están resueltos. `npm run typecheck`, 66 pruebas, lint sin errores y build pasan; la
-revisión automática incluye ahora el linter, aunque esos commits aún no se han subido.
+están resueltos. `npm run typecheck`, lint sin errores y build pasan; la revisión automática
+incluye ahora el linter, aunque esos commits aún no se han subido. Las pruebas eran 66 en esa
+sesión (2026-09-23); **a 2026-09-24 son 90**, tras añadir rate limiting, privacidad de logs
+del webhook y la confirmación server-side del pedido.
 
 ### ⚠️ Límites de esta auditoría — léelos antes de fiarte del informe
 
@@ -475,7 +485,11 @@ sesión y el mismo tipo.
 
 ### M9 · La página de confirmación afirma que el pago se recibió sin comprobarlo
 
-**Archivo:** [src/routes/pedido.confirmado.tsx:21-38](src/routes/pedido.confirmado.tsx#L21-L38)
+**Estado actual:** resuelto el 2026-09-24. `/pedido/confirmado` consulta ahora
+`/api/pedido-estado`, que relee la sesión en Stripe server-side. El fragmento siguiente
+describe la versión auditada originalmente, cuando la página no comprobaba nada.
+
+**Archivo (versión auditada):** [src/routes/pedido.confirmado.tsx:21-38](src/routes/pedido.confirmado.tsx#L21-L38)
 **Severidad:** media
 
 La ruta no consulta `session_id` ni el estado del pedido, pero muestra siempre «Hemos recibido
@@ -558,7 +572,10 @@ campo de selección, esta decisión debe revisarse antes de desplegar.
 
 ### B3 · `dangerouslySetInnerHTML` en código muerto
 
-**Archivo:** [src/components/ui/chart.tsx:73](src/components/ui/chart.tsx#L73)
+**Estado actual:** resuelto el 2026-09-24 — `chart.tsx` y `recharts` se borraron (commit
+`781313a`); el proyecto ya no tiene ningún `dangerouslySetInnerHTML`.
+
+**Archivo (ya borrado):** `src/components/ui/chart.tsx:73`
 
 Es el único `dangerouslySetInnerHTML` de todo el proyecto. Viene de la plantilla de shadcn
 y **no lo importa nadie**: `grep -rn "ui/chart" src/` no devuelve ni una línea. No es
@@ -588,7 +605,11 @@ tallas inventadas. No sirve de nada:
 
 ### B5 · Nitro en versión beta en el runtime de producción
 
-**Archivo:** [package.json](package.json) — `"nitro": "3.0.260603-beta"`
+**Estado actual:** resuelto el 2026-09-24 — la migración a Cloudflare Workers
+(`@cloudflare/vite-plugin`) no usa Nitro. Confirmado sin referencias por grep y quitado del
+`package.json` (commit `ca76609`), no actualizado a una beta más reciente.
+
+**Archivo (ya quitado):** `package.json` — `"nitro": "3.0.260603-beta"`
 
 Es el servidor que sirve la tienda. No tiene ningún CVE conocido; se anota como riesgo de
 estabilidad, no de seguridad. Hay una beta más reciente (`3.0.260903-beta`).

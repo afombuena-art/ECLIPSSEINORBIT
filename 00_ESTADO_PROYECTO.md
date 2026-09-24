@@ -112,6 +112,44 @@ del navegador a mano en cada QA hasta que se decida activarla en modo bloqueante
 Los archivos estáticos de `public/` no pasan por el Worker; llevan sus cabeceras aparte en
 `public/_headers` (Cloudflare las sirve directamente desde el binding de assets).
 
+## Segunda pasada de correcciones — 2026-09-24
+
+Continuación en la misma sesión, cinco commits más en `auditoria-preproduccion`:
+
+- `a49139c` — **CALIDAD B-8 resuelto.** El webhook ya no vuelca códigos postales en logs de
+  servidor. `compararEnvioCobradoConEntrega()` (`shipping.ts`) separa el mensaje completo
+  (con CPs, para Airtable) de un código corto sin datos personales (para el log). El payload
+  que llega a n8n/Airtable no cambió.
+- `ca76609` — **`@lovable.dev/vite-tanstack-config` y `nitro` eliminados**, confirmado sin
+  referencias por grep. 80 paquetes transitivos menos, 0 vulnerabilidades.
+- `781313a` — **CALIDAD B-3 resuelto.** `src/components/ui/chart.tsx` y `recharts` borrados
+  (sin consumidores, confirmado por grep): el proyecto queda sin ningún
+  `dangerouslySetInnerHTML`.
+- `0e982ad` — **SEGURIDAD M9 resuelto.** `/pedido/confirmado` ya no afirma el pago por llegar
+  a la URL: consulta `/api/pedido-estado`, una ruta de servidor normal (no una
+  `createServerFn`, a propósito: no comparte cupo con el rate limiter del checkout) que
+  relee la sesión en Stripe y exige los mismos cuatro criterios que el webhook (marca de
+  origen, mode, moneda, formato de orderRef). Solo tres estados visibles, sin datos del
+  cliente. No sustituye al webhook.
+- Este commit de documentación.
+
+⚠️ **`node_modules` se rompió y se reparó en el camino.** Un `npm ci` chocó con un archivo
+bloqueado (patrón EPERM ya conocido de este equipo) y quedó a medio borrar (45 paquetes en
+vez de cientos). La causa real: dos procesos de una preview anterior (`npm run preview` /
+`vite preview`) habían quedado vivos y tenían bloqueado el directorio de `@cloudflare/vite-
+plugin`. Se cerraron esos dos procesos y `npm install` reparó `node_modules` sin tocar
+código. Repetible si vuelve a pasar: comprobar procesos `node.exe`/`workerd.exe` colgados de
+una preview anterior antes de asumir que es un problema de dependencias.
+
+✅ **90 pruebas** (`npm test`), typecheck, lint (0 errores, mismos 7 avisos de siempre),
+build y `npm audit` (0 vulnerabilidades) — todo verificado tras cada commit de esta pasada.
+
+🔹 **SEGURIDAD M8 (deduplicación atómica): propuesta técnica presentada, sin implementar.**
+Ana pidió una recomendación antes de tocar nada (puede requerir D1, Durable Objects o
+cambios en n8n/Airtable). La propuesta completa se entregó en la conversación con Claude
+Code del 2026-09-24; falta que Ana la lea y autorice una dirección antes de crear ningún
+recurso de Cloudflare o modificar n8n/Airtable.
+
 ⛔ **Sigue bloqueada la producción** hasta resolver o aceptar expresamente:
 
 1. ✅ Migración técnica verificada a Cloudflare — hecho el 2026-09-24, SSR, server functions y
@@ -119,7 +157,9 @@ Los archivos estáticos de `public/` no pasan por el Worker; llevan sus cabecera
 2. ✅ Rate limiting de Cloudflare solo para crear sesiones de Checkout — hecho el 2026-09-24.
 3. ✅ Cabeceras de seguridad y CSP (`Report-Only`) en el nuevo alojamiento — hecho el
    2026-09-24.
-4. Deduplicación atómica por sesión y tipo de evento, no solo por `event.id`.
+4. **Deduplicación atómica por sesión y tipo de evento, no solo por `event.id`** (M8) —
+   propuesta técnica presentada el 2026-09-24, pendiente de que Ana decida una dirección.
+   No implementar sin su autorización expresa.
 5. Alta y prueba del webhook live, secretos de Cloudflare y controles operativos.
 6. Sustituir Vercel por Cloudflare en la política de privacidad y el resto de documentación
    antes de publicar — **no hecho todavía a propósito**: hay que verificar qué datos, región
@@ -736,9 +776,10 @@ Desactivados: Klarna (decisión de Ana: más comisión y poco sentido en carrito
 
 ### Tests automáticos — ✅ incorporados
 
-El proyecto tiene `vitest`, script `test` y **66 pruebas** para catálogo, envío, checkout y
-utilidades relacionadas. `npm test` y `npm run typecheck` pasan. No sustituyen las pruebas
-reales de Stripe, n8n, Airtable ni el runtime de Cloudflare.
+El proyecto tiene `vitest`, script `test` y **90 pruebas** (2026-09-24) para catálogo, envío,
+aviso de envío sin datos personales en logs, checkout, rate limiting y el estado del pedido
+confirmado. `npm test` y `npm run typecheck` pasan. No sustituyen las pruebas reales de
+Stripe, n8n, Airtable ni el runtime de Cloudflare en producción.
 
 ### ⚠️ Riesgo abierto: Jacobo editando productos
 
