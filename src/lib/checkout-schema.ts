@@ -63,7 +63,9 @@ export type CheckoutError =
   | "TALLA_NO_DISPONIBLE"
   | "FUERA_DE_COBERTURA"
   | "CODIGO_POSTAL_INVALIDO"
-  | "DEMASIADO_PESO";
+  | "DEMASIADO_PESO"
+  | "DEMASIADAS_PETICIONES"
+  | "SERVICIO_NO_DISPONIBLE";
 
 /** Respuesta de `createCheckoutSession`: o la URL de pago, o el motivo del rechazo. */
 export type CheckoutResult = { ok: true; url: string } | { ok: false; error: CheckoutError };

@@ -7,6 +7,21 @@
   "assets": {
     "directory": "dist/client",
   },
+  // Límite de peticiones para crear sesiones de Checkout (SEGURIDAD.md, hallazgo A1).
+  // No cubre /api/stripe-webhook: CLAUDE.md §4 prohíbe limitar el webhook.
+  // El contador es local por ubicación de Cloudflare y eventualmente consistente
+  // entre ubicaciones, no un cerrojo global exacto. Periodo fijo a 60 s (únicos
+  // valores admitidos por el binding: 10 o 60).
+  "ratelimits": [
+    {
+      "name": "CHECKOUT_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 20,
+        "period": 60,
+      },
+    },
+  ],
   "observability": {
     "enabled": true,
   },

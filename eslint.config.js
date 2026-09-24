@@ -8,7 +8,17 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   // `.vercel` guarda la web ya construida. Sin ignorarla, `npm run lint`
   // analiza miles de ficheros generados y tarda minutos en vez de segundos.
-  { ignores: ["dist", ".output", ".vinxi", ".vercel", "src/routeTree.gen.ts"] },
+  {
+    ignores: [
+      "dist",
+      ".output",
+      ".vinxi",
+      ".vercel",
+      ".wrangler",
+      "src/routeTree.gen.ts",
+      "worker-configuration.d.ts",
+    ],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],

@@ -30,6 +30,8 @@ const MENSAJES_DE_ERROR: Record<CheckoutError, string> = {
   CODIGO_POSTAL_INVALIDO: "El código postal no es válido. Revísalo y vuelve a intentarlo.",
   DEMASIADO_PESO:
     "Este pedido supera el peso máximo de nuestro envío habitual. Escríbenos por WhatsApp y lo gestionamos de otra manera.",
+  DEMASIADAS_PETICIONES: "Demasiados intentos seguidos. Espera un momento y vuelve a intentarlo.",
+  SERVICIO_NO_DISPONIBLE: "No se ha podido procesar el pago. Inténtalo de nuevo en unos segundos.",
 };
 
 export const Route = createFileRoute("/checkout")({

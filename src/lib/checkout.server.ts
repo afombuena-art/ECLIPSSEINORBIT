@@ -37,6 +37,11 @@ function resolveOrigin(): string {
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .validator(checkoutSchema)
   .handler(async ({ data }): Promise<CheckoutResult> => {
+    // El límite de peticiones (SEGURIDAD.md A1) vive en el middleware de
+    // petición de `src/start.ts`, no aquí: awaitear el binding de Cloudflare
+    // dentro de esta server function rompe la respuesta (comprobado con dos
+    // variantes del middleware de función oficial; ver el comentario junto a
+    // `rateLimitMiddleware` en start.ts).
     const stripe = getStripe();
     const origin = resolveOrigin();
 
