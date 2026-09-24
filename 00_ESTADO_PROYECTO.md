@@ -144,11 +144,89 @@ una preview anterior antes de asumir que es un problema de dependencias.
 ✅ **90 pruebas** (`npm test`), typecheck, lint (0 errores, mismos 7 avisos de siempre),
 build y `npm audit` (0 vulnerabilidades) — todo verificado tras cada commit de esta pasada.
 
-🔹 **SEGURIDAD M8 (deduplicación atómica): propuesta técnica presentada, sin implementar.**
-Ana pidió una recomendación antes de tocar nada (puede requerir D1, Durable Objects o
-cambios en n8n/Airtable). La propuesta completa se entregó en la conversación con Claude
-Code del 2026-09-24; falta que Ana la lea y autorice una dirección antes de crear ningún
-recurso de Cloudflare o modificar n8n/Airtable.
+## Propuesta técnica para M8 (deduplicación atómica) — presentada el 2026-09-24, sin implementar
+
+🔹 **Ana pidió esta recomendación antes de tocar nada.** No se ha creado ningún recurso de
+Cloudflare ni modificado n8n/Airtable. Queda pendiente de que Ana lea esto y autorice una
+dirección.
+
+**El problema exacto:** la barrera final es hoy el upsert de Airtable con
+`fieldsToMergeOn: ["eventId"]`. Si Stripe llega a emitir dos `Event` distintos (dos
+`event.id` diferentes) para la misma sesión y el mismo tipo, ambos pasan las barreras
+actuales y crean **dos filas** en Airtable para el mismo pedido.
+
+**Solución recomendada: cambiar la clave del upsert de Airtable, de `eventId` a `orderRef`.**
+
+- **Por qué esta y no una de Cloudflare:** no crea ningún recurso nuevo (ni D1, ni Durable
+  Objects, ni bindings, ni despliegue), y reutiliza un mecanismo que **ya está probado y
+  funcionando** — el upsert de Airtable ya demostró de forma verificada (prueba del
+  2026-09-21, más arriba en este archivo) que colapsa reintentos en una sola fila. Solo
+  cambia *por qué campo* colapsa.
+- **Alternativas descartadas:**
+  - **Cloudflare D1** (tabla `processed_orders`, restricción `UNIQUE` en `order_ref`,
+    INSERT atómico): control total y auditable, pero exige crear un recurso nuevo de
+    Cloudflare — necesita que Ana lo cree y autorice, con `wrangler d1 create`, un binding
+    nuevo en `wrangler.jsonc` y una migración. Más mantenimiento a largo plazo (esquema,
+    copias).
+  - **Durable Objects**: la garantía más fuerte que existe, pero sobredimensionada para
+    «unidades limitadas, pocos pedidos» (volumen ya documentado en este archivo). Añade
+    complejidad de clases, migraciones y depuración sin beneficio real aquí.
+  - **Cloudflare KV**: descartada sin más — es eventualmente consistente, no ofrece la
+    garantía atómica que hace falta.
+  - **Seguir solo con memoria**: ya demostrado insuficiente, es el propio hallazgo M8.
+
+**Clave de negocio única:** `orderRef` (el UUID `checkoutAttemptId` que genera el
+navegador, ya validado en servidor, ya usado como `client_reference_id` de Stripe y como
+clave de idempotencia `checkout:${orderRef}`). No hace falta combinarlo con el tipo de
+evento: en pagos asíncronos, el webhook ya descarta el evento `completed` cuando
+`payment_status` es `unpaid` (solo escribe el que confirma el resultado final), así que en
+la práctica siempre hay un único evento «bueno» por pedido escribiendo en Airtable.
+
+**Estados y reintentos:** no hace falta una máquina de estados nueva. El upsert de Airtable
+ya es una única llamada atómica (busca-o-crea en una sola petición HTTP, no un «buscar y
+luego crear» en dos pasos separados desde n8n). Un reintento del mismo evento, o un segundo
+evento distinto para el mismo pedido, simplemente reescribe la misma fila.
+
+**Si se reserva la operación pero n8n falla:** no cambia nada de esto — el diseño actual ya
+marca `n8nForwarded` en Stripe **solo después** de que n8n confirme (nunca antes), así que
+no hay ningún estado de «reservado pero no entregado» que limpiar. Si n8n falla, el webhook
+responde 5xx, Stripe reintenta el evento completo más tarde, y no queda nada a medias.
+
+**Si n8n termina bien pero falla el marcado final:** el comportamiento actual ya lo cubre
+bien (`markForwarded` nunca lanza; si falla, se registra y se sigue, porque el pedido ya
+llegó). Con la clave cambiada a `orderRef`, si eso provoca un reenvío posterior a n8n, el
+upsert simplemente **reescribe la misma fila** en vez de crear una duplicada — el cambio
+hace este caso más seguro, no lo toca a peor.
+
+**Cómo se evita procesar dos eventos distintos de Stripe para el mismo pedido:** keyando la
+escritura de Airtable en `orderRef` (estable durante toda la vida de la sesión y en el caso
+de los dos eventos del pago asíncrono), no en `event.id`, cualquier número de Events de
+Stripe referidos al mismo pedido convergen en una fila, atómicamente, vía el propio upsert
+de Airtable.
+
+**Recursos, archivos, coste:**
+- **Cero recursos nuevos de Cloudflare.** Ningún cambio en `wrangler.jsonc` ni en el
+  repositorio es estrictamente necesario.
+- **Un cambio de configuración en n8n**: el nodo «Crear pedido» del workflow
+  `qmS3k2Pp3wxyKUqZ`, campo `fieldsToMergeOn`, de `["eventId"]` a `["orderRef"]`. El acceso
+  de esta oficina a n8n es de solo lectura: tiene que aplicarlo Ana o Jacobo, o autorizarlo
+  expresamente al especialista de Entrega y Automatizaciones.
+- Opcional, no necesario: actualizar el comentario de `webhook-dedup.server.ts` para que
+  refleje que la clave de negocio real vive ahora en la configuración de Airtable.
+- Coste adicional: ninguno.
+
+**Pruebas necesarias:** simular dos `eventId` distintos con el mismo `orderRef` llegando al
+nodo «Crear pedido» de n8n (se puede forzar manualmente desde el propio n8n) y comprobar que
+Airtable sigue teniendo **una sola fila**, con los datos del último evento.
+
+**Recuperación/reconciliación:** antes de aplicar el cambio, conviene una comprobación
+puntual en Airtable — agrupar por `orderRef` y confirmar que no hay ya filas duplicadas por
+el mismo pedido bajo el esquema actual (no debería haberlas, `orderRef` es un UUID por
+intento de compra, pero es una comprobación barata antes de cambiar la clave de una tabla
+con pedidos reales).
+
+**Contrato que se mantiene intacto:** Stripe sigue sin recibir 200 hasta que n8n confirma.
+Esto no lo toca nada de la propuesta.
 
 ⛔ **Sigue bloqueada la producción** hasta resolver o aceptar expresamente:
 
@@ -659,13 +737,15 @@ que las 4 antiguas están borradas.
 
 ## Próxima acción
 
-✅ **Migración local a Cloudflare Workers — hecha y verificada el 2026-09-24.** Ver la
-sección «Migración a Cloudflare Workers» más arriba. Tres commits (`7c6cfe6`, `1985355`,
-`09b4156`). No se ha accedido a la cuenta de Cloudflare, no hay login, no se ha desplegado,
-no se ha cambiado DNS, no se han configurado secretos reales ni tocado Stripe live, y no se
-ha hecho push.
+✅ **Migración a Cloudflare Workers y segunda pasada de correcciones — hechas y verificadas
+el 2026-09-24.** Ver «Migración a Cloudflare Workers» y «Segunda pasada de correcciones» más
+arriba. 9 commits en `auditoria-preproduccion`, ninguno subido ni desplegado. 90 pruebas,
+typecheck, lint y build pasan; `npm audit` y `gitleaks` sin hallazgos.
 
-🔹 **Lo siguiente:** preview de Cloudflare real (no local, sin secretos live) y una compra de
+🔸 **Lo primero al retomar: decidir M8.** Propuesta técnica completa arriba («Propuesta
+técnica para M8»). No implementar nada sin que Ana la lea y diga qué dirección tomar.
+
+🔹 **Después:** preview de Cloudflare real (no local, sin secretos live) y una compra de
 prueba completa de punta a punta, incluido el webhook con `stripe listen` sobre el runtime
 nuevo. También siguen abiertas las decisiones visibles sobre contador, 4 o 5 camisetas e
 imagen frontal/trasera, y sustituir Vercel por Cloudflare en la política de privacidad
