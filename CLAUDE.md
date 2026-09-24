@@ -1,9 +1,11 @@
 # CLAUDE.md — ECLIPSSEINORBIT / Integración Stripe
 
 ## Contexto
-Proyecto TanStack Start (Vite + React) desplegado en Vercel.
-Se está integrando pasarela de pago Stripe. Este documento es
-de obligado cumplimiento en todo lo relacionado con pagos.
+Proyecto TanStack Start (Vite + React) para Cloudflare Workers
+(`@cloudflare/vite-plugin` + `wrangler`; antes en Vercel, decisión del
+2026-09-24 — ver `00_ESTADO_PROYECTO.md`). Se está integrando pasarela de
+pago Stripe. Este documento es de obligado cumplimiento en todo lo
+relacionado con pagos.
 
 ## 1. Gestión de secretos — innegociable
 
@@ -24,8 +26,9 @@ de obligado cumplimiento en todo lo relacionado con pagos.
   variantes — esos archivos los gestiona Ana directamente.
 - Si hace falta un valor real de una clave para probar algo, la
   respuesta correcta es pedírselo a Ana para que lo meta ella en
-  Vercel o en .env.local — nunca pegarlo en el chat ni escribirlo
-  en un archivo del repo.
+  el panel de Cloudflare (Workers → Settings → Variables and Secrets)
+  o en .env.local — nunca pegarlo en el chat ni escribirlo en un
+  archivo del repo.
 
 ## 2. Arquitectura de pagos
 
@@ -116,8 +119,10 @@ de obligado cumplimiento en todo lo relacionado con pagos.
   server-side.
 - Rate limiting sí aplica a endpoints iniciados por usuarios
   (ej. el que crea la Checkout Session), no al webhook.
-- Toda comunicación en producción va sobre HTTPS (Vercel lo fuerza
-  por defecto — no desactivar).
+- Toda comunicación en producción va sobre HTTPS (Cloudflare lo fuerza
+  por defecto — no desactivar). HSTS activo sin `preload` hasta
+  confirmar que el dominio y todos los subdominios funcionan siempre
+  por HTTPS (ver SEGURIDAD.md, M1).
 
 ## 8. Entornos
 
@@ -129,9 +134,11 @@ de obligado cumplimiento en todo lo relacionado con pagos.
 
 ## 9. Higiene del repositorio
 
-- No modificar nada dentro de .vercel/output — es un artefacto de
-  build generado automáticamente. Si aparece cualquier cambio ahí,
-  es señal de que algo se ejecutó mal, no un cambio a subir.
+- No modificar nada dentro de dist/ ni .wrangler/ — son artefactos de
+  build y de estado local generados automáticamente. Si aparece
+  cualquier cambio ahí, es señal de que algo se ejecutó mal, no un
+  cambio a subir. (`.vercel/output`, del alojamiento anterior, ya no
+  se usa.)
 - Confirmar que .env, .env.local y variantes están en .gitignore.
   Si no lo están, avisar antes de hacer ningún commit.
 - Nunca hacer `git push` directo a main. Todo el trabajo vive en
@@ -155,8 +162,8 @@ con claves de test:
 Claude Code debe detenerse y pedir confirmación explícita antes de:
 - Instalar cualquier dependencia nueva no mencionada por Ana.
 - Actualizar el SDK de Stripe o cambiar de versión de API.
-- Modificar archivos de configuración de despliegue (vercel.json,
-  config de Nitro, etc.).
+- Modificar archivos de configuración de despliegue (wrangler.jsonc,
+  vite.config.ts, etc.).
 - Hacer cualquier `git push` o abrir un Pull Request.
 - Tocar cualquier archivo de autenticación, sesiones de usuario, o
   datos sensibles ya existentes en el proyecto, aunque no tenga

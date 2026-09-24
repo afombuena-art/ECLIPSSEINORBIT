@@ -6,7 +6,7 @@
 comentarios y líneas en blanco, y excluyendo `src/components/ui/`, `src/routeTree.gen.ts` y
 `src/assets/`. También se revisaron `package.json`, `tsconfig.json`, `vite.config.ts`,
 `eslint.config.js`, `.gitignore`, `.env.example`, `.githooks/` y `scripts/`.
-**Fuera de alcance:** `src/components/ui/` (48 ficheros de shadcn sin tocar), `src/routeTree.gen.ts` (generado), `node_modules/`, el workflow de n8n y la configuración real de Vercel y Stripe, que no se pueden leer desde aquí.
+**Fuera de alcance:** `src/components/ui/` (48 ficheros de shadcn sin tocar), `src/routeTree.gen.ts` (generado), `node_modules/`, el workflow de n8n y la configuración real de Cloudflare y Stripe, que no se pueden leer desde aquí.
 
 La revisión original fue estática. Las correcciones posteriores sí modificaron código y se
 verificaron con tipos, tests, lint, build y una comprobación local parcial en navegador.
@@ -278,7 +278,7 @@ producción. Antes de declarar la tienda lista faltan evidencias de:
 - **Enlaces y rutas:** recorrido automático o manual de enlaces internos, 404, correo,
   WhatsApp, Instagram y textos legales. Que los enlaces de este informe apunten a ficheros
   existentes no prueba los enlaces de la web.
-- **Servicios externos:** configuración real de Vercel, Stripe, n8n y Airtable. Se cubren
+- **Servicios externos:** configuración real de Cloudflare, Stripe, n8n y Airtable. Se cubren
   por separado en `SEGURIDAD.md` y en la lista de puesta en producción.
 
 Hasta completar esas comprobaciones, el estado correcto es **revisión estática terminada;

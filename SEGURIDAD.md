@@ -37,8 +37,8 @@ identificados y
 
 | # | Estado | Nota |
 |---|---|---|
-| **A1** rate limiting | ⛔ **Pendiente** | Debe resolverse con un control persistente o de plataforma antes de producción. La capacidad exacta y el plan aplicable deben comprobarse en la cuenta de alojamiento; el plan Hobby figura además como no apto para uso comercial en el estado oficial. |
-| **M1** cabeceras | ⛔ **Pendiente — bloqueado** | `vercel.json` es configuración de despliegue (§11). La propuesta de este informe sigue vigente, con la CSP en `Report-Only` primero. |
+| **A1** rate limiting | ✅ **Resuelto — migración a Cloudflare, 2026-09-24** | Binding oficial Rate Limiting de Cloudflare Workers (20 peticiones/60 s por `CF-Connecting-IP`), como middleware de petición en `src/start.ts`, exclusivo de `createCheckoutSession`. Falla cerrado (503 si el binding no responde). Verificado en preview local: 20 permitidas, 21ª → 429, reseteo a los ~60 s, webhook fuera del límite. Pendiente de comprobar en producción real (colos distintos, tráfico real). |
+| **M1** cabeceras | ✅ **Resuelto — migración a Cloudflare, 2026-09-24** | Middleware de petición en `src/start.ts` añade X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy y HSTS (sin `preload`) a toda respuesta del Worker; `public/_headers` cubre los estáticos. CSP en `Content-Security-Policy-Report-Only`, tal como proponía este informe, a la espera de comprobar en un despliegue real qué necesita `script-src` antes de activarla en modo bloqueante. No hay colector de reportes configurado: hay que mirar la consola del navegador a mano en cada QA. |
 | **M2** tope de `items` | ✅ **Resuelto** | `.max(20)` en el esquema y agrupación por producto+talla antes de construir la sesión. Commit `61aa680`. |
 | **M3** origen por Host | ✅ **Resuelto en código** | En producción `SITE_URL` es obligatoria y ya no se acepta el origen de la petición. En desarrollo se conserva el respaldo local. Falta cargar y verificar el valor en el alojamiento. Commit `ddf2102`. |
 | **M4** desajuste de CP | 🟡 **Sin cambios, riesgo asumido** | Decisión previa de Ana. Sigue pendiente lo que añadía este informe: que la columna «Aviso envío» se vea sin buscarla. |
@@ -89,7 +89,13 @@ revisión automática incluye ahora el linter, aunque esos commits aún no se ha
 
 ### A1 · No hay rate limiting en la creación de Checkout Sessions
 
-**Archivo:** [src/lib/checkout.server.ts:22](src/lib/checkout.server.ts#L22)
+**Estado actual:** resuelto el 2026-09-24, con la migración a Cloudflare Workers. El binding
+oficial Rate Limiting (`src/start.ts`, middleware de petición) limita a 20 peticiones cada 60 s
+por `CF-Connecting-IP`, exclusivo de `createCheckoutSession`, con fallo cerrado (503) si el
+binding no responde. El fragmento siguiente describe la versión auditada originalmente, sobre
+Vercel; se conserva porque el razonamiento del ataque sigue siendo válido.
+
+**Archivo (versión auditada):** [src/lib/checkout.server.ts:22](src/lib/checkout.server.ts#L22)
 **Severidad:** alta
 
 La server function `createCheckoutSession` es un endpoint POST público y no tiene ningún
@@ -149,8 +155,13 @@ entregas reales.
 
 ### M1 · Ninguna cabecera de seguridad
 
-**Archivos:** no existe `vercel.json`; tampoco hay configuración de headers en
-[vite.config.ts](vite.config.ts)
+**Estado actual:** resuelto el 2026-09-24, con la migración a Cloudflare Workers. Middleware de
+petición en `src/start.ts` (X-Content-Type-Options, X-Frame-Options, Referrer-Policy,
+Permissions-Policy, HSTS sin `preload`, y CSP en `Report-Only`) más `public/_headers` para los
+estáticos. El fragmento siguiente describe la versión auditada originalmente, sobre Vercel.
+
+**Archivos (versión auditada):** no existía `vercel.json`; tampoco había configuración de
+headers en [vite.config.ts](vite.config.ts)
 **Severidad:** media
 
 Buscando `content-security-policy|strict-transport|x-frame-options|x-content-type|referrer-policy`
@@ -713,19 +724,21 @@ sensibles introducidos por el comprador; ver M10. Por tanto, no se afirma que el
 
 Por orden:
 
-1. **Rate limit persistente o de plataforma en `createCheckoutSession`** (A1). Lo exige el
-   propio `CLAUDE.md` §7 y es lo único alto del informe. Un `Map` por instancia no basta como
-   control definitivo en serverless.
+1. ✅ **Rate limit en `createCheckoutSession`** (A1) — resuelto el 2026-09-24 con el binding
+   de Cloudflare Workers. Pendiente de comprobar con tráfico real en producción (colos
+   distintos, latencia de sincronización entre ubicaciones).
 2. **Deduplicar también por sesión/operación de negocio**, no solo por `event.id`, y probar
    dos Event distintos para la misma sesión y tipo (M8).
-3. **Cabeceras de seguridad en el alojamiento** (M1), desplegando primero la CSP en modo
-   `Report-Only`; HSTS sin `preload` hasta verificar dominio y subdominios.
+3. ✅ **Cabeceras de seguridad en el alojamiento** (M1) — resuelto el 2026-09-24, CSP en modo
+   `Report-Only`; HSTS sin `preload` hasta verificar dominio y subdominios reales en
+   Cloudflare.
 4. **Cargar y comprobar `SITE_URL` y el resto de variables de producción**. El código ya
-   rechaza la ausencia de `SITE_URL` en producción (M3).
-5. **Dar de alta el endpoint del webhook en modo live en Stripe** y poner su `whsec_` nuevo
-   en `STRIPE_WEBHOOK_SECRET` de producción. Ya está en `00_ESTADO_PROYECTO.md`; se repite
-   aquí porque es el fallo más caro de todos: **la tienda cobraría y ningún pedido llegaría
-   a Airtable**.
+   rechaza la ausencia de `SITE_URL` en producción (M3). Debe cargarse como secreto/variable
+   de Cloudflare, no en Vercel.
+5. **Dar de alta el endpoint del webhook en modo live en Stripe**, apuntando al dominio
+   servido por Cloudflare, y poner su `whsec_` nuevo en `STRIPE_WEBHOOK_SECRET` de
+   producción. Ya está en `00_ESTADO_PROYECTO.md`; se repite aquí porque es el fallo más caro
+   de todos: **la tienda cobraría y ningún pedido llegaría a Airtable**.
 6. **Comprobar la retención de notas y payloads** en Stripe, n8n y Airtable (M10).
 7. **Obtener evidencia de los controles operativos esenciales:** MFA y accesos, separación
    de secretos por entorno, alertas de fallos, conciliación de cobros/pedidos, copia

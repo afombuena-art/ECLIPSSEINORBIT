@@ -27,28 +27,109 @@ lint` termina con 0 errores y 7 avisos no bloqueantes, `npm run build` pasa y
 commits locales de la revisión del 2026-09-23 y 24: **no se han subido ni desplegado**.
 
 ✅ **Decisión de alojamiento del 2026-09-24:** Ana descarta continuar en Vercel y elige
-**Cloudflare** como destino. Ana lo ha denominado «Cloudflare Pages». Antes de implementar,
-debe resolverse la forma técnica exacta: la guía oficial actual de Cloudflare para una
-aplicación TanStack Start completa usa **Cloudflare Workers**, `@cloudflare/vite-plugin` y
-`wrangler`; una exportación React estática en Pages no conservaría las server functions, el
-checkout ni el webhook. La migración todavía no se ha implementado ni desplegado.
+**Cloudflare** como destino. Ana lo ha denominado «Cloudflare Pages». La forma técnica exacta
+se resolvió y se implementó el mismo día: **Cloudflare Workers**, `@cloudflare/vite-plugin` y
+`wrangler` (no Pages con exportación estática, que no conservaría server functions ni webhook).
+Ver la sección siguiente.
 
-⚠️ El hook local de pre-commit no logra ejecutar Gitleaks desde Git Bash en este equipo
-(`Permission denied`). Cada commit nuevo se comprobó manualmente con el mismo ejecutable y
-sin secretos detectados, pero el hook debe repararse antes de considerar fiable el control
-automático.
+✅ **Hook de pre-commit reparado el 2026-09-24.** El `Permission denied` de Gitleaks desde Git
+Bash era Acceso controlado a carpetas de Windows bloqueando `git.exe` (mismo tipo de bloqueo
+que ya había afectado a `node.exe`). Ana autorizó `C:\Program Files\Git\mingw64\bin\git.exe`
+en Windows Defender y el hook volvió a funcionar: todos los commits de esta sesión pasaron
+Gitleaks automáticamente, sin comprobación manual aparte.
+
+## Migración a Cloudflare Workers — implementada y verificada en local, 2026-09-24
+
+Hecho por Claude Code, siguiendo la autorización de Ana para preparar y verificar la
+migración localmente, sin login, sin desplegar y sin tocar secretos reales. Tres commits en
+`auditoria-preproduccion`:
+
+- `7c6cfe6` — `vite.config.ts` reescrito sin el wrapper `@lovable.dev/vite-tanstack-config`
+  (ya no se usa Lovable.dev, confirmado por Ana), con `@cloudflare/vite-plugin` +
+  `tanstackStart()` + `react()` en el orden oficial. `wrangler.jsonc` nuevo, apuntando a
+  `src/server.ts` (ya tenía la firma `fetch(request, env, ctx)`, compatible sin tocarlo).
+- `1985355` — rate limiting (SEGURIDAD A1) con el binding oficial de Cloudflare, ver detalle
+  abajo.
+- `09b4156` — cabeceras de seguridad (SEGURIDAD M1), ver detalle abajo.
+
+⚠️ **Bloqueo de entorno encontrado y resuelto en el camino:** `workerd.exe`
+(`node_modules/@cloudflare/workerd-windows-64/bin/workerd.exe`) tampoco estaba autorizado en
+Acceso controlado a carpetas — mismo síntoma que `node.exe` y luego `git.exe`. Ana lo autorizó
+y la preview local arrancó sin más.
+
+**Verificado con `npm run preview` (runtime real de Cloudflare, workerd, en local, sin
+desplegar):**
+- Portada, ficha de producto (`/eclipssebrand`) y `/checkout` cargan (SSR completo, sin
+  errores).
+- El SDK de Stripe funciona **sin adaptación**: `stripe.balance.retrieve()` en modo test
+  respondió con `livemode:false`. No hizo falta `createFetchHttpClient()`: el SDK detecta
+  Node vía `process` (que `nodejs_compat` expone) y usa su cliente HTTP basado en el módulo
+  `https`, que `nodejs_compat` también soporta.
+- El webhook (`/api/stripe-webhook`) sigue verificando la firma sobre el body crudo
+  (`request.text()`, sin parsear antes) — no se tocó, y sigue igual bajo Workers.
+- Rate limiting (ver abajo): 20 peticiones permitidas, la 21ª bloqueada con 429, reseteo a
+  los ~60 s, webhook fuera del límite.
+- Cabeceras de seguridad presentes en páginas SSR, en el webhook y en un asset estático.
+- `npm run typecheck`, **70 pruebas** (`npm test`, +4 nuevas de rate limiting), `npm run
+  lint` (0 errores, 7 avisos no bloqueantes, mismo baseline de siempre) y `npm run build`
+  pasan. `npm audit` sigue en 0 vulnerabilidades.
+
+⚠️ **Lo que NO se ha podido verificar en local:** crear una Checkout Session real (el
+servidor exige `SITE_URL` en modo producción — M3 — y esta variable no está puesta para la
+preview local; es correcto que falle así, no es un bug). Tampoco se ha probado el webhook con
+firma real de Stripe (`stripe listen`) bajo este runtime nuevo, ni una compra de punta a
+punta. Falta también decidir el script `deploy` exacto (`wrangler deploy`) y probarlo — hoy
+solo está escrito, nunca ejecutado.
+
+**Rate limiting (SEGURIDAD A1):** binding oficial `Rate Limiting` de Cloudflare Workers, 20
+peticiones cada 60 s por `CF-Connecting-IP` (única cabecera de IP que Cloudflare garantiza en
+el borde; no se registra en ningún log), exclusivo de `createCheckoutSession`. Falla cerrado:
+si el binding no responde, 503 en vez de crear una sesión de Stripe sin límite.
+
+⚠️ **Hallazgo técnico real, no una suposición:** awaitear este binding **dentro** del
+`.handler()` de una `createServerFn` rompe la construcción de la respuesta (500 genérico en
+vez de servir el resultado). Se comprobó con tres variantes distintas, incluidas las dos que
+pidió Ana como alternativa "oficial" (`createMiddleware({type: "function"})` de TanStack,
+tanto devolviendo un `Response` propio —rechazado por el compilador— como pasando el
+resultado por `sendContext` y devolviendo el 429 desde el handler —mismo 500 en runtime—). La
+solución que sí funciona: el límite vive en un middleware de **petición** en `src/start.ts`
+(la misma capa que ya usan el CSRF y el manejo de errores), no en el de función. Documentado
+en el comentario junto a `rateLimitMiddleware`.
+
+⚠️ **Limitación conocida y documentada, no corregida:** el filtro del middleware es
+`handlerType === "serverFn"`, que hoy equivale exactamente a "solo `createCheckoutSession`"
+porque es la única server function del proyecto (confirmado por grep). Comprobado leyendo el
+código fuente del framework: ese `handlerType` se fija por el prefijo de la URL antes de
+resolver qué función concreta es, así que **cualquier server function futura compartiría el
+mismo cupo de IP**. Si se añade una segunda, revisar el filtro.
+
+**Cabeceras de seguridad (SEGURIDAD M1):** middleware de petición en `src/start.ts` añade
+X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy y HSTS (sin
+`preload`) a toda respuesta del Worker. CSP en `Content-Security-Policy-Report-Only`, no
+bloqueante: TanStack Start inyecta scripts inline y no se ha probado en un despliegue real
+qué necesita `script-src`. No hay colector de reportes configurado — hay que mirar la consola
+del navegador a mano en cada QA hasta que se decida activarla en modo bloqueante o montar uno.
+Los archivos estáticos de `public/` no pasan por el Worker; llevan sus cabeceras aparte en
+`public/_headers` (Cloudflare las sirve directamente desde el binding de assets).
 
 ⛔ **Sigue bloqueada la producción** hasta resolver o aceptar expresamente:
 
-1. Migración técnica verificada a Cloudflare, manteniendo SSR, server functions y body crudo
-   del webhook.
-2. Rate limiting de Cloudflare solo para crear sesiones de Checkout.
-3. Cabeceras de seguridad y CSP en el nuevo alojamiento.
+1. ✅ Migración técnica verificada a Cloudflare — hecho el 2026-09-24, SSR, server functions y
+   body crudo del webhook conservados. Falta la prueba con tráfico real (no local).
+2. ✅ Rate limiting de Cloudflare solo para crear sesiones de Checkout — hecho el 2026-09-24.
+3. ✅ Cabeceras de seguridad y CSP (`Report-Only`) en el nuevo alojamiento — hecho el
+   2026-09-24.
 4. Deduplicación atómica por sesión y tipo de evento, no solo por `event.id`.
 5. Alta y prueba del webhook live, secretos de Cloudflare y controles operativos.
-6. Sustituir Vercel por Cloudflare en privacidad y documentación antes de publicar.
+6. Sustituir Vercel por Cloudflare en la política de privacidad y el resto de documentación
+   antes de publicar — **no hecho todavía a propósito**: hay que verificar qué datos, región
+   y condiciones corresponden realmente a Cloudflare antes de escribirlo, no sustituir el
+   nombre sin más.
 7. Decisiones visibles: fecha/comportamiento del contador, 4 o 5 camisetas y si la
    espalda debe ser la imagen principal.
+8. Preview de Cloudflare real (no local) y una compra de prueba completa de punta a punta,
+   incluido el webhook con firma real de Stripe.
+9. Decidir y probar el comando de despliegue (`wrangler deploy`) — escrito, no ejecutado.
 
 ## Qué pasó el 2026-09-22 (sesión larga, resumen para retomar)
 
@@ -538,17 +619,17 @@ que las 4 antiguas están borradas.
 
 ## Próxima acción
 
-🔹 **Lo primero: preparar y verificar localmente la migración a Cloudflare sin desplegar.**
-Claude debe confirmar si el destino correcto es Workers o Pages Functions para conservar
-TanStack Start full-stack. Después, y solo con esa arquitectura confirmada, debe adaptar la
-configuración, Stripe para el runtime `fetch`, variables por petición, cabeceras y rate
-limiting, con un commit separado por corrección. No debe acceder a la cuenta de Cloudflare,
-hacer login, desplegar, cambiar DNS, configurar secretos reales, tocar Stripe live ni hacer
-push.
+✅ **Migración local a Cloudflare Workers — hecha y verificada el 2026-09-24.** Ver la
+sección «Migración a Cloudflare Workers» más arriba. Tres commits (`7c6cfe6`, `1985355`,
+`09b4156`). No se ha accedido a la cuenta de Cloudflare, no hay login, no se ha desplegado,
+no se ha cambiado DNS, no se han configurado secretos reales ni tocado Stripe live, y no se
+ha hecho push.
 
-⚠️ Tras la adaptación local seguirá faltando una vista previa de Cloudflare y una compra de
-prueba completa antes de producción. También siguen abiertas las decisiones visibles sobre
-contador, 4 o 5 camisetas e imagen frontal/trasera.
+🔹 **Lo siguiente:** preview de Cloudflare real (no local, sin secretos live) y una compra de
+prueba completa de punta a punta, incluido el webhook con `stripe listen` sobre el runtime
+nuevo. También siguen abiertas las decisiones visibles sobre contador, 4 o 5 camisetas e
+imagen frontal/trasera, y sustituir Vercel por Cloudflare en la política de privacidad
+(pendiente a propósito, ver bloqueante 6).
 
 **1 · ✅ DPA de Airtable — FIRMADO el 2026-09-20.** Ver punto 9.
 

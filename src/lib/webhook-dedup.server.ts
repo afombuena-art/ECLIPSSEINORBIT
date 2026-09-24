@@ -29,9 +29,10 @@ const MAX_VALUE_CHARS = 480;
  * ⚠️ **Es una optimización para duplicados secuenciales, no un cerrojo.** Se
  * consulta al entrar y solo se apunta cuando n8n ya ha confirmado, varios
  * segundos después. Dos entregas simultáneas del mismo evento pasan las dos.
- * Tampoco vale entre instancias: en Vercel cada petición puede caer en una
- * nueva. La garantía real tiene que venir de una operación persistente y
- * atómica — ver M8 de `SEGURIDAD.md`.
+ * Tampoco vale entre instancias: en Cloudflare Workers cada petición puede
+ * caer en un isolate nuevo, igual que caía en una instancia nueva en Vercel.
+ * La garantía real tiene que venir de una operación persistente y atómica —
+ * ver M8 de `SEGURIDAD.md`.
  */
 const seenInThisInstance = new Set<string>();
 const SEEN_MAX = 500;
