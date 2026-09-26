@@ -187,10 +187,15 @@ build de Cloudflare, preview local (incluida la independencia de los dos rate li
 `npm audit` (0 vulnerabilidades) — verificado tras cada commit. `gitleaks` explícito sobre
 todos los commits locales: sin hallazgos.
 
-🔢 **Cifras exactas a 2026-09-26, recontadas tras el commit de documentación de M8**
-(`6ea6b7f`; no las repitas de memoria más adelante, recuéntalas): `git log --oneline
-auditoria-preproduccion ^origin/auditoria-preproduccion | wc -l` → **21 commits locales,
-ninguno subido**. Frente a `main`: **95 commits por delante, 0 por detrás**.
+🔢 **No fijes aquí una cifra de commits como si fuera permanente: cada commit nuevo la deja
+obsoleta.** Consulta siempre en el momento:
+- `git log --oneline auditoria-preproduccion ^origin/auditoria-preproduccion | wc -l` →
+  commits locales sin subir.
+- `git rev-list --left-right --count main...auditoria-preproduccion` → commits por detrás /
+  por delante de `main`.
+
+Referencia histórica, no vigente: inmediatamente antes del commit `5b38cb5` eran **21
+commits locales sin subir** y **95 por delante de `main`, 0 por detrás**.
 
 ⚠️ **«Nada desplegado» se refiere solo a la web** (este repositorio: no hay `wrangler
 deploy` hecho, no hay login de Cloudflare, no hay dominio real sirviendo este código).
@@ -630,15 +635,34 @@ bloqueantes, y la revisión automática ya incluye este paso (`ea57e99`).
 
 **Síntoma (2026-08-29):** al reenviar un evento, se creaba un **registro duplicado en Airtable con el mismo `eventId`**.
 
-**Qué se hizo:** en vez de buscar la causa exacta del nodo que fallaba, se **rediseñó el workflow** para que el problema no pueda darse. La deduplicación era un «comprobar y luego actuar» en tres pasos (buscar → ¿existe? → crear), frágil por construcción. Ahora **la garantiza Airtable**.
+**Qué se hizo (2026-09-21):** en vez de buscar la causa exacta del nodo que fallaba, se
+**rediseñó el workflow** para que el problema no pueda darse. La deduplicación era un
+«comprobar y luego actuar» en tres pasos (buscar → ¿existe? → crear), frágil por
+construcción. Se sustituyó por un único `upsert` de Airtable, que **evita duplicados en
+reenvíos secuenciales** del mismo evento — no se demostró entonces, ni se demuestra ahora,
+que cubra dos peticiones simultáneas llegando al mismo tiempo; ver M8 de `SEGURIDAD.md`.
 
 ```
-ANTES    Webhook → Wait(2s) → Buscar duplicado → ¿Ya existe? → Crear → Responder
-DESPUÉS  Webhook → Crear pedido (upsert, coincidencia por eventId) → Responder
+ANTES (hasta 2026-09-21)   Webhook → Wait(2s) → Buscar duplicado → ¿Ya existe? → Crear → Responder
+DESPUÉS (2026-09-21)       Webhook → Crear pedido (upsert, coincidencia por eventId) → Responder
 ```
+
+🔁 **Actualizado el 2026-09-26 (M8, Opción A):** la coincidencia del upsert pasó de
+`eventId` a `orderRef`, y se añadió un rechazo explícito para pedidos sin referencia. El
+workflow activo tiene ahora **5 nodos**, con dos ramas después de la comprobación:
+
+```
+ACTUAL (2026-09-26)  Webhook → Si (¿hay orderRef?)
+                                 ├─ verdadero → Crear pedido (upsert por orderRef) → Responder 200
+                                 └─ falso → Responder al webhook (400, sin tocar Airtable)
+```
+
+Detalle completo, con la tabla de pruebas ejecutadas, en «Qué se aplicó de verdad —
+2026-09-26», dentro de la propuesta técnica de M8 más arriba.
 
 ⚠️ **El workflow en uso es OTRO, con ID nuevo:**
-- **Activo:** `qmS3k2Pp3wxyKUqZ` — «Pedidos Stripe — ECLIPSSEINORBIT», 3 nodos, ruta `stripe-eclipsse-order`.
+- **Activo:** `qmS3k2Pp3wxyKUqZ` — «Pedidos Stripe — ECLIPSSEINORBIT», 5 nodos desde el
+  2026-09-26 (antes 3), ruta `stripe-eclipsse-order`.
 - **Desactivado:** `17y7m9VMFcYZDNff` — «Pedidos Stripe — ECLIPSSEINORBIT_versión anterior (con bug)», 7 nodos. Se conserva como respaldo; **no reactivar**.
 - La ruta del webhook y la autenticación de cabecera son las mismas, así que **el `.env` no cambia**.
 
