@@ -1,4 +1,5 @@
 import type Stripe from "stripe";
+import { errorSeguro } from "@/lib/log-safety.server";
 
 /**
  * Deduplicación de eventos de Stripe (segundo cerrojo).
@@ -116,7 +117,7 @@ export async function markForwarded(
       `stripe-webhook: no se pudo marcar el evento ${eventId} como entregado. ` +
         `El pedido SÍ llegó a n8n; ante un reintento de Stripe la deduplicación ` +
         `dependerá de n8n.`,
-      err,
+      errorSeguro(err),
     );
   }
 }

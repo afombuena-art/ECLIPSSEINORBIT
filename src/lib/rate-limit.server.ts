@@ -1,3 +1,5 @@
+import { errorSeguro } from "@/lib/log-safety.server";
+
 /**
  * Forma mínima del binding de Rate Limiting de Cloudflare Workers que
  * necesitamos. Se declara aquí (en vez de importar el tipo generado por
@@ -31,7 +33,7 @@ export async function checkRateLimit(
     const { success } = await limiter.limit({ key });
     return success ? "allowed" : "blocked";
   } catch (error) {
-    console.error("rate-limit: el binding falló", error);
+    console.error("rate-limit: el binding falló", errorSeguro(error));
     return "error";
   }
 }

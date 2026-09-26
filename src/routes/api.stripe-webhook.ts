@@ -4,6 +4,7 @@ import { getStripe } from "@/lib/stripe.server";
 import { alreadyForwarded, markForwarded, seenInMemory } from "@/lib/webhook-dedup.server";
 import { zoneFromPostalCode, compararEnvioCobradoConEntrega } from "@/lib/shipping";
 import { ORIGEN_PEDIDO } from "@/lib/checkout-schema";
+import { errorSeguro } from "@/lib/log-safety.server";
 
 const N8N_TIMEOUT_MS = 12_000;
 
@@ -155,7 +156,7 @@ export const Route = createFileRoute("/api/stripe-webhook")({
         try {
           event = await stripe.webhooks.constructEventAsync(rawBody, signature, webhookSecret);
         } catch (err) {
-          console.error("stripe-webhook: firma no válida", err);
+          console.error("stripe-webhook: firma no válida", errorSeguro(err));
           return new Response("Firma no válida", { status: 400 });
         }
 
@@ -192,7 +193,7 @@ export const Route = createFileRoute("/api/stripe-webhook")({
             expand: ["line_items", "line_items.data.price.product", "payment_intent"],
           });
         } catch (err) {
-          console.error("stripe-webhook: no se pudo releer la sesión", err);
+          console.error("stripe-webhook: no se pudo releer la sesión", errorSeguro(err));
           return new Response("retry", { status: 500 });
         }
         msReleer = Date.now() - tInicio;
@@ -323,7 +324,10 @@ export const Route = createFileRoute("/api/stripe-webhook")({
             return new Response("n8n error", { status: 502 });
           }
         } catch (err) {
-          console.error(`stripe-webhook: no se pudo entregar a n8n el evento ${event.id}`, err);
+          console.error(
+            `stripe-webhook: no se pudo entregar a n8n el evento ${event.id}`,
+            errorSeguro(err),
+          );
           return new Response("n8n inalcanzable", { status: 504 });
         } finally {
           clearTimeout(timeout);

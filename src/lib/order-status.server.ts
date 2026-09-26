@@ -1,5 +1,6 @@
 import type Stripe from "stripe";
 import { ORIGEN_PEDIDO } from "@/lib/checkout-schema";
+import { errorSeguro } from "@/lib/log-safety.server";
 
 /**
  * Estado visible en /pedido/confirmado (SEGURIDAD M9). Solo tres valores,
@@ -70,7 +71,7 @@ export async function resolveOrderStatus(
     const session = await retrieve(sessionId);
     return deriveOrderStatus(session);
   } catch (error) {
-    console.error("pedido-estado: no se pudo leer la sesión en Stripe", error);
+    console.error("pedido-estado: no se pudo leer la sesión en Stripe", errorSeguro(error));
     return "no_confirmado";
   }
 }

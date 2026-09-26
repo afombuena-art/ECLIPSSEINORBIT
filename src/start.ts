@@ -4,6 +4,7 @@ import { env } from "cloudflare:workers";
 
 import { renderErrorPage } from "./lib/error-page";
 import { checkRateLimit } from "./lib/rate-limit.server";
+import { errorSeguro } from "./lib/log-safety.server";
 
 // Protege las server functions (RPC same-origin) frente a peticiones cross-site.
 // Va antes que el límite de peticiones: una petición cross-site rechazada no
@@ -118,7 +119,7 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
     if (error != null && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
-    console.error(error);
+    console.error("start: error sin capturar en una server function o ruta", errorSeguro(error));
     return new Response(renderErrorPage(), {
       status: 500,
       headers: { "content-type": "text/html; charset=utf-8" },
