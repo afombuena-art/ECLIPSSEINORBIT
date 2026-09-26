@@ -178,24 +178,39 @@ técnica para M8») decía que el upsert de Airtable era una operación demostra
 frente a concurrencia. **Eso era una afirmación no demostrada.** Ya está corregido en esa
 misma sección: sigue habiendo dos opciones (A, sencilla, con riesgo residual de concurrencia
 asumido explícitamente; B, cierre técnico fuerte con D1/Durable Object + idempotencia en
-n8n), y **M8 sigue pendiente de decisión, no resuelto.**
+n8n), y **M8 sigue pendiente de decisión, no resuelto.** (Actualización del mismo día: Ana
+eligió la Opción A pocas horas después y se aplicó en n8n; ver «Qué se aplicó de verdad —
+2026-09-26» más abajo, dentro de la sección de la propuesta.)
 
 ✅ **98 pruebas** (`npm test`), typecheck, lint (0 errores, mismos 7 avisos de siempre),
 build de Cloudflare, preview local (incluida la independencia de los dos rate limiters) y
 `npm audit` (0 vulnerabilidades) — verificado tras cada commit. `gitleaks` explícito sobre
 todos los commits locales: sin hallazgos.
 
-🔢 **Cifras exactas a 2026-09-26** (no las repitas de memoria más adelante, recuéntalas):
-`git log --oneline auditoria-preproduccion ^origin/auditoria-preproduccion | wc -l` → **19
-commits locales, ninguno subido**. Frente a `main`: **93 commits por delante, 0 por detrás**
-(recalculado, no es la cifra de «80» de sesiones anteriores). Nada desplegado, nada en
-producción.
+🔢 **Cifras exactas a 2026-09-26, antes del commit de esta sección** (no las repitas de
+memoria más adelante, recuéntalas): `git log --oneline auditoria-preproduccion
+^origin/auditoria-preproduccion | wc -l` → **20 commits locales, ninguno subido**. Frente a
+`main`: **94 commits por delante, 0 por detrás**. Nada desplegado, nada en producción. El
+commit de esta documentación (M8 aplicado) suma uno más: recuenta con el mismo comando si
+hace falta la cifra exacta más adelante, no la des por 21 sin comprobar.
 
-## Propuesta técnica para M8 (deduplicación) — presentada el 2026-09-24, corregida el 2026-09-26, sin implementar
+## Cuarta pasada — 2026-09-26: M8 aplicado (Opción A)
 
-🔹 **Ana pidió esta recomendación antes de tocar nada.** No se ha creado ningún recurso de
-Cloudflare ni modificado n8n/Airtable. **M8 sigue pendiente**: no se cierra con esta
-propuesta, se cierra cuando Ana decida una dirección y se aplique.
+Ana probó `orderRef` con datos falsos, guiada paso a paso (no tiene acceso técnico directo
+a n8n cómodo; hizo los clics ella misma en su instancia). Resultado: los 4 casos de prueba
+(nuevo, mismo pedido, pedido distinto, sin referencia) se comportan como debían. Detalle
+completo, con la tabla de pruebas, en «Qué se aplicó de verdad — 2026-09-26» dentro de la
+sección de la propuesta, justo debajo. Sin cambios de código en este repositorio: el cambio
+vive en el workflow de n8n `qmS3k2Pp3wxyKUqZ`.
+
+## Propuesta técnica para M8 (deduplicación) — presentada el 2026-09-24, corregida el 2026-09-26, Opción A aplicada el 2026-09-26
+
+🔹 **Ana pidió esta recomendación antes de tocar nada.** El mismo día 2026-09-26, más tarde,
+eligió la Opción A y autorizó aplicar exclusivamente el cambio de `fieldsToMergeOn` en n8n.
+Se aplicó, se probó con datos falsos y se documenta en detalle en «Qué se aplicó de verdad —
+2026-09-26», al final de esta sección. **M8 está mitigado, no es un cierre atómico
+garantizado** — la Opción B sigue sin implementarse y el riesgo de concurrencia real queda
+aceptado expresamente por Ana.
 
 ⚠️ **Corrección del 2026-09-26 a la versión anterior de esta propuesta:** la primera
 versión presentaba el upsert de Airtable como si fuera una operación atómica frente a
@@ -293,6 +308,58 @@ que no hay ya filas duplicadas por el mismo pedido bajo el esquema actual.
 **Contrato que se mantiene intacto en ambas opciones:** Stripe sigue sin recibir 200 hasta
 que n8n confirma. Ninguna de las dos opciones lo toca.
 
+### Qué se aplicó de verdad — 2026-09-26
+
+Ana autorizó exclusivamente la Opción A, con instrucciones concretas: verificar antes de
+tocar nada, cambiar solo `fieldsToMergeOn`, no tocar nada más, probar con datos falsos y
+documentar aquí el resultado sin datos personales.
+
+**Verificación previa.** Un envío de prueba con `orderRef` a través de la herramienta de
+pruebas (fuera de este repositorio) confirmó que el campo llega y se guarda bien en la
+columna «Referencia del pedido», antes de tocar nada en n8n.
+
+**Cambio aplicado.** En el nodo «Crear pedido» del workflow `qmS3k2Pp3wxyKUqZ`, «Columnas
+para coincidir en» pasó de `eventId` a **`Referencia del pedido`** (la columna mapeada a
+`orderRef`). `eventId` se conserva en la fila como dato informativo, ya no como clave del
+upsert.
+
+**Comprobación añadida, no prevista en la propuesta original.** Al probar un pedido sin
+`orderRef`, el upsert de Airtable creaba una fila sin referencia en vez de fallar. Ana pidió
+cerrarlo «limpio y profesional»: se insertó un nodo **«Si»** entre «Webhook» y «Crear
+pedido» que comprueba que `{{ $('Webhook').item.json.body.orderRef }}` no esté vacío. Si
+falla, un nodo nuevo **«Responder al webhook»** devuelve `400` con
+`{"error": "Falta la referencia del pedido"}` sin tocar Airtable. La rama verdadera sigue
+exactamente igual que antes: → Crear pedido → Responder 200.
+
+**Pruebas ejecutadas**, con datos de prueba en el Airtable real (`orderRef`
+`11111111-…`/`22222222-…`, sin datos de clientes reales), mediante la herramienta
+`prueba-orderref.ps1`/`.bat`:
+
+| Caso | Resultado esperado | Resultado obtenido |
+|---|---|---|
+| Pedido nuevo | Crea 1 fila | ✅ Crea 1 fila |
+| Mismo `orderRef`, `eventId` distinto (simula un segundo Event de Stripe) | Actualiza la misma fila, no duplica | ✅ Actualiza la misma fila |
+| `orderRef` distinto | Crea una fila aparte | ✅ Crea una fila aparte |
+| Sin `orderRef` | Rechazado, ninguna fila creada | ✅ n8n responde 400, ninguna fila creada |
+
+Los 4 casos se probaron **uno detrás de otro (secuenciales), no simultáneos**. No se ha
+probado ni se garantiza el caso de concurrencia real (dos peticiones al mismo `orderRef`
+llegando exactamente a la vez). Ana aceptó expresamente ese riesgo residual y decidió no
+implementar la Opción B.
+
+**Orden de respuesta a Stripe.** Sin cambios: el nodo «Responder 200» sigue colgando
+únicamente de la salida de «Crear pedido», así que n8n solo responde éxito después de que
+Airtable confirme el upsert. Verificado mirando las conexiones reales del workflow, no solo
+leído de memoria.
+
+**Filas de prueba.** Las creadas durante estas pruebas se borraron de Airtable a mano tras
+verificar cada resultado; no deben quedar filas con `orderRef` de prueba (`1111…`/`2222…`).
+
+**Qué no cambió.** Ningún archivo de este repositorio, ningún despliegue, ninguna otra
+configuración de n8n o Airtable. El único cambio de datos fue `fieldsToMergeOn` en el nodo
+«Crear pedido», más los dos nodos nuevos («Si» y «Responder al webhook») para el caso sin
+referencia. Sin commit de código: el cambio vive en n8n, fuera de este repositorio.
+
 ⛔ **Sigue bloqueada la producción** hasta resolver o aceptar expresamente:
 
 1. ✅ Migración técnica verificada a Cloudflare — hecho el 2026-09-24, SSR, server functions y
@@ -301,10 +368,10 @@ que n8n confirma. Ninguna de las dos opciones lo toca.
    y extendido el 2026-09-26 a `/api/pedido-estado` con un cupo propio e independiente.
 3. ✅ Cabeceras de seguridad y CSP (`Report-Only`) en el nuevo alojamiento — hecho el
    2026-09-24.
-4. **Deduplicación por sesión y tipo de evento, no solo por `event.id`** (M8) — **sigue
-   pendiente de decisión, no resuelta**. Dos opciones presentadas arriba (A: sencilla, con
-   riesgo residual de concurrencia asumido; B: cierre técnico fuerte con D1/Durable Object
-   + idempotencia en n8n). No implementar nada sin que Ana decida cuál.
+4. ✅ **Deduplicación por sesión y tipo de evento, no solo por `event.id`** (M8) —
+   **mitigada el 2026-09-26**, Opción A aplicada en n8n y probada con datos falsos (ver «Qué
+   se aplicó de verdad» arriba). Riesgo residual de concurrencia real aceptado
+   expresamente por Ana; la Opción B (D1/Durable Object) no se implementó.
 5. Alta y prueba del webhook live, secretos de Cloudflare y controles operativos.
 6. Sustituir Vercel por Cloudflare en la política de privacidad y el resto de documentación
    antes de publicar — **no hecho todavía a propósito**: hay que verificar qué datos, región

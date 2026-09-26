@@ -22,11 +22,12 @@ integridad del flujo de compra y de los pedidos.
 
 ⚠️ **La tabla siguiente es la fotografía original de la auditoría del 2026-09-21: cuenta
 cuántos hallazgos había, no cuántos siguen abiertos hoy.** El estado real, actualizado, está
-en la sección «🔧 Estado de corrección» justo debajo. A fecha de esta revisión (2026-09-24):
-**A1, M1 y M9 están resueltos**; B3 y B5 también (se borró el código muerto de `chart.tsx` y
-se quitó `nitro`, que era la dependencia en beta). Quedan abiertos M4 (riesgo asumido), M8
-(deduplicación atómica — pendiente de decisión, propuesta en `00_ESTADO_PROYECTO.md`), M10
-(riesgo aceptado) y B2 (`typecast`, riesgo aceptado).
+en la sección «🔧 Estado de corrección» justo debajo. A fecha de esta revisión (2026-09-26):
+**A1, M1, M9 y M8 están resueltos o mitigados**; B3 y B5 también (se borró el código muerto
+de `chart.tsx` y se quitó `nitro`, que era la dependencia en beta). M8 se mitigó el
+2026-09-26 (Opción A, aplicada directamente en n8n, ver detalle más abajo) con un riesgo
+residual de concurrencia real aceptado expresamente por Ana. Quedan abiertos M4 (riesgo
+asumido), M10 (riesgo aceptado) y B2 (`typecast`, riesgo aceptado).
 
 | Severidad | Nº en la auditoría original | Resumen |
 |---|---|---|
@@ -53,7 +54,7 @@ identificados y
 | **M5** `overrides` | ✅ **Resuelto** | Ana dio el OK. Quitados los tres: **`npm audit` pasa de 10 vulnerabilidades (6 altas, 4 moderadas) a 0**. El formateo pendiente se corrigió después y `npm run lint` termina con 0 errores. Commits `60ddef1` y `ea57e99`. |
 | **M6** idempotencia | ✅ **Resuelto en código** | El navegador crea un UUID por operación, lo reutiliza al reintentar la misma entrada y el servidor lo valida y usa como `orderRef` y clave de Stripe. Dos pruebas nuevas cubren la validación. Commit `68ee82c`. |
 | **M7** validar el pedido | ✅ **Resuelto** | Marca `source` en la metadata al crear la sesión; el webhook la exige y valida `mode`, moneda, formato de `orderRef` y que el pago conste cobrado. Commit `a29f487`. |
-| **M8** deduplicación | 🟡 **Parcial — documentado, no cerrado** | El arreglo real (clave de negocio persistente y atómica, más prueba con dos Event distintos) sigue pendiente y toca Airtable. Lo que sí se hizo: el código ya no describe como «cerrojo» algo que en concurrencia no lo es, y enumera los dos casos que no cubre. Commit `2bc21f0`. |
+| **M8** deduplicación | ✅ **Mitigado — Opción A aplicada en n8n, 2026-09-26** | Upsert de Airtable cambiado de `eventId` a `orderRef` (`fieldsToMergeOn`), más un nodo «Si» que rechaza con 400 los pedidos sin `orderRef` (antes creaba una fila huérfana). Probado con datos falsos en el Airtable real: pedido nuevo, mismo `orderRef` con `eventId` distinto, `orderRef` distinto y sin `orderRef` — los 4 casos se comportaron como se esperaba. Riesgo residual de concurrencia real (dos peticiones simultáneas) **no demostrado como cubierto, aceptado expresamente por Ana**. Cambio hecho directamente en el workflow de n8n, fuera de este repositorio: sin commit de código. Detalle completo en `00_ESTADO_PROYECTO.md`. |
 | **M9** confirmación de pago | ✅ **Resuelto — 2026-09-24** | `/pedido/confirmado` consulta `/api/pedido-estado`, que relee la sesión en Stripe y exige marca de origen, mode, moneda y formato de orderRef (los mismos criterios que el webhook). Solo tres estados visibles (confirmado/pendiente/no_confirmado), sin datos del cliente. No sustituye al webhook. Commit `0e982ad`. |
 | **M10** notas libres | 🟡 **Mínimo aplicado** | Aviso junto al campo de no escribir datos sensibles. **Falta decidir** si las notas deben existir también en Stripe y comprobar la retención de payloads en n8n. Commit `6b42e27`. |
 | **B1** CSV en Airtable | ✅ **Resuelto** | Notas, nombre y dirección pasan por un prefijo de apóstrofo si empiezan por `=`, `+`, `-`, `@`, tabulador o retorno. Commit `dcaa297`. |
@@ -463,6 +464,23 @@ Stripe es exclusiva de esta tienda; si lo es, reduce el riesgo, pero no sustituy
 
 ### M8 · La deduplicación no cubre eventos distintos sobre la misma sesión
 
+**Estado actual:** mitigado el 2026-09-26 (Opción A, ver propuesta y detalle completo en
+`00_ESTADO_PROYECTO.md`). En el workflow de n8n `qmS3k2Pp3wxyKUqZ`, el nodo «Crear pedido»
+ya no hace el upsert de Airtable por `eventId`, sino por `orderRef`
+(`fieldsToMergeOn: ["orderRef"]`). Se añadió además un nodo «Si» antes de Airtable que
+comprueba `{{ $('Webhook').item.json.body.orderRef }}` y, si está vacío, responde 400 sin
+tocar Airtable (antes de este cambio, un pedido sin `orderRef` creaba una fila huérfana).
+Probado con datos falsos en el Airtable real, cuatro casos: pedido nuevo → crea una fila;
+mismo `orderRef` con `eventId` distinto (simulando un segundo Event de Stripe para la misma
+sesión) → actualiza esa misma fila, no duplica; `orderRef` distinto → crea una fila aparte;
+sin `orderRef` → rechazado con 400, ninguna fila creada. Los cuatro se comportaron como se
+esperaba. **Esto no es una garantía atómica frente a concurrencia real** (dos peticiones al
+mismo `orderRef` llegando exactamente a la vez, no una detrás de otra): solo se ha probado y
+cubre el caso secuencial. Ana decidió explícitamente aceptar ese riesgo residual en vez de
+implementar la Opción B (D1/Durable Object). El cambio se aplicó directamente en n8n, fuera
+de este repositorio: no hay commit de código que lo respalde, solo esta documentación. El
+fragmento siguiente describe el hallazgo tal como se auditó originalmente, antes del cambio.
+
 **Archivos:** [src/lib/webhook-dedup.server.ts](src/lib/webhook-dedup.server.ts) ·
 [src/routes/api.stripe-webhook.ts:65-105](src/routes/api.stripe-webhook.ts#L65-L105)
 **Severidad:** media
@@ -695,9 +713,12 @@ la sesión de Stripe. Dos pruebas automáticas cubren su presencia y formato. Ve
 
 **Deduplicación** — las tres barreras están verificadas para reenvíos del **mismo
 `event.id`** (ver `00_ESTADO_PROYECTO.md`): caché en memoria, marca persistente en la metadata
-del PaymentIntent y `upsert` por `eventId` en Airtable. La marca solo se escribe después de
-que n8n confirme, así que un fallo de n8n no pierde ese evento. Esta verificación no cubre
-dos Event distintos para la misma sesión y tipo; ver M8.
+del PaymentIntent y `upsert` en Airtable. Este último ya no es por `eventId`: se cambió a
+`orderRef` el 2026-09-26 (M8, Opción A), lo que añade cobertura probada para el caso de dos
+`event.id` distintos sobre la misma sesión, siempre que lleguen uno detrás de otro. La marca
+solo se escribe después de que n8n confirme, así que un fallo de n8n no pierde ese evento.
+Esta verificación sigue sin cubrir dos peticiones simultáneas de verdad (concurrencia real);
+riesgo residual aceptado, ver M8.
 
 **Errores** — [src/start.ts:10-23](src/start.ts#L10-L23) convierte cualquier `throw` de una
 server function en una página HTML genérica **sin mensaje ni stack**. Los mensajes internos
@@ -748,8 +769,10 @@ Por orden:
 1. ✅ **Rate limit en `createCheckoutSession`** (A1) — resuelto el 2026-09-24 con el binding
    de Cloudflare Workers. Pendiente de comprobar con tráfico real en producción (colos
    distintos, latencia de sincronización entre ubicaciones).
-2. **Deduplicar también por sesión/operación de negocio**, no solo por `event.id`, y probar
-   dos Event distintos para la misma sesión y tipo (M8).
+2. ✅ **Deduplicar también por sesión/operación de negocio**, no solo por `event.id` (M8) —
+   mitigado el 2026-09-26, Opción A aplicada en n8n (upsert por `orderRef`, más rechazo de
+   pedidos sin referencia). Riesgo residual de concurrencia real aceptado por Ana; no se
+   implementó la Opción B (D1/Durable Object).
 3. ✅ **Cabeceras de seguridad en el alojamiento** (M1) — resuelto el 2026-09-24, CSP en modo
    `Report-Only`; HSTS sin `preload` hasta verificar dominio y subdominios reales en
    Cloudflare.
