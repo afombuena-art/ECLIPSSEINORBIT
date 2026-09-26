@@ -219,9 +219,13 @@ Cambiar la clave del upsert de Airtable, de `eventId` a `orderRef` (el UUID
 y como clave de idempotencia `checkout:${orderRef}`).
 
 - **Qué consigue de verdad:** evita duplicados cuando los eventos llegan **secuenciales**
-  (uno después de otro, que es el caso observado y probado hasta ahora) y cuando dos
-  eventos de tipos distintos del mismo pedido (el `completed` sin pagar y el
-  `async_payment_succeeded` posterior) escriben en momentos distintos.
+  (uno después de otro, que es el caso observado y probado hasta ahora). ⚠️ Corrección: el
+  webhook descarta `checkout.session.completed` con `payment_status: "unpaid"` **antes** de
+  llamar a n8n (`return ... status: 200` sin seguir) — ese evento nunca llega a Airtable ni
+  al upsert. En un pago asíncrono, el único evento que de verdad escribe es
+  `async_payment_succeeded` (o `_failed`). No hay dos eventos «buenos» compitiendo por la
+  misma fila en ese caso: hay uno solo. El caso que sí cubre el upsert por `orderRef` es
+  otro: reintentos secuenciales del **mismo tipo** de evento con `event.id` distintos.
 - **Qué NO demuestra ni garantiza:** que dos upserts con el mismo `orderRef` lleguen a
   Airtable **al mismo tiempo** (dos entregas casi simultáneas del webhook) no vayan a crear
   dos filas. Es una mitigación práctica, razonable para «unidades limitadas, pocos
