@@ -1,14 +1,36 @@
 # Estado del proyecto · ECLIPSSEINORBIT
 
-**Última actualización:** 2026-09-24
+**Última actualización:** 2026-09-26
 **Tipo:** integración de Stripe para tienda online
-**Estado:** activo — **correcciones locales verificadas; todavía no apto para producción**
+**Estado:** activo — **auditoría local de seguridad y calidad cerrada; todavía no apto para producción**
 **Ingresos confirmados:** no confirmados
 **Compromiso o fecha:** ninguno confirmado
 
 > Este archivo manda sobre la memoria, sobre conversaciones anteriores y sobre cualquier suposición. Si algo aquí contradice lo que se recuerda, gana lo que está escrito aquí.
 >
 > **Ana trabaja este proyecto con varias herramientas (Claude Code y Codex).** Este archivo es el punto de encuentro: debe entenderse sin haber visto ninguna conversación previa. Quien lo lea, lo lee entero antes de tocar nada.
+
+## Cierre de la auditoría local — 2026-09-26
+
+✅ Auditoría local terminada. Pasan `typecheck`, **98/98 pruebas**, lint (0 errores y 7
+avisos no bloqueantes), build de Cloudflare y `npm audit` tanto completo como solo de
+producción, con **0 vulnerabilidades**. Gitleaks revisó todo el contenido textual añadido en
+el historial: 0 hallazgos; los cinco commits que no suma su contador son cuatro cambios
+exclusivamente binarios de imágenes y una eliminación de `package-lock.json`.
+
+✅ El paquete exacto que prepararía `wrangler deploy --dry-run` se inspeccionó sin desplegar:
+no contiene `.env`, `.dev.vars` ni valores de secretos. El `.dev.vars` que el plugin de
+Cloudflare genera dentro de `dist/server` se confirmó como artefacto exclusivo de la preview
+local. La carpeta `dist` se borró al terminar y Git quedó limpio.
+
+✅ M8 está mitigado en el workflow real de n8n mediante upsert por `orderRef` y rechazo 400
+si falta esa referencia; las pruebas secuenciales con datos ficticios pasaron y las filas de
+prueba se borraron. Ana acepta el riesgo residual de dos peticiones verdaderamente
+simultáneas. No se implementa D1 ni Durable Objects.
+
+⛔ No hubo push ni despliegue real. La auditoría local cerrada no autoriza producción. Falta
+una preview real en Cloudflare con configuración de prueba, el recorrido completo de compra
+y webhook, y los controles de producción documentados más abajo.
 
 ## Revisión independiente del 2026-09-23
 
@@ -899,10 +921,10 @@ que las 4 antiguas están borradas.
 
 ## Próxima acción
 
-✅ **Migración a Cloudflare Workers y segunda pasada de correcciones — hechas y verificadas
-el 2026-09-24.** Ver «Migración a Cloudflare Workers» y «Segunda pasada de correcciones» más
-arriba. 9 commits en `auditoria-preproduccion`, ninguno subido ni desplegado. 90 pruebas,
-typecheck, lint y build pasan; `npm audit` y `gitleaks` sin hallazgos.
+✅ **Auditoría local de seguridad y calidad — cerrada el 2026-09-26.** Ver «Cierre de la
+auditoría local» al principio de este archivo. Pasan 98 pruebas, typecheck, lint y build;
+`npm audit` y Gitleaks no dejaron hallazgos, y el paquete real del dry-run no contiene
+secretos. Nada de la web se ha subido ni desplegado.
 
 ✅ **M8 decidido y aplicado — 2026-09-26.** Ana eligió la Opción A, se aplicó en n8n
 (`fieldsToMergeOn` de `eventId` a `orderRef`, más rechazo de pedidos sin referencia) y se
