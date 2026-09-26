@@ -187,12 +187,17 @@ build de Cloudflare, preview local (incluida la independencia de los dos rate li
 `npm audit` (0 vulnerabilidades) — verificado tras cada commit. `gitleaks` explícito sobre
 todos los commits locales: sin hallazgos.
 
-🔢 **Cifras exactas a 2026-09-26, antes del commit de esta sección** (no las repitas de
-memoria más adelante, recuéntalas): `git log --oneline auditoria-preproduccion
-^origin/auditoria-preproduccion | wc -l` → **20 commits locales, ninguno subido**. Frente a
-`main`: **94 commits por delante, 0 por detrás**. Nada desplegado, nada en producción. El
-commit de esta documentación (M8 aplicado) suma uno más: recuenta con el mismo comando si
-hace falta la cifra exacta más adelante, no la des por 21 sin comprobar.
+🔢 **Cifras exactas a 2026-09-26, recontadas tras el commit de documentación de M8**
+(`6ea6b7f`; no las repitas de memoria más adelante, recuéntalas): `git log --oneline
+auditoria-preproduccion ^origin/auditoria-preproduccion | wc -l` → **21 commits locales,
+ninguno subido**. Frente a `main`: **95 commits por delante, 0 por detrás**.
+
+⚠️ **«Nada desplegado» se refiere solo a la web** (este repositorio: no hay `wrangler
+deploy` hecho, no hay login de Cloudflare, no hay dominio real sirviendo este código).
+**No es cierto para n8n:** el cambio de M8 (`fieldsToMergeOn` a `orderRef`, más el nodo de
+rechazo sin referencia) se aplicó el 2026-09-26 directamente sobre el workflow real de n8n,
+fuera de este repositorio y sin control de versiones aquí. **Puede estar ya operativo** si
+ese workflow está activo — no depende de que la web se despliegue.
 
 ## Cuarta pasada — 2026-09-26: M8 aplicado (Opción A)
 
@@ -851,14 +856,13 @@ comprador de no escribir datos sensibles, que es la medida que sí reduce el
 riesgo. Queda como opción futura, si alguna vez importa: borrar el campo `notes`
 de la metadata de Stripe justo después de que n8n confirme.
 
-**3 · Deduplicación por sesión (M8 de `SEGURIDAD.md`): aplazada a propósito.**
-Hoy la red de seguridad es el `upsert` de n8n por `eventId`, y funciona.
-🔹 **Cuándo retomarlo, y son señales concretas, no una fecha:**
-- Si aparece **un pedido duplicado en Airtable**. Es lo primero que hay que mirar.
-- Si el volumen deja de ser «unidades limitadas y pocos pedidos».
-Lo que habría que hacer: identificar el pedido por `checkoutSessionId + tipo de
-evento` en vez de por `event.id`, con una operación atómica en Airtable, y
-probarlo con dos eventos distintos de la misma sesión.
+**3 · Deduplicación por sesión (M8 de `SEGURIDAD.md`): decisión histórica, sustituida.**
+Esta entrada es del 2026-09-22: en ese momento se decidió aplazar M8 y la red de seguridad
+era el `upsert` de n8n por `eventId`. **Ya no es el estado actual.** El 2026-09-26 Ana
+decidió aplicar la Opción A: el `upsert` de n8n pasó de `eventId` a `orderRef`, y se añadió
+un rechazo explícito (400) para pedidos sin `orderRef`. Ver «Qué se aplicó de verdad —
+2026-09-26» y la fila de M8 en la tabla de `SEGURIDAD.md`. Se deja este párrafo como
+registro de la decisión original, no como estado vigente.
 
 **4 · Retención en n8n — ✅ HECHO por Ana el 2026-09-22.** Se detectó que el
 workflow `qmS3k2Pp3wxyKUqZ` no tenía configurado nada de guardado y usaba el
@@ -876,14 +880,17 @@ el 2026-09-24.** Ver «Migración a Cloudflare Workers» y «Segunda pasada de c
 arriba. 9 commits en `auditoria-preproduccion`, ninguno subido ni desplegado. 90 pruebas,
 typecheck, lint y build pasan; `npm audit` y `gitleaks` sin hallazgos.
 
-🔸 **Lo primero al retomar: decidir M8.** Propuesta técnica completa arriba («Propuesta
-técnica para M8»). No implementar nada sin que Ana la lea y diga qué dirección tomar.
+✅ **M8 decidido y aplicado — 2026-09-26.** Ana eligió la Opción A, se aplicó en n8n
+(`fieldsToMergeOn` de `eventId` a `orderRef`, más rechazo de pedidos sin referencia) y se
+probó con datos falsos en el Airtable real. Detalle completo en «Qué se aplicó de verdad —
+2026-09-26». Riesgo residual de concurrencia real aceptado expresamente por Ana; Opción B no
+implementada. Ya no es «lo primero al retomar».
 
-🔹 **Después:** preview de Cloudflare real (no local, sin secretos live) y una compra de
-prueba completa de punta a punta, incluido el webhook con `stripe listen` sobre el runtime
-nuevo. También siguen abiertas las decisiones visibles sobre contador, 4 o 5 camisetas e
-imagen frontal/trasera, y sustituir Vercel por Cloudflare en la política de privacidad
-(pendiente a propósito, ver bloqueante 6).
+🔸 **Lo primero al retomar ahora:** preview de Cloudflare real (no local, sin secretos live)
+y una compra de prueba completa de punta a punta, incluido el webhook con `stripe listen`
+sobre el runtime nuevo. También siguen abiertas las decisiones visibles sobre contador, 4 o
+5 camisetas e imagen frontal/trasera, y sustituir Vercel por Cloudflare en la política de
+privacidad (pendiente a propósito, ver bloqueante 6).
 
 **1 · ✅ DPA de Airtable — FIRMADO el 2026-09-20.** Ver punto 9.
 
