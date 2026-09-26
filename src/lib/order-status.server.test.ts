@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   deriveOrderStatus,
+  handlePedidoEstadoRequest,
   pareceIdDeSesion,
   resolveOrderStatus,
   type SessionParaEstado,
@@ -103,5 +104,67 @@ describe("resolveOrderStatus", () => {
       return sesion();
     });
     expect(idsRecibidos).toEqual(["cs_test_el-id-correcto"]);
+  });
+});
+
+describe("handlePedidoEstadoRequest", () => {
+  // El límite de peticiones de este endpoint es independiente del checkout:
+  // aquí solo se prueba su propia lógica (permitido/bloqueado/binding caído),
+  // inyectando checkLimit() de mentira. La independencia real de los dos
+  // contadores se comprueba además en la preview de Cloudflare (ver
+  // 00_ESTADO_PROYECTO.md).
+
+  it("caso permitido: consulta la sesión y devuelve 200", async () => {
+    const resultado = await handlePedidoEstadoRequest(
+      "cs_test_x",
+      async () => "allowed",
+      async () => sesion(),
+    );
+    expect(resultado).toEqual({ estado: "confirmado", httpStatus: 200 });
+  });
+
+  it("caso bloqueado: 429 sin llegar a llamar a Stripe", async () => {
+    let seLlamoARetrieve = false;
+    const resultado = await handlePedidoEstadoRequest(
+      "cs_test_x",
+      async () => "blocked",
+      async () => {
+        seLlamoARetrieve = true;
+        return sesion();
+      },
+    );
+    expect(resultado).toEqual({ estado: "no_confirmado", httpStatus: 429 });
+    expect(seLlamoARetrieve).toBe(false);
+  });
+
+  it("fallo del binding de rate limiting: 503, falla cerrado sin llamar a Stripe", async () => {
+    let seLlamoARetrieve = false;
+    const resultado = await handlePedidoEstadoRequest(
+      "cs_test_x",
+      async () => "error",
+      async () => {
+        seLlamoARetrieve = true;
+        return sesion();
+      },
+    );
+    expect(resultado).toEqual({ estado: "no_confirmado", httpStatus: 503 });
+    expect(seLlamoARetrieve).toBe(false);
+  });
+
+  it("permitido pero sin session_id o con formato inválido: 200 no_confirmado, sin llamar a Stripe", async () => {
+    let seLlamoARetrieve = false;
+    const retrieve = async () => {
+      seLlamoARetrieve = true;
+      return sesion();
+    };
+    expect(await handlePedidoEstadoRequest(null, async () => "allowed", retrieve)).toEqual({
+      estado: "no_confirmado",
+      httpStatus: 200,
+    });
+    expect(await handlePedidoEstadoRequest("inventado", async () => "allowed", retrieve)).toEqual({
+      estado: "no_confirmado",
+      httpStatus: 200,
+    });
+    expect(seLlamoARetrieve).toBe(false);
   });
 });

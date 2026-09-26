@@ -74,3 +74,33 @@ export async function resolveOrderStatus(
     return "no_confirmado";
   }
 }
+
+/** Resultado listo para convertir en `Response`: estado a mostrar y código HTTP. */
+export type OrderStatusResponse = { estado: OrderStatus; httpStatus: 200 | 429 | 503 };
+
+/**
+ * Junta el límite de peticiones propio de este endpoint (independiente del
+ * checkout — SEGURIDAD, ver comentario en `api.pedido-estado.ts`) con la
+ * lectura del estado. `checkLimit` y `retrieve` van inyectados para poder
+ * probar los tres casos (permitido, bloqueado, binding caído) sin tocar
+ * Cloudflare ni Stripe de verdad.
+ *
+ * Falla cerrado: si el binding de rate limiting no responde, 503 — no se
+ * llama a Stripe sin saber si la petición debería haberse limitado.
+ */
+export async function handlePedidoEstadoRequest(
+  sessionId: string | null,
+  checkLimit: () => Promise<"allowed" | "blocked" | "error">,
+  retrieve: (sessionId: string) => Promise<SessionParaEstado>,
+): Promise<OrderStatusResponse> {
+  const limite = await checkLimit();
+  if (limite === "blocked") return { estado: "no_confirmado", httpStatus: 429 };
+  if (limite === "error") return { estado: "no_confirmado", httpStatus: 503 };
+
+  if (!pareceIdDeSesion(sessionId)) {
+    return { estado: "no_confirmado", httpStatus: 200 };
+  }
+
+  const estado = await resolveOrderStatus(sessionId, retrieve);
+  return { estado, httpStatus: 200 };
+}
