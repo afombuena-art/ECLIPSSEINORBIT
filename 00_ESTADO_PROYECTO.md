@@ -10,6 +10,77 @@
 >
 > **Ana trabaja este proyecto con varias herramientas (Claude Code y Codex).** Este archivo es el punto de encuentro: debe entenderse sin haber visto ninguna conversación previa. Quien lo lea, lo lee entero antes de tocar nada.
 
+## ✅ Validación real en Cloudflare (preprod) — 2026-09-27
+
+Primera vez que se prueba el código de verdad desplegado en Cloudflare, no solo en preview
+local. Rama `auditoria-preproduccion`, hasta el commit `6b08bd1`.
+
+**Worker de preproducción creado**: `eclipsseinorbit-preprod`
+(`https://eclipsseinorbit-preprod.eclipssebrand.workers.dev`), como entorno `env.preprod`
+dentro del mismo `wrangler.jsonc` (no un archivo de configuración aparte). Worker
+independiente del de producción: nombre propio, rate limiter propio (`namespace_id 1002` vs
+`1001` de producción), variables propias (`SITE_URL`, `APP_ENV=preprod`), y una cabecera
+`X-Robots-Tag: noindex, nofollow, noarchive` que solo se activa en preprod (producción no la
+recibe, comprobado por comparación directa).
+
+**Secretos configurados en preprod** (nombres, nunca valores): `STRIPE_SECRET_KEY` (clave de
+**test**), `STRIPE_WEBHOOK_SECRET`, `N8N_ORDER_WEBHOOK_URL`, `N8N_ORDER_WEBHOOK_SECRET`.
+Decisión expresa de Ana: en vez de duplicar el workflow de n8n y crear una tabla de Airtable
+aislada, se usó **el workflow activo (`qmS3k2Pp3wxyKUqZ`) y la tabla real de Airtable**,
+aceptando crear una fila de prueba claramente identificada y borrarla después.
+
+**Compra completa de prueba, de punta a punta:** Checkout Session en modo test, pagada con
+tarjeta de prueba. Webhook entregado con `200` en 4703 ms (`releer sesión 190 · n8n 4327 ·
+marcar 186`). n8n confirmó y creó **una única fila** en Airtable — Ana la verificó con los
+datos correctos (importe, prendas, envío, estado, `orderRef`) y la borró. `/pedido/confirmado`
+y `/api/pedido-estado` respondieron correctamente.
+
+**Endpoints probados contra el Worker real:** `GET` al webhook → `405`; `POST` sin firma →
+`400` sin llamar a n8n; `POST` con firma inválida → `400`, log sanitizado; `pedido-estado`
+con sesión inexistente → `200` controlado, sin stack ni datos sensibles.
+
+**Flujo de cancelación:** una sesión de test creada, sin pagar, vuelta por `/pedido/cancelado`
+→ correcto, y **confirmado con logs en tiempo real que no llega ningún pedido a n8n/Airtable**
+por una sesión abandonada.
+
+**Rate limiting, comportamiento real (matiza lo que decía este archivo y `SEGURIDAD.md` sobre
+la preview local):** el binding de Cloudflare bloquea de verdad en el Worker desplegado, pero
+**no en un corte exacto de 20/21** — en tráfico real es aproximado (primer bloqueo entre la
+petición ~15 y ~22 según el tráfico reciente, alternando después). Los cupos de checkout y de
+`pedido-estado` se confirmaron **independientes** entre sí. Nunca se observó un `503`.
+
+**Cabeceras de seguridad:** las seis (incluida CSP `Report-Only`) confirmadas en el Worker
+real, no solo en preview local.
+
+**QA visual y funcional final (Codex + Playwright)**, contra la versión desplegada
+`fb3aeff4-f06c-4fe5-a844-1bd911852975`: **18/18** comprobaciones responsive en 375×812,
+390×844 y 768×1024 (portada, navegación, cookies, producto, carrito, checkout, páginas
+legales) — cero errores de consola durante el recorrido cubierto (esto no demuestra que la
+CSP pueda pasar a modo bloqueante; sigue en `Report-Only`), sin desbordamientos, recortes ni
+solapamientos, una sesión `cs_test_` creada y cancelada sin pago. Esta QA **encontró y
+corrigió un desbordamiento horizontal real en móvil** (commit `9ee1fbc`, detalle en
+`CALIDAD.md` B-13): espaciado del contador de portada y falta de `overflow-hidden` en dos
+secciones con animación de escala (`eclipssebrand.tsx`, `personaliza.tsx`). De paso se
+instaló Playwright como dependencia de desarrollo (commit `7e32ef5`) y se dejó configurado un
+servidor MCP de Playwright para Claude Code (commit `6b08bd1`), **pendiente de aprobación**:
+esta QA la ejecutó Codex con Playwright directamente, no ese MCP.
+
+**Comprobación manual final de Ana**, en navegador real (web y móvil): banner de cookies en
+sesión privada, ficha de producto, carrito, checkout, llegada a Stripe en modo test y
+cancelación — todo correcto, sin completar ningún pago.
+
+**Pruebas automáticas, cifra actual: 110/110, en 8 archivos** (`npm test`), tras añadir esta
+sesión las pruebas de `robots-header.server` (preprod/producción). Las cifras de «98/98» que
+aparecen más abajo en este documento son la fotografía correcta del cierre del 2026-09-26; no
+se han reescrito para no falsear esa fecha.
+
+⚠️ **Lo que esto NO cierra:** nada de esto es producción ni claves live. Sigue sin probarse
+con tráfico real de compradores, sin activar la CSP en modo bloqueante, y M4, M8, M10 y B2
+siguen exactamente con el mismo riesgo aceptado que antes. Tampoco se ha probado en
+Firefox/Safari/Edge (solo Chromium, vía Playwright), ni accesibilidad, ni rendimiento.
+
+---
+
 ## Cierre de la auditoría local — 2026-09-26
 
 ✅ Auditoría local terminada. Pasan `typecheck`, **98/98 pruebas**, lint (0 errores y 7
@@ -932,11 +1003,16 @@ probó con datos falsos en el Airtable real. Detalle completo en «Qué se aplic
 2026-09-26». Riesgo residual de concurrencia real aceptado expresamente por Ana; Opción B no
 implementada. Ya no es «lo primero al retomar».
 
-🔸 **Lo primero al retomar ahora:** preview de Cloudflare real (no local, sin secretos live)
-y una compra de prueba completa de punta a punta, incluido el webhook con `stripe listen`
-sobre el runtime nuevo. También siguen abiertas las decisiones visibles sobre contador, 4 o
-5 camisetas e imagen frontal/trasera, y sustituir Vercel por Cloudflare en la política de
-privacidad (pendiente a propósito, ver bloqueante 6).
+✅ **Preview de Cloudflare real y compra de prueba completa de punta a punta — hecho el
+2026-09-27.** Ver «✅ Validación real en Cloudflare (preprod)» al principio de este archivo.
+Ya no es «lo primero al retomar».
+
+🔸 **Lo primero al retomar ahora:** decidir si se avanza hacia producción real (claves live,
+webhook live, integración en `main`, con autorización expresa de Ana) o si antes se completa
+la QA que falta (accesibilidad, Firefox/Safari/Edge, rendimiento — ver `CALIDAD.md`). También
+siguen abiertas las decisiones visibles sobre contador, 4 o 5 camisetas e imagen
+frontal/trasera, y sustituir Vercel por Cloudflare en la política de privacidad (pendiente a
+propósito, ver bloqueante 6).
 
 **1 · ✅ DPA de Airtable — FIRMADO el 2026-09-20.** Ver punto 9.
 

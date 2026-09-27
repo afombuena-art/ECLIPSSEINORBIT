@@ -38,6 +38,88 @@ asumido), M10 (riesgo aceptado) y B2 (`typecast`, riesgo aceptado).
 
 ---
 
+## ✅ Validación real en Cloudflare (preprod) — 2026-09-27
+
+Hasta ahora, A1 (rate limiting) y M1 (cabeceras) estaban «resueltos» solo por lectura de
+código y una preview local (`workerd` en el portátil). Esta sesión creó y desplegó de verdad
+un Worker de preproducción aislado, `eclipsseinorbit-preprod`
+(`https://eclipsseinorbit-preprod.eclipssebrand.workers.dev`), con su propio entorno
+`env.preprod` en `wrangler.jsonc` (rama `auditoria-preproduccion`, hasta el commit `6b08bd1`):
+Worker independiente, rate limiter propio (`namespace_id 1002`, distinto del `1001` de
+producción), `SITE_URL`/`APP_ENV=preprod` como variables propias, y `X-Robots-Tag: noindex,
+nofollow, noarchive` que solo se activa cuando `APP_ENV === "preprod"` (producción no lo
+recibe, confirmado por comparación directa de cabeceras).
+
+**Secretos de preprod** (nombres, sin valores): `STRIPE_SECRET_KEY` (test), `STRIPE_WEBHOOK_SECRET`,
+`N8N_ORDER_WEBHOOK_URL`, `N8N_ORDER_WEBHOOK_SECRET`. Decisión expresa de Ana: **se usó el
+workflow de n8n activo y la tabla real de Airtable** (no una copia), aceptando crear una fila
+de prueba claramente identificada y borrarla después — no se duplicó el workflow ni se creó
+una tabla aislada.
+
+**Compra completa de prueba (primera, end to end):** Checkout Session en modo test creada,
+pagada con tarjeta de prueba. Webhook entregado con `HTTP 200` en 4703 ms (`releer sesión 190
+· n8n 4327 · marcar 186`, evento `evt_1UKKHm3pSwZ8rGo9zPLqy2yC`). n8n confirmó y creó
+**una única fila** en la tabla real de Airtable, verificada por Ana con los datos correctos y
+borrada después. Página `/pedido/confirmado` y `/api/pedido-estado` respondieron `200`.
+
+**Endpoints, probados contra el Worker real:**
+- `GET /api/stripe-webhook` → `405`.
+- `POST` sin cabecera `stripe-signature` → `400` («Falta la cabecera stripe-signature»), **sin llamar a n8n**.
+- `POST` con firma presente pero inválida → `400` («Firma no válida»), log sanitizado (solo `tipo: StripeSignatureVerificationError`).
+- `/api/pedido-estado` con `session_id` de formato válido pero inexistente → `200 {"estado":"no_confirmado"}`, log solo con `tipo/código/estadoHttp/requestId` de Stripe — sin stack, sin datos sensibles.
+
+**Flujo de cancelación:** una única Checkout Session de test creada, sin pagar; vuelta
+simulada por `/pedido/cancelado` (misma página a la que redirige Stripe al cancelar, sin
+`session_id` ni verificación asociada) → `200`, copia correcta. **Ningún** `POST
+/api/stripe-webhook` se disparó por esa sesión abandonada: confirmado con logs en tiempo real
+(`wrangler tail`) que no llega ningún pedido a n8n/Airtable por una sesión sin pagar.
+
+**A1 · rate limiting, comportamiento real del borde (matiza lo dicho en preview local):** el
+binding **sí bloquea** en tráfico real, pero **no en un corte exacto de 20/21** como en
+Miniflare. En ráfagas controladas, el primer `429` apareció en algún punto entre la petición
+~15 y ~22 según el tráfico reciente de esa ventana, y una vez activo alterna `200`/`429` en
+vez de cortar en seco — coherente con que el binding es, según su propia documentación y el
+comentario ya existente en `wrangler.jsonc`, «eventualmente consistente, no un cerrojo global
+exacto». **Independencia confirmada**: se dejó el contador de `createCheckoutSession`
+bloqueado a propósito y se lanzaron 35 peticiones seguidas a `/api/pedido-estado` — todas
+`200`, sin contagio entre los dos cupos. **Nunca se observó un `503`** (el binding respondió
+siempre). Reseteo de la ventana confirmado tras esperar. Ninguna de estas pruebas creó pedidos
+reales: se usaron payloads inválidos que la validación de Zod rechaza antes de llamar a
+Stripe, o IDs de sesión con formato inválido, precisamente para no generar sesiones ni gasto
+de cuota de Stripe.
+
+**M1 · cabeceras, confirmadas en el despliegue real:** las seis cabeceras (`Strict-Transport-
+Security`, `Content-Security-Policy-Report-Only`, `Referrer-Policy`, `X-Content-Type-Options`,
+`X-Frame-Options`, `X-Robots-Tag` en preprod) están presentes en el Worker real, no solo en
+preview local.
+
+**QA visual/responsive final (Codex + Playwright, contra la versión desplegada
+`fb3aeff4-f06c-4fe5-a844-1bd911852975`):** 18/18 comprobaciones en 375×812, 390×844 y
+768×1024 (portada, `/eclipssebrand`, `/personaliza`, `/checkout`, `/legal/aviso-legal`,
+`/legal/privacidad`) — navegación, banner de cookies, producto, carrito y checkout correctos;
+una sesión `cs_test_` creada y cancelada sin pago; página de cancelación correcta; **cero
+errores de consola durante el recorrido cubierto** — esto no demuestra todavía que la CSP
+pueda pasar a modo bloqueante, sigue en `Content-Security-Policy-Report-Only`; sin
+desbordamientos, recortes ni solapamientos. (El servidor MCP de Playwright para Claude Code
+está configurado en este repositorio pero **pendiente de aprobación**; esta QA la ejecutó
+Codex con Playwright directamente, no ese MCP.) **Esta QA encontró y corrigió un
+desbordamiento horizontal real en móvil** (commit `9ee1fbc`): faltaba `overflow-hidden` en
+dos secciones con una animación de escala (`eclipssebrand.tsx`, `personaliza.tsx`) y el
+espaciado del contador (`DropCountdown.tsx`) era demasiado ancho por debajo de `sm:`. Detalle
+en `CALIDAD.md`.
+
+**Comprobación manual final de Ana, en navegador real (web y móvil):** banner de cookies en
+sesión privada, ficha de producto, carrito, checkout, llegada a Stripe en modo test y
+cancelación — todo correcto, sin completar ningún pago. Complementa la QA automatizada de
+Codex/Playwright con un recorrido humano real, en dispositivos reales.
+
+⚠️ **Lo que esto NO cierra:** sigue sin probarse con tráfico real de compradores (solo
+peticiones controladas desde un único origen), sigue sin activarse la CSP en modo
+bloqueante, y M4, M8, M10 y B2 (typecast) **siguen abiertos exactamente con el mismo riesgo
+aceptado que antes** — nada de esta validación los resuelve ni los reduce.
+
+---
+
 ## 🔧 Estado de corrección — actualizado el 2026-09-23
 
 Sesión de corrección por orden de severidad, con las correcciones registradas en commits
@@ -46,8 +128,8 @@ identificados y
 
 | # | Estado | Nota |
 |---|---|---|
-| **A1** rate limiting | ✅ **Resuelto — migración a Cloudflare, 2026-09-24** | Binding oficial Rate Limiting de Cloudflare Workers (20 peticiones/60 s por `CF-Connecting-IP`), como middleware de petición en `src/start.ts`, exclusivo de `createCheckoutSession`. Falla cerrado (503 si el binding no responde). Verificado en preview local: 20 permitidas, 21ª → 429, reseteo a los ~60 s, webhook fuera del límite. Pendiente de comprobar en producción real (colos distintos, tráfico real). |
-| **M1** cabeceras | ✅ **Resuelto — migración a Cloudflare, 2026-09-24** | Middleware de petición en `src/start.ts` añade X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy y HSTS (sin `preload`) a toda respuesta del Worker; `public/_headers` cubre los estáticos. CSP en `Content-Security-Policy-Report-Only`, tal como proponía este informe, a la espera de comprobar en un despliegue real qué necesita `script-src` antes de activarla en modo bloqueante. No hay colector de reportes configurado: hay que mirar la consola del navegador a mano en cada QA. |
+| **A1** rate limiting | ✅ **Resuelto y validado en preprod real — 2026-09-27** | Binding oficial Rate Limiting de Cloudflare Workers, como middleware de petición en `src/start.ts`, exclusivo de `createCheckoutSession`. Falla cerrado (503 si el binding no responde, nunca observado en la prueba real). Verificado en preview local: 20 permitidas, 21ª → 429. **Verificado además contra el Worker real desplegado**: bloquea, pero de forma aproximada (primer 429 entre la petición ~15 y ~22 según tráfico reciente, alternando 200/429 después), coherente con que el binding es «eventualmente consistente». Cupos de `createCheckoutSession` y `/api/pedido-estado` confirmados independientes. Ver detalle en «✅ Validación real en Cloudflare (preprod) — 2026-09-27». |
+| **M1** cabeceras | ✅ **Resuelto y confirmado en preprod real — 2026-09-27** | Middleware de petición en `src/start.ts` añade X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy y HSTS (sin `preload`) a toda respuesta del Worker; `public/_headers` cubre los estáticos. Las seis cabeceras (incluida CSP) confirmadas presentes en el Worker real `eclipsseinorbit-preprod`, no solo en preview local. CSP sigue en `Content-Security-Policy-Report-Only`, a propósito — la QA final (Codex con Playwright, más comprobación manual de Ana en web y móvil) no observó errores de consola durante el recorrido cubierto; esto no demuestra todavía que la política pueda pasar a modo bloqueante, y esa decisión sigue sin tomarse. No hay colector de reportes configurado. |
 | **M2** tope de `items` | ✅ **Resuelto** | `.max(20)` en el esquema y agrupación por producto+talla antes de construir la sesión. Commit `61aa680`. |
 | **M3** origen por Host | ✅ **Resuelto en código** | En producción `SITE_URL` es obligatoria y ya no se acepta el origen de la petición. En desarrollo se conserva el respaldo local. Falta cargar y verificar el valor en el alojamiento. Commit `ddf2102`. |
 | **M4** desajuste de CP | 🟡 **Sin cambios, riesgo asumido** | Decisión previa de Ana. Sigue pendiente lo que añadía este informe: que la columna «Aviso envío» se vea sin buscarla. |
@@ -781,27 +863,39 @@ sensibles introducidos por el comprador; ver M10. Por tanto, no se afirma que el
 
 Por orden:
 
-1. ✅ **Rate limit en `createCheckoutSession`** (A1) — resuelto el 2026-09-24 con el binding
-   de Cloudflare Workers. Pendiente de comprobar con tráfico real en producción (colos
-   distintos, latencia de sincronización entre ubicaciones).
+1. ✅ **Rate limit en `createCheckoutSession`** (A1) — resuelto el 2026-09-24, **validado
+   contra tráfico real el 2026-09-27** en `eclipsseinorbit-preprod` (bloquea de forma
+   aproximada, no en un corte exacto — ver detalle arriba). Sigue pendiente probarlo con
+   tráfico real de compradores, no solo peticiones controladas desde un único origen.
 2. ✅ **Deduplicar también por sesión/operación de negocio**, no solo por `event.id` (M8) —
    mitigado el 2026-09-26, Opción A aplicada en n8n (upsert por `orderRef`, más rechazo de
    pedidos sin referencia). Riesgo residual de concurrencia real aceptado por Ana; no se
-   implementó la Opción B (D1/Durable Object).
-3. ✅ **Cabeceras de seguridad en el alojamiento** (M1) — resuelto el 2026-09-24, CSP en modo
-   `Report-Only`; HSTS sin `preload` hasta verificar dominio y subdominios reales en
-   Cloudflare.
-4. **Cargar y comprobar `SITE_URL` y el resto de variables de producción**. El código ya
-   rechaza la ausencia de `SITE_URL` en producción (M3). Debe cargarse como secreto/variable
-   de Cloudflare, no en Vercel.
+   implementó la Opción B (D1/Durable Object). **Sin cambios el 2026-09-27.**
+3. ✅ **Cabeceras de seguridad en el alojamiento** (M1) — resuelto el 2026-09-24, **confirmado
+   en el Worker real el 2026-09-27**; CSP sigue en modo `Report-Only` (cero errores de
+   consola en la QA final, pero no se ha activado en bloqueante); HSTS sin `preload` hasta
+   verificar dominio y subdominios reales en Cloudflare (dominio de producción sigue sin
+   migrar).
+4. ✅ **Cargar y comprobar `SITE_URL` y el resto de variables**. Hecho para **preproducción**
+   el 2026-09-27: `eclipsseinorbit-preprod` tiene su propio `SITE_URL`, `APP_ENV`,
+   `STRIPE_SECRET_KEY` (test), `STRIPE_WEBHOOK_SECRET`, `N8N_ORDER_WEBHOOK_URL` y
+   `N8N_ORDER_WEBHOOK_SECRET`, aislados del Worker de producción. **Sigue pendiente para
+   producción real**, con claves `live`.
 5. **Dar de alta el endpoint del webhook en modo live en Stripe**, apuntando al dominio
    servido por Cloudflare, y poner su `whsec_` nuevo en `STRIPE_WEBHOOK_SECRET` de
-   producción. Ya está en `00_ESTADO_PROYECTO.md`; se repite aquí porque es el fallo más caro
-   de todos: **la tienda cobraría y ningún pedido llegaría a Airtable**.
-6. **Comprobar la retención de notas y payloads** en Stripe, n8n y Airtable (M10).
+   producción. El de preproducción (test) ya está probado de punta a punta (ver arriba); el
+   de producción (live) **sigue sin existir**. Es el fallo más caro de todos si se olvida:
+   **la tienda cobraría y ningún pedido llegaría a Airtable**.
+6. **Comprobar la retención de notas y payloads** en Stripe, n8n y Airtable (M10). **Sin
+   cambios el 2026-09-27.**
 7. **Obtener evidencia de los controles operativos esenciales:** MFA y accesos, separación
    de secretos por entorno, alertas de fallos, conciliación de cobros/pedidos, copia
    recuperable e instrucciones mínimas de incidente.
+8. ✅ **Preview de Cloudflare real y compra de prueba completa de punta a punta** — hecho el
+   2026-09-27 en `eclipsseinorbit-preprod`: checkout, webhook, n8n y Airtable probados con
+   una compra real en modo test (ver «✅ Validación real en Cloudflare» arriba). QA visual y
+   responsive también completada (Playwright, 18/18). **No sustituye la validación en
+   producción real ni con claves live.**
 
 **No bloquean, pero conviene hacerlos pronto:** B1 (prefijo anti-CSV), B3 (borrar
 `chart.tsx` y `recharts`), vigilar el riesgo aceptado de `typecast` (B2), la vista de Airtable

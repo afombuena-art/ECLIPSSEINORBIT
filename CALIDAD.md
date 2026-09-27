@@ -61,8 +61,9 @@ identificados y
 | **B-11** página de error en inglés | ✅ **Resuelto** | Commit `8104817`. |
 | **B-12** enlace con recarga | ✅ **Resuelto** | Commit `70cd896`. |
 
-**Resumen: 15 resueltos, 2 parciales y 5 pendientes.** Los pendientes requieren una
-decisión de contenido/cumplimiento o una comprobación externa; no se resuelven a ciegas.
+**Resumen: 16 resueltos, 2 parciales y 5 pendientes** (con la incorporación de B-13, encontrado
+y resuelto el 2026-09-27). Los pendientes requieren una decisión de contenido/cumplimiento o
+una comprobación externa; no se resuelven a ciegas.
 
 ⚠️ **Lo corregido no ha tocado el diseño ni las reglas de negocio.** Las tarifas
 de envío, las zonas, los precios, el catálogo y qué pedidos se aceptan o rechazan
@@ -264,38 +265,68 @@ entrega; esos logs se conservaban y eran accesibles a quien tuviera el proyecto.
 
 **B-12 · Enlace con recarga completa dentro del banner.** [CookieBanner.tsx:41](src/components/CookieBanner.tsx#L41) — `<a href="/legal/cookies">` en vez de `<Link to=...>`. Recarga la página entera y reinicializa el estado en memoria; el carrito se recupera de `localStorage`, así que no se pierde, pero el salto y la rehidratación son innecesarios.
 
+**B-13 · Desbordamiento horizontal real en móvil — encontrado y resuelto el 2026-09-27.**
+La QA responsive con Playwright contra `eclipsseinorbit-preprod` encontró desbordamiento
+horizontal en dos rutas a 375–390px, por dos causas distintas:
+- [DropCountdown.tsx:58](src/components/DropCountdown.tsx#L58) — `gap-6` entre los cuatro
+  dígitos del contador era demasiado ancho por debajo del breakpoint `sm:`. Corregido a
+  `gap-4 sm:gap-6 md:gap-14`.
+- [eclipssebrand.tsx:134](src/routes/eclipssebrand.tsx#L134) y
+  [personaliza.tsx:272](src/routes/personaliza.tsx#L272) — la sección que envuelve una imagen
+  con animación de escala (`whileInView={{ scale: 1 }}` desde `initial={{ scale: 1.02 }}`) no
+  tenía `overflow-hidden`: el 2% de escala de más se salía del viewport en móvil. Corregida
+  añadiendo `overflow-hidden` a esa sección en los dos ficheros.
+
+Commit `9ee1fbc`, con un banco de pruebas nuevo (`tests/e2e/responsive.spec.ts`, Playwright)
+que comprueba en 375/390/768 px que `document.documentElement.scrollWidth` y
+`document.body.scrollWidth` coinciden con el ancho del viewport en portada, `/eclipssebrand`,
+`/personaliza`, `/checkout` y las dos páginas legales revisadas — 18 comprobaciones en total,
+las 18 en verde tras la corrección.
+
 ---
 
 ## ⚪ No comprobado en esta revisión
 
-Este documento es una revisión estática. No equivale a QA funcional, visual ni de
-producción. Antes de declarar la tienda lista faltan evidencias de:
+Este documento es una revisión estática. Parte de lo que sigue **ya se comprobó de verdad el
+2026-09-27**, contra el Worker real de preproducción `eclipsseinorbit-preprod` — se indica
+expresamente qué sí y qué no. Antes de declarar la tienda lista faltan evidencias de:
 
 - **Build, tipos, tests y lint:** verificados el 2026-09-23 (66 pruebas) y de nuevo el
   2026-09-24 tras la migración a Cloudflare (**90 pruebas**). Pasan build, `typecheck` y
   lint sin errores; quedan los mismos 7 avisos no bloqueantes de Fast Refresh.
-- **Pruebas funcionales actuales:** carrito, cantidades límite, talla retirada, código
-  postal inválido, pérdida de red, doble clic, retorno desde Stripe y errores de n8n en un
-  preview que contenga exactamente el código candidato a producción.
-- **QA visual responsive:** apertura y capturas reales en móvil, tablet y escritorio. En
-  particular, contador, banner de cookies, carrito, checkout, errores y páginas legales.
+- ✅ **Pruebas funcionales contra preprod real — 2026-09-27:** compra completa (checkout →
+  webhook → n8n → Airtable, una fila, verificada y borrada), cancelación (una sesión sin
+  pagar, sin pedido creado), `GET`/`POST` al webhook con y sin firma válida, y
+  `/api/pedido-estado` con sesión inexistente. **Sigue sin probarse**: doble clic exacto,
+  pérdida de red a mitad de pago, y talla retirada en mitad de una compra en curso.
+- ✅ **QA visual responsive — 2026-09-27**, con Playwright contra `eclipsseinorbit-preprod`
+  en 375×812, 390×844 y 768×1024: portada, `/eclipssebrand`, `/personaliza`, `/checkout`,
+  banner de cookies, carrito y dos páginas legales — 18/18 comprobaciones, cero errores de
+  consola, sin desbordamientos ni solapamientos tras corregir B-13. **No cubre**: el resto de
+  páginas legales no incluidas en el banco de pruebas, ni tablet/escritorio por encima de
+  768px.
 - **Accesibilidad:** navegación solo con teclado, orden y visibilidad del foco, nombres
   accesibles, contraste, zoom, mensajes de error y una comprobación con lector de pantalla.
-- **Compatibilidad:** Chrome, Firefox, Safari y Edge. M-8 se deriva del código, pero no se ha
-  reproducido en esos navegadores.
+  **Sigue sin comprobarse.**
+- **Compatibilidad:** la QA del 2026-09-27 corrió sobre el navegador headless de Playwright
+  (Chromium). **Firefox, Safari y Edge siguen sin probarse.** M-8 se deriva del código, pero
+  no se ha reproducido en ningún navegador real.
 - **Rendimiento:** Lighthouse/Core Web Vitals, peso y dimensiones de imágenes, carga de
-  fuentes y comportamiento en red lenta.
+  fuentes y comportamiento en red lenta. **Sigue sin comprobarse.**
 - **SEO y compartición reales:** canonicals, sitemap, robots, JSON-LD, `og:url`, `og:image`
   y tarjetas de WhatsApp u otras redes sobre el dominio definitivo. La lectura del código
-  detecta M-6 y M-7, pero no sustituye una prueba contra una URL publicada.
+  detecta M-6 y M-7, pero no sustituye una prueba contra una URL publicada. `X-Robots-Tag:
+  noindex` se confirmó activo solo en preprod, no en producción (correcto y a propósito).
 - **Enlaces y rutas:** recorrido automático o manual de enlaces internos, 404, correo,
-  WhatsApp, Instagram y textos legales. Que los enlaces de este informe apunten a ficheros
-  existentes no prueba los enlaces de la web.
-- **Servicios externos:** configuración real de Cloudflare, Stripe, n8n y Airtable. Se cubren
-  por separado en `SEGURIDAD.md` y en la lista de puesta en producción.
+  WhatsApp, Instagram y textos legales más allá de los dos cubiertos por la QA del 2026-09-27.
+- ✅ **Servicios externos, parcialmente cubierto:** Cloudflare (Worker de preprod desplegado y
+  probado), Stripe (test) y n8n/Airtable (workflow y tabla reales, con una compra de prueba)
+  ya tienen evidencia real — ver `SEGURIDAD.md`. **Sigue pendiente**: la misma validación con
+  claves `live` y en el dominio de producción real.
 
-Hasta completar esas comprobaciones, el estado correcto es **revisión estática terminada;
-QA visual y funcional pendiente**.
+Estado actualizado: **revisión estática terminada; QA visual y funcional validada en
+preproducción real (Chromium, 3 anchos); accesibilidad, otros navegadores, rendimiento y
+producción real siguen pendientes.**
 
 ---
 
@@ -353,4 +384,6 @@ de casos límite. Para una decisión de producción deben leerse juntos `CALIDAD
 3. **M-9 y B-3** — confirmar cuántas camisetas hay y qué cara debe ser la imagen principal.
 4. **B-1, B-2 y B-8** — consentimiento, fuentes externas y conservación de logs.
 5. **Ejecutar la matriz funcional, visual, responsive, accesible y de navegadores** de la
-   sección «No comprobado» sobre un preview candidato a producción.
+   sección «No comprobado» sobre un preview candidato a producción. ✅ **Parcialmente hecho el
+   2026-09-27** (funcional y responsive en preprod real, Chromium); quedan accesibilidad,
+   Firefox/Safari/Edge y rendimiento.
