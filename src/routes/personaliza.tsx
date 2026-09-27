@@ -269,7 +269,7 @@ function CustomPage() {
         </div>
       </section>
 
-      <section className="border-t border-border flex justify-center bg-white">
+      <section className="border-t border-border flex justify-center bg-white overflow-hidden">
         <motion.div
           initial={{ opacity: 0, scale: 1.02 }}
           whileInView={{ opacity: 1, scale: 1 }}

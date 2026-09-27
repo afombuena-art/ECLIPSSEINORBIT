@@ -131,7 +131,7 @@ function BrandPage() {
         </div>
       </section>
 
-      <section className="border-t border-border bg-white flex justify-center">
+      <section className="border-t border-border bg-white flex justify-center overflow-hidden">
         <motion.div
           initial={{ opacity: 0, scale: 1.02 }}
           whileInView={{ opacity: 1, scale: 1 }}

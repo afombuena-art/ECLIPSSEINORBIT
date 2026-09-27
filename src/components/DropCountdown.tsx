@@ -55,7 +55,7 @@ export function DropCountdown() {
         </p>
 
         <div
-          className="flex justify-center gap-6 md:gap-14"
+          className="flex justify-center gap-4 sm:gap-6 md:gap-14"
           style={{ opacity: mounted ? 1 : 0, transition: "opacity 0.3s" }}
         >
           <Digit value={time.days} label="días" />
