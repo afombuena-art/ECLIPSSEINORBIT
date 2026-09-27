@@ -1,4 +1,5 @@
 import { getProductById } from "@/data/products";
+import { textoSeguro } from "@/lib/csv-safe-text";
 
 /**
  * Tarifas de envío de Correos vía Packlink PRO, enviando desde 41001 (Sevilla).
@@ -170,6 +171,12 @@ export type AvisoEnvio = { mensaje: string; codigo: AvisoEnvioCodigo } | null;
  * `codigo` es un identificador corto sin ningún dato personal, pensado para
  * quien llama y solo quiere registrar la incidencia en un log de servidor sin
  * volcar el CP del cliente (CALIDAD B-8).
+ *
+ * El cálculo de zona y la comparación usan los códigos postales SIN sanear
+ * (`entregaPostalCode` puede venir tal cual del formulario de dirección de
+ * Stripe, que no valida el formato). `textoSeguro` solo se aplica justo antes
+ * de interpolar en `mensaje`, para no alterar esa comparación con una
+ * protección pensada para la exportación a CSV.
  */
 export function compararEnvioCobradoConEntrega(
   cobradoZona: string | null,
@@ -179,23 +186,25 @@ export function compararEnvioCobradoConEntrega(
   if (entregaPostalCode === null || cobradoZona === null) return null;
 
   const zonaEntrega = zoneFromPostalCode(entregaPostalCode);
+  const cobradoPostalCodeSeguro = textoSeguro(cobradoPostalCode);
+  const entregaPostalCodeSeguro = textoSeguro(entregaPostalCode);
   if (!zonaEntrega.ok) {
     if (zonaEntrega.reason === "fuera-de-cobertura") {
       return {
         codigo: "fuera_de_cobertura",
-        mensaje: `NO ENVIAR — la dirección de entrega (CP ${entregaPostalCode}) está en Canarias, Ceuta o Melilla, donde no enviamos. Se cobró como ${cobradoZona} (CP ${cobradoPostalCode}). Contactar con el cliente y devolver o regularizar.`,
+        mensaje: `NO ENVIAR — la dirección de entrega (CP ${entregaPostalCodeSeguro}) está en Canarias, Ceuta o Melilla, donde no enviamos. Se cobró como ${cobradoZona} (CP ${cobradoPostalCodeSeguro}). Contactar con el cliente y devolver o regularizar.`,
       };
     }
     return {
       codigo: "cp_entrega_invalido",
-      mensaje: `REVISAR — el CP de entrega (${entregaPostalCode}) no es un código postal español válido. Se cobró como ${cobradoZona} (CP ${cobradoPostalCode}).`,
+      mensaje: `REVISAR — el CP de entrega (${entregaPostalCodeSeguro}) no es un código postal español válido. Se cobró como ${cobradoZona} (CP ${cobradoPostalCodeSeguro}).`,
     };
   }
 
   if (zonaEntrega.zone !== cobradoZona) {
     return {
       codigo: "zona_no_coincide",
-      mensaje: `REVISAR — se cobró envío de ${cobradoZona} (CP ${cobradoPostalCode}) pero la entrega es en ${zonaEntrega.zone} (CP ${entregaPostalCode}). Puede faltar diferencia de portes.`,
+      mensaje: `REVISAR — se cobró envío de ${cobradoZona} (CP ${cobradoPostalCodeSeguro}) pero la entrega es en ${zonaEntrega.zone} (CP ${entregaPostalCodeSeguro}). Puede faltar diferencia de portes.`,
     };
   }
 

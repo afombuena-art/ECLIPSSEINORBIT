@@ -202,6 +202,23 @@ describe("compararEnvioCobradoConEntrega", () => {
     expect(aviso?.mensaje).toContain("08001");
   });
 
+  it("no altera un código postal válido dentro del mensaje", () => {
+    const aviso = compararEnvioCobradoConEntrega("peninsula", "08001", "41001");
+    expect(aviso?.codigo).toBe("zona_no_coincide");
+    expect(aviso?.mensaje).toContain("(CP 08001)");
+    expect(aviso?.mensaje).toContain("(CP 41001)");
+  });
+
+  it("auditoría 2026-09-27: sanea un CP de entrega que empieza por un carácter de fórmula, sin cambiar el cálculo de zona", () => {
+    // "=1+1" no es un CP válido (no son 5 dígitos), así que cae en
+    // cp_entrega_invalido igual que "9999" — el saneado no altera esa
+    // decisión, solo el texto del mensaje.
+    const aviso = compararEnvioCobradoConEntrega("sevilla", "41001", "=1+1");
+    expect(aviso?.codigo).toBe("cp_entrega_invalido");
+    expect(aviso?.mensaje).toContain("entrega ('=1+1)");
+    expect(aviso?.mensaje).not.toContain("entrega (=1+1)");
+  });
+
   it("CALIDAD B-8: el código nunca contiene el código postal (solo el mensaje lo lleva)", () => {
     // El log de servidor solo debe volcar `codigo`, nunca `mensaje`. Esta
     // prueba fija esa garantía: ningún valor posible de `codigo` tiene

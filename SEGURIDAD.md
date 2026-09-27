@@ -57,7 +57,7 @@ identificados y
 | **M8** deduplicación | ✅ **Mitigado — Opción A aplicada en n8n, 2026-09-26** | Upsert de Airtable cambiado de `eventId` a `orderRef` (`fieldsToMergeOn`), más un nodo «Si» que rechaza con 400 los pedidos sin `orderRef` (antes creaba una fila huérfana). Probado con datos falsos en el Airtable real: pedido nuevo, mismo `orderRef` con `eventId` distinto, `orderRef` distinto y sin `orderRef` — los 4 casos se comportaron como se esperaba. Riesgo residual de concurrencia real (dos peticiones simultáneas) **no demostrado como cubierto, aceptado expresamente por Ana**. Cambio hecho directamente en el workflow de n8n, fuera de este repositorio: sin commit de código. Detalle completo en `00_ESTADO_PROYECTO.md`. |
 | **M9** confirmación de pago | ✅ **Resuelto — 2026-09-24** | `/pedido/confirmado` consulta `/api/pedido-estado`, que relee la sesión en Stripe y exige marca de origen, mode, moneda y formato de orderRef (los mismos criterios que el webhook). Solo tres estados visibles (confirmado/pendiente/no_confirmado), sin datos del cliente. No sustituye al webhook. Commit `0e982ad`. |
 | **M10** notas libres | 🟡 **Mínimo aplicado** | Aviso junto al campo de no escribir datos sensibles. **Falta decidir** si las notas deben existir también en Stripe y comprobar la retención de payloads en n8n. Commit `6b42e27`. |
-| **B1** CSV en Airtable | ✅ **Resuelto** | Notas, nombre y dirección pasan por un prefijo de apóstrofo si empiezan por `=`, `+`, `-`, `@`, tabulador o retorno. Commit `dcaa297`. |
+| **B1** CSV en Airtable | ✅ **Resuelto — cobertura completada el 2026-09-27** | Notas, nombre y dirección pasan por un prefijo de apóstrofo si empiezan por `=`, `+`, `-`, `@`, tabulador o retorno. Commit `dcaa297`. **Hueco encontrado en la auditoría del 2026-09-27:** el CP de entrega que recoge el formulario de Stripe (no el nuestro) llegaba sin ese mismo saneado a `envio.codigoPostalEntrega`/`envio.aviso`. Cerrado saneando `entregaEn`/`cobradoPor` solo en los límites de salida (al construir `envio.*` en el webhook, y justo antes de interpolar en los mensajes de `shipping.ts`) — el cálculo de zona y la comparación siguen usando los códigos postales sin sanear, para no alterar esa lógica. `textoSeguro()` se movió a `src/lib/csv-safe-text.ts` para poder reutilizarse desde los dos sitios y probarse por separado. |
 | **B2** `typecast` | 🟡 **Sin cambios, a propósito** | Riesgo aceptado y documentado. Revisar si algún día se mapea texto del comprador a un campo de selección. |
 | **B3** `chart.tsx` muerto | ✅ **Resuelto — 2026-09-24** | Confirmado sin consumidores (grep) y borrado junto con `recharts`. Commit `781313a`. |
 | **B4** carrito manipulable | ✅ **Sin acción — estaba bien** | Verificado de nuevo. |
@@ -568,6 +568,21 @@ que empiece por `=`, `+`, `-` o `@` se ejecuta como fórmula en el equipo de qui
 
 **Arreglo:** antes de mandar el payload a n8n, prefijar con un apóstrofo los valores de
 texto libre que empiecen por esos cuatro caracteres.
+
+**Seguimiento 2026-09-27 — hueco encontrado y cerrado:** el arreglo original no cubría el
+código postal de entrega que devuelve el formulario de dirección alojado por Stripe
+(`entregaEn` en [api.stripe-webhook.ts](src/routes/api.stripe-webhook.ts)), a diferencia del
+código postal de nuestro propio checkout (que sí valida `^\d{5}$`). Ese CP llegaba sin sanear
+a `envio.codigoPostalEntrega` y al texto de `envio.aviso` construido en
+[shipping.ts](src/lib/shipping.ts). Cerrado con `textoSeguro()` aplicado únicamente en los
+límites de salida —al construir `envio.*`, y justo antes de interpolar en los mensajes de
+`shipping.ts`— para no alterar con una protección pensada para CSV el cálculo de zona ni la
+comparación entre lo cobrado y lo entregado, que siguen usando los códigos postales sin
+sanear. `textoSeguro()` se extrajo a
+[src/lib/csv-safe-text.ts](src/lib/csv-safe-text.ts) para reutilizarse desde ambos archivos y
+tener prueba unitaria propia; `shipping.ts` gana además una prueba de integración que
+comprueba que un CP con `=` no aparece sin proteger en el mensaje y que uno válido
+(`41001`) no cambia.
 
 ### B2 · `typecast: true` en el nodo de Airtable
 

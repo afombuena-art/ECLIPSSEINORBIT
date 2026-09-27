@@ -248,7 +248,11 @@ vuelca `avisoEnvio` (el texto con los CPs); registra solo un código corto sin d
 personales (`fuera_de_cobertura` / `cp_entrega_invalido` / `zona_no_coincide`) y el ID de la
 sesión de Stripe. Commit `a49139c`, con prueba que fija que ningún código posible contiene
 dígitos. El texto completo sigue llegando, sin cambios, al payload de Airtable — la
-retención ahí sigue siendo una decisión de plazos, no de código. Descripción original,
+retención ahí sigue siendo una decisión de plazos, no de código. **Actualización
+2026-09-27:** ese texto completo ahora sí pasa por `textoSeguro()` antes de llegar a
+`envio.codigoPostalEntrega`/`envio.aviso` (hueco de SEGURIDAD.md B1 cerrado esa fecha); lo
+que sigue sin cambios es que Airtable recibe el CP en texto, no que vaya sin proteger.
+Descripción original,
 sobre logs de Vercel: `console.warn` volcaba `avisoEnvio`, que incluía el CP cobrado y el de
 entrega; esos logs se conservaban y eran accesibles a quien tuviera el proyecto.
 

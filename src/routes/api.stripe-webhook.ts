@@ -5,25 +5,9 @@ import { alreadyForwarded, markForwarded, seenInMemory } from "@/lib/webhook-ded
 import { zoneFromPostalCode, compararEnvioCobradoConEntrega } from "@/lib/shipping";
 import { ORIGEN_PEDIDO } from "@/lib/checkout-schema";
 import { errorSeguro } from "@/lib/log-safety.server";
+import { textoSeguro } from "@/lib/csv-safe-text";
 
 const N8N_TIMEOUT_MS = 12_000;
-
-/**
- * Caracteres con los que Excel y LibreOffice empiezan a interpretar una celda
- * como fórmula. Airtable no evalúa nada, pero sus exportaciones a CSV se abren
- * en una hoja de cálculo, y ahí sí se ejecutan.
- */
-const INICIO_DE_FORMULA = /^[=+\-@\t\r]/;
-
-/**
- * Texto libre del comprador listo para guardarse. Si empieza por un carácter de
- * fórmula se le antepone un apóstrofo, que es como se marca «esto es texto» en
- * una hoja de cálculo.
- */
-function textoSeguro(valor: string | null | undefined): string | null {
-  if (valor == null) return null;
-  return INICIO_DE_FORMULA.test(valor) ? `'${valor}` : valor;
-}
 
 /** Igual que `textoSeguro`, sobre los campos libres de una dirección. */
 function direccionSegura(address: Stripe.Address | null | undefined): Stripe.Address | null {
@@ -223,6 +207,13 @@ export const Route = createFileRoute("/api/stripe-webhook")({
         // nuestro checkout, antes de que Stripe recogiera la dirección real.
         // Si no coinciden, el pedido se marca para que se revise a mano: puede
         // ser un error del comprador o un intento de pagar de menos.
+        //
+        // Estos dos valores se mantienen SIN sanear: se usan para calcular la
+        // zona (`zoneFromPostalCode`) y comparar contra lo cobrado
+        // (`compararEnvioCobradoConEntrega`), y `textoSeguro` podría alterar
+        // esa comparación. El saneado para CSV se aplica solo en los límites
+        // de salida: aquí abajo al construir `envio.*`, y dentro de
+        // `shipping.ts` justo antes de interpolar en los mensajes.
         const cobradoPor = session.metadata?.shippingPostalCode ?? null;
         const cobradoZona = session.metadata?.shippingZone ?? null;
         const entregaEn =
@@ -282,8 +273,10 @@ export const Route = createFileRoute("/api/stripe-webhook")({
           marketingOptIn: session.metadata?.marketingOptIn === "true",
           envio: {
             zonaCobrada: cobradoZona,
-            codigoPostalCobrado: cobradoPor,
-            codigoPostalEntrega: entregaEn,
+            // Saneado aquí (límite de salida hacia Airtable), no antes: arriba
+            // se usan sin sanear para el cálculo de zona y la comparación.
+            codigoPostalCobrado: textoSeguro(cobradoPor),
+            codigoPostalEntrega: textoSeguro(entregaEn),
             zonaEntrega: zonaRealEntrega,
             /** `true` si la zona de entrega no coincide con la cobrada. */
             revisar: revisarEnvio,
