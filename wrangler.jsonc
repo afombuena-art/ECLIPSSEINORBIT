@@ -25,4 +25,22 @@
   "observability": {
     "enabled": true,
   },
+  "env": {
+    // Entorno de preproducción: Worker independiente, sin rutas ni dominio propio.
+    // Los bindings no se heredan entre entornos, así que el rate limiter se
+    // repite aquí con un namespace_id distinto al de producción (1001).
+    "preprod": {
+      "name": "eclipsseinorbit-preprod",
+      "ratelimits": [
+        {
+          "name": "CHECKOUT_RATE_LIMITER",
+          "namespace_id": "1002",
+          "simple": {
+            "limit": 20,
+            "period": 60,
+          },
+        },
+      ],
+    },
+  },
 }
