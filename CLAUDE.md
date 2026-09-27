@@ -183,3 +183,17 @@ conviene verificar que el hook sigue bloqueando commits con secretos:
 2. Hacer `git add` de ese archivo e intentar un commit: debe fallar.
 3. Borrar el archivo de prueba sin dejar rastro — que no quede ni en
    el index, ni en el disco, ni en ningún commit del historial.
+
+## 13. QA visual con Playwright
+
+- El proyecto expone el servidor MCP oficial de Playwright en
+  `.mcp.json`, con un navegador aislado y headless. Al abrir una sesión
+  nueva de Claude Code desde la raíz del proyecto, aceptar el MCP
+  `playwright` si Claude solicita confianza.
+- Usar las herramientas del MCP para revisar la web renderizada,
+  responsive, interacciones y desbordamientos; no declarar QA visual
+  completa basándose solo en HTML, CSS o respuestas HTTP.
+- Si el MCP no aparece en una sesión que ya estaba abierta, reiniciar
+  Claude Code desde la raíz del proyecto y comprobarlo con `/mcp`.
+- La instalación local puede verificarse sin descargar nada mediante
+  `npx --no-install playwright-mcp --version`.
