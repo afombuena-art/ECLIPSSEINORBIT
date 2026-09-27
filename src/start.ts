@@ -5,6 +5,7 @@ import { env } from "cloudflare:workers";
 import { renderErrorPage } from "./lib/error-page";
 import { checkRateLimit } from "./lib/rate-limit.server";
 import { errorSeguro } from "./lib/log-safety.server";
+import { applyPreprodRobotsHeader } from "./lib/robots-header.server";
 
 // Protege las server functions (RPC same-origin) frente a peticiones cross-site.
 // Va antes que el límite de peticiones: una petición cross-site rechazada no
@@ -108,6 +109,7 @@ const securityHeadersMiddleware = createMiddleware().server(async ({ next }) => 
   const response = result instanceof Response ? result : result?.response;
   if (response instanceof Response) {
     applySecurityHeaders(response.headers);
+    applyPreprodRobotsHeader(response.headers, process.env.APP_ENV);
   }
   return result;
 });

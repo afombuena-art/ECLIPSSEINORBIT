@@ -31,6 +31,13 @@
     // repite aquí con un namespace_id distinto al de producción (1001).
     "preprod": {
       "name": "eclipsseinorbit-preprod",
+      // APP_ENV activa el X-Robots-Tag de start.ts: preproducción no debe
+      // indexarse mientras se prueba Stripe. SITE_URL es la URL pública real
+      // de este Worker (checkout.server.ts la exige siempre, ver CLAUDE.md).
+      "vars": {
+        "SITE_URL": "https://eclipsseinorbit-preprod.eclipssebrand.workers.dev",
+        "APP_ENV": "preprod",
+      },
       "ratelimits": [
         {
           "name": "CHECKOUT_RATE_LIMITER",
