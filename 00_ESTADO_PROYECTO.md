@@ -1,8 +1,8 @@
 # Estado del proyecto · ECLIPSSEINORBIT
 
-**Última actualización:** 2026-09-26
+**Última actualización:** 2026-09-27
 **Tipo:** integración de Stripe para tienda online
-**Estado:** activo — **auditoría local de seguridad y calidad cerrada; todavía no apto para producción**
+**Estado:** activo — **preproducción validada; apto con pendientes para preparar una puesta en producción controlada, todavía no para conmutar el dominio**
 **Ingresos confirmados:** no confirmados
 **Compromiso o fecha:** ninguno confirmado
 
@@ -78,6 +78,30 @@ se han reescrito para no falsear esa fecha.
 con tráfico real de compradores, sin activar la CSP en modo bloqueante, y M4, M8, M10 y B2
 siguen exactamente con el mismo riesgo aceptado que antes. Tampoco se ha probado en
 Firefox/Safari/Edge (solo Chromium, vía Playwright), ni accesibilidad, ni rendimiento.
+
+## Cierre de sesión — 2026-09-27
+
+**Punto exacto para retomar:** rama `auditoria-preproduccion`. El último commit de
+validación antes de este cierre documental fue `7270fcd` y el árbol estaba limpio. La
+cantidad actual de commits locales se consulta con
+`git rev-list --count origin/auditoria-preproduccion..HEAD`. La
+preproducción está desplegada y validada en Cloudflare; producción, `main`, el dominio y
+Vercel siguen sin cambios.
+
+**Conclusión de entrega:** el código y el flujo de prueba quedan **aptos para el alcance
+comprobado en preproducción**, con los riesgos residuales documentados y aceptados. Esto no
+equivale a estar listo para pulsar un único botón de producción: faltan la preparación y la
+conmutación live descritas más abajo.
+
+**Próxima acción única al retomar:** subir `auditoria-preproduccion` a su rama remota para
+guardar y revisar los commits locales, **sin integrar todavía en `main`**. Después se preparará,
+en una sesión separada y con autorización expresa, la checklist live: política de privacidad
+Cloudflare, Worker y secretos de producción, webhook Stripe live, recibos live, control del
+autodeploy de Vercel, dominio/DNS y plan de reversión.
+
+⚠️ **No ejecutar mañana como una sola maniobra:** merge a `main`, secretos live, webhook
+live, cambio de dominio y retirada de Vercel. Cada paso debe comprobarse antes de pasar al
+siguiente; la web actual de producción se conserva como reversión hasta validar la nueva.
 
 ---
 
@@ -1007,12 +1031,13 @@ implementada. Ya no es «lo primero al retomar».
 2026-09-27.** Ver «✅ Validación real en Cloudflare (preprod)» al principio de este archivo.
 Ya no es «lo primero al retomar».
 
-🔸 **Lo primero al retomar ahora:** decidir si se avanza hacia producción real (claves live,
-webhook live, integración en `main`, con autorización expresa de Ana) o si antes se completa
-la QA que falta (accesibilidad, Firefox/Safari/Edge, rendimiento — ver `CALIDAD.md`). También
-siguen abiertas las decisiones visibles sobre contador, 4 o 5 camisetas e imagen
-frontal/trasera, y sustituir Vercel por Cloudflare en la política de privacidad (pendiente a
-propósito, ver bloqueante 6).
+🔸 **Lo primero al retomar ahora:** subir `auditoria-preproduccion` a su rama remota, sin
+integrar en `main`. Después, preparar la puesta en producción por pasos: política de
+privacidad, configuración y secretos live de Cloudflare, webhook Stripe live, recibos,
+control del autodeploy de Vercel, dominio/DNS y reversión. La QA adicional de accesibilidad,
+Firefox/Safari/Edge y rendimiento sigue siendo recomendable, pero no se confunde con la QA
+de preproducción ya cerrada. También siguen abiertas las decisiones visibles sobre contador,
+4 o 5 camisetas e imagen frontal/trasera.
 
 **1 · ✅ DPA de Airtable — FIRMADO el 2026-09-20.** Ver punto 9.
 
@@ -1026,8 +1051,10 @@ propósito, ver bloqueante 6).
 
 **5 · ✅ Los 7 segundos — resueltos el 2026-09-21** (3749 ms). Ver arriba.
 
-**6 · Puesta en producción — BLOQUEADA.** Antes hay que migrar y validar el proyecto en
-Cloudflare, cerrar los bloqueantes de seguridad y completar las pruebas externas.
+**6 · Puesta en producción — PREPRODUCCIÓN VALIDADA; CONMUTACIÓN LIVE PENDIENTE.** El código
+y el flujo de prueba están validados en Cloudflare. No se cambia aún el dominio: faltan la
+política de privacidad, configuración y secretos live, webhook live, recibos, control del
+autodeploy de Vercel, dominio/DNS, plan de reversión y autorización expresa de Ana.
 
 **7 · Activar los recibos automáticos de Stripe** (decisión 1 de arriba). Panel de
 Stripe, en **modo live**. ⚠️ En modo prueba Stripe no manda recibos solos, así que
