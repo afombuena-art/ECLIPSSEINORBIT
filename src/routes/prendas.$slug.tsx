@@ -231,7 +231,7 @@ function ProductPage() {
           </div>
 
           <div className="mt-10 flex flex-col sm:flex-row gap-3">
-            <div className="flex items-center border border-black self-start">
+            <div className="flex items-center rounded-md border border-black self-start">
               <button
                 type="button"
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
