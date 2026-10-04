@@ -1088,16 +1088,30 @@ Primero debe existir una versión de preview comprobada. La secuencia nueva ser�
 6. Desconectar o pausar el despliegue automático de Vercel antes de integrar en `main`.
 
 ✅ **Dato resuelto el 2026-09-22:** la web está publicada en
-`https://www.eclipssebrand.es/` y sirve la rama `main`. El despliegue está
-conectado desde GitHub (el repositorio remoto es
-`github.com/afombuena-art/ECLIPSSEINORBIT` y `main` lo sigue).
+`https://www.eclipssebrand.es/` y sirve la rama `main`.
 
 - `SITE_URL` = `https://www.eclipssebrand.es`
 - URL del webhook en Stripe = `https://www.eclipssebrand.es/api/stripe-webhook`
 
-⚠️ **No integrar todavía en `main`.** Vercel sigue conectado a esa rama y podría desplegar
-automáticamente. Primero hay que preparar Cloudflare y controlar qué proveedor queda
-vinculado a producción.
+### ⚠️ Se trabaja sobre una BIFURCACIÓN — descubierto el 2026-10-04
+
+```
+eclipsseuniverse/ECLIPSSEINORBIT     ← el original, cuenta de Jacobo
+        ↑ fork
+afombuena-art/ECLIPSSEINORBIT        ← el de Ana, es a donde apunta `origin`
+```
+
+**Dos consecuencias que no estaban contempladas en esta checklist:**
+
+**1 · Hace falta un Pull Request entre repositorios.** Subir la rama al `origin` de Ana **no** la acerca a producción: solo la guarda. Para que el trabajo llegue a la web hay que abrir un **PR de `afombuena-art` a `eclipsseuniverse`**, que Jacobo tendrá que aceptar. Es un paso extra, con su revisión, que conviene no descubrir el día del despliegue.
+
+**2 · ⚠️ DATO POR CONFIRMAR, Y ES CRÍTICO: ¿a qué repositorio está conectado el despliegue?** Arriba ponía que a `afombuena-art`, pero eso se escribió el 2026-09-22, **antes de saber que era una bifurcación**, así que no es fiable. Si Vercel vigila el `main` de **Ana**, integrar ahí dispara producción. Si vigila el de **Jacobo**, el disparo es al aceptar el PR.
+
+🔹 **Comprobarlo en el panel de Vercel → el proyecto → Settings → Git**, antes de integrar nada. El nombre del repositorio conectado aparece ahí.
+
+⚠️ **No integrar todavía en ningún `main`.** Hasta saber cuál vigila Vercel, cualquier merge puede desplegar sin querer. Primero preparar Cloudflare y controlar qué proveedor queda vinculado a producción.
+
+✅ **Lo que sí es seguro, comprobado el 2026-10-04:** subir ramas que no sean `main` al `origin` de Ana. Se subieron 32 commits de `auditoria-preproduccion` y `main` quedó intacto.
 
 **1 · Integrar `auditoria-preproduccion` en `main` solo tras cerrar los bloqueantes, preparar
 Cloudflare y recibir autorización expresa.** Tras registrar esta decisión, la rama va **80
