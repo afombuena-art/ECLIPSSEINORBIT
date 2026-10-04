@@ -7,7 +7,6 @@ import { ContactCTA } from "@/components/ContactCTA";
 import { SiteFooter } from "@/components/SiteFooter";
 import { products } from "@/data/products";
 import { formatEuros } from "@/lib/money";
-import { DropCountdown } from "@/components/DropCountdown";
 import hero from "@/assets/hero_drop.jpeg.asset.json";
 import { absoluteSiteUrl } from "@/data/site";
 
@@ -279,7 +278,6 @@ function BrandPage() {
       </section>
 
       <ContactCTA />
-      <DropCountdown />
       <SiteFooter />
     </div>
   );
