@@ -1,6 +1,6 @@
 # Estado del proyecto · ECLIPSSEINORBIT
 
-**Última actualización:** 2026-10-04
+**Última actualización:** 2026-10-05
 **Tipo:** integración de Stripe para tienda online
 **Estado:** activo — **preproducción validada; apto con pendientes para preparar una puesta en producción controlada, todavía no para conmutar el dominio**
 **Ingresos confirmados:** no confirmados
@@ -531,7 +531,7 @@ referencia. Sin commit de código: el cambio vive en n8n, fuera de este reposito
 
 ⛔ **Quedan código, configuración externa, pruebas y decisiones de contenido.** Ver la revisión del 2026-09-23 y «Próxima acción».
 
-## 🎨 Rediseño de identidad pedido por Jacobo — 2026-10-04, BLOQUEADO
+## 🎨 Rediseño de identidad pedido por Jacobo — desbloqueado el 2026-10-05, sin empezar
 
 Jacobo entregó un encargo largo (14 puntos) para **adaptar la web a una identidad de marca nueva**. El texto completo lo tiene Ana en la conversación del 2026-10-04.
 
@@ -555,11 +555,42 @@ Los archivos están en **`02_ARCHIVOS/`** (versionados en el repo; no son sensib
 | `LOGO_PRINCIPAL.jpeg` (2560²) | ⚠️ Símbolo + «ECLIPSSE™ universe», pero en **gris sobre gris claro**: el recorte a transparente no sale limpio |
 | `LOGO_SOLO_SIMBOLO.jpeg`, `SOLO_TEXTO.jpeg` | ⚠️ Igual, fondo claro |
 
-**Lo que falta y bloquea de verdad:**
+### ✅ DESBLOQUEADO el 2026-10-05 por respuesta de Jacobo
 
-1. ❌ **La tipografía.** No hay ningún archivo de fuente. Sin ella **el punto 3 entero es imposible** (aplicar la fuente a títulos, botones, menús, formularios, footer). Es la mitad del rediseño. ⚠️ **Al pedirla, preguntar si tiene licencia de uso WEB**, que es distinta de la de imprenta: es lo que más veces para un rediseño a medias.
-2. ❌ **La paleta de colores.** No hay códigos hexadecimales, y su encargo dice «usa EXCLUSIVAMENTE los nuevos colores oficiales que proporcionaré». **Deducirlos de las imágenes sería adivinar.** 🔹 Viendo la marca puede que sean simplemente negro y blanco, pero **lo tiene que confirmar él**.
-3. 🔹 **Deseable: el logo en vectorial** (`.svg` o `.ai`). Para favicons y tamaños pequeños se ve bastante mejor que un JPEG, por grande que sea.
+Dijo literalmente: **«No hace falta la tipografía exacta y lo de los colores q lo saque de la imagen»**.
+
+**1 · Paleta — RESUELTA, medida, no estimada.** Se muestrearon los cinco JPEG píxel a píxel con Playwright. Resultado:
+
+```
+saturación media: 0.000   en los CINCO archivos
+```
+
+**La marca es estrictamente monocroma: no hay ni una pizca de color en ningún archivo.** Valores reales:
+
+| Archivo | Colores |
+|---|---|
+| `LOGO_FONDO_NEGRO` | `#000000` fondo · `#F8F8F8` símbolo |
+| `LOGO_PRINCIPAL`, `LOGO_SOLO_SIMBOLO`, `SOLO_TEXTO` | `#E8E8E8` fondo · `#B8B8B8` logo |
+| `BANNER_ACTUALIZADO` | negros de `#000000` a `#484848` |
+
+⚠️ **Aviso de accesibilidad: el logo gris sobre gris claro da un contraste de ~1.9:1**, muy por debajo del mínimo exigible de 4.5:1. **Sobre fondo claro hay que usar el logo en negro, no ese gris.** El de fondo negro sí cumple de sobra.
+
+**2 · Tipografía — libre elección.** Al no exigir la exacta, **desaparece el problema de la licencia**: se elegirá una fuente con licencia web abierta.
+
+⚠️ **Consecuencia que Jacobo debe asumir y conviene recordarle:** la web llevará una tipografía **distinta** a la de sus prendas, su Instagram y su logo. En una marca de ropa la coherencia visual es parte del producto; no es grave si la elegida es de la misma familia estética, pero **no será idéntica**.
+
+🔹 **Dirección propuesta, sin aplicar todavía:** una grotesca ancha y de peso alto, en la línea del «ECLIPSSE» del logo. **Antes de tocar los 55 componentes hay que enseñarle a Ana 2-3 opciones aplicadas sobre la propia web para que elijan.** Probar una fuente es media hora; descubrir que no gusta después de propagarla es rehacerlo todo.
+
+**3 · 🔹 Sigue siendo deseable el logo en vectorial** (`.svg` o `.ai`) para favicons y tamaños pequeños. No bloquea: de `LOGO_FONDO_NEGRO.jpeg` se puede derivar una versión transparente exacta.
+
+### Plan acordado, sin empezar
+
+1. **Tokens primero**: fijar la paleta monocroma y la escala tipográfica en un único sitio.
+2. **Enseñar 2-3 fuentes aplicadas** y que elija Ana.
+3. **Después** propagar a componentes, formas, transparencias y animaciones.
+4. **Repetir la QA**, que es lo que el rediseño invalida.
+
+⛔ **Nada de esto se ha empezado.** La sesión del 2026-10-05 terminó aquí.
 
 ### Lo único que sí se hizo
 
@@ -605,10 +636,15 @@ Jacobo, y **no es el que despliega**. Ver «Se trabaja sobre una BIFURCACIÓN» 
 Vercel vigila `eclipsseuniverse/ECLIPSSEINORBIT`, rama `main`. Subir cualquier cosa al
 remoto de Ana es inofensivo; **lo que despliega es aceptar el Pull Request**.
 
-🎨 **Y desde el 2026-10-04 hay un encargo nuevo encima de la mesa: el rediseño de identidad
-de Jacobo**, bloqueado a falta de la tipografía y la paleta. Ver la sección «🎨 Rediseño de
-identidad» al principio de este archivo, **incluido el aviso de no pasarle ese encargo a una
-herramienta generativa**.
+🎨 **Encima de la mesa desde el 2026-10-04: el rediseño de identidad de Jacobo.**
+**Desbloqueado el 2026-10-05** —paleta medida y tipografía de libre elección— pero **sin
+empezar**. Ver «🎨 Rediseño de identidad» al principio de este archivo, **incluido el aviso de
+no pasarle ese encargo a una herramienta generativa**.
+
+⚠️ **Y la decisión de fondo sigue sin tomarse: ¿se abre la tienda con la identidad actual o se
+espera al rediseño?** La tienda lleva lista desde el 2026-09-27. Cada semana de espera es una
+semana sin vender; abrir con una identidad ya descartada también tiene coste en una marca de
+ropa. **Hay que hablarlo con Jacobo, no dejarlo correr.**
 
 ⚠️ **Decisiones todavía abiertas:** contador, 4 o 5 camisetas, imagen principal de
 las camisetas y cómo mantendrá Jacobo el catálogo sin romper precios.
