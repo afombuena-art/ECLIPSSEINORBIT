@@ -1127,13 +1127,21 @@ afombuena-art/ECLIPSSEINORBIT        ← el de Ana, es a donde apunta `origin`
 
 **1 · Hace falta un Pull Request entre repositorios.** Subir la rama al `origin` de Ana **no** la acerca a producción: solo la guarda. Para que el trabajo llegue a la web hay que abrir un **PR de `afombuena-art` a `eclipsseuniverse`**, que Jacobo tendrá que aceptar. Es un paso extra, con su revisión, que conviene no descubrir el día del despliegue.
 
-**2 · ⚠️ DATO POR CONFIRMAR, Y ES CRÍTICO: ¿a qué repositorio está conectado el despliegue?** Arriba ponía que a `afombuena-art`, pero eso se escribió el 2026-09-22, **antes de saber que era una bifurcación**, así que no es fiable. Si Vercel vigila el `main` de **Ana**, integrar ahí dispara producción. Si vigila el de **Jacobo**, el disparo es al aceptar el PR.
+**2 · ✅ RESUELTO el 2026-10-04 mirando el panel de Vercel (Settings → Git).** Donde antes se decía que el despliegue estaba conectado a `afombuena-art` era **incorrecto**: se escribió el 2026-09-22, antes de saber que había una bifurcación.
 
-🔹 **Comprobarlo en el panel de Vercel → el proyecto → Settings → Git**, antes de integrar nada. El nombre del repositorio conectado aparece ahí.
+```
+Connected Git Repository:  eclipsseuniverse/ECLIPSSEINORBIT   (conectado el 2 de julio)
+```
 
-⚠️ **No integrar todavía en ningún `main`.** Hasta saber cuál vigila Vercel, cualquier merge puede desplegar sin querer. Primero preparar Cloudflare y controlar qué proveedor queda vinculado a producción.
+**Vercel vigila el repositorio de JACOBO, no el de Ana.** Consecuencias:
 
-✅ **Lo que sí es seguro, comprobado el 2026-10-04:** subir ramas que no sean `main` al `origin` de Ana. Se subieron 32 commits de `auditoria-preproduccion` y `main` quedó intacto.
+- ✅ **La bifurcación de Ana no despliega nada.** Subir cualquier rama a `origin`, incluida `main`, es inofensivo. Comprobado el 2026-10-04 subiendo 32 commits de `auditoria-preproduccion`.
+- ⚠️ **El punto de riesgo real es aceptar el Pull Request en el repositorio de Jacobo.** Ese es el momento en que Vercel se entera y despliega; nada antes.
+- ✅ **No hay deploy hooks** («This project does not have any deploy hooks»), así que no existe ninguna URL capaz de disparar un despliegue por su cuenta.
+
+🔹 **Queda un detalle menor por mirar cuando se vaya a hacer el merge:** cuál es exactamente la *Production Branch* del proyecto en Vercel. No sale en esa pantalla —en las versiones nuevas está en **Settings → Environments → Production**—, pero el sitio ya sirve `main`, así que casi con seguridad es esa.
+
+⚠️ **Aun así, no aceptar el PR hasta tener Cloudflare preparado y decidido qué proveedor queda vinculado a producción.**
 
 **1 · Integrar `auditoria-preproduccion` en `main` solo tras cerrar los bloqueantes, preparar
 Cloudflare y recibir autorización expresa.** Tras registrar esta decisión, la rama va **80
