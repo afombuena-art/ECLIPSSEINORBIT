@@ -1,6 +1,6 @@
 # Estado del proyecto · ECLIPSSEINORBIT
 
-**Última actualización:** 2026-09-27
+**Última actualización:** 2026-10-04
 **Tipo:** integración de Stripe para tienda online
 **Estado:** activo — **preproducción validada; apto con pendientes para preparar una puesta en producción controlada, todavía no para conmutar el dominio**
 **Ingresos confirmados:** no confirmados
@@ -531,6 +531,48 @@ referencia. Sin commit de código: el cambio vive en n8n, fuera de este reposito
 
 ⛔ **Quedan código, configuración externa, pruebas y decisiones de contenido.** Ver la revisión del 2026-09-23 y «Próxima acción».
 
+## 🎨 Rediseño de identidad pedido por Jacobo — 2026-10-04, BLOQUEADO
+
+Jacobo entregó un encargo largo (14 puntos) para **adaptar la web a una identidad de marca nueva**. El texto completo lo tiene Ana en la conversación del 2026-10-04.
+
+⚠️ **No es un retoque: es rehacer la capa visual entera.** Toca los ~55 componentes, la tipografía, la paleta, todos los logos y favicons, el lenguaje de formas (radios), transparencias y las animaciones de todo el sitio. El propio punto 13 pide «que parezca que toda la web fue diseñada desde el principio bajo una única dirección artística».
+
+✅ **No toca la maquinaria**: pagos, envío por zonas, webhook, deduplicación, n8n y Airtable se quedan igual. La validación del motor sigue valiendo.
+❌ **Sí invalida toda la QA visual**: los 18/18 responsive del 2026-09-27, los contrastes (paleta nueva = accesibilidad nueva), el rendimiento en móvil (animaciones nuevas) y posibles incumplimientos de la CSP por fuentes y recursos nuevos.
+
+### ⚠️ Aviso importante para quien retome esto
+
+El encargo está redactado **como un prompt para una herramienta generativa de webs**, y este proyecto nació en Lovable. **Pegarlo en una herramienta que regenere código apuntando al repositorio puede reescribir componentes y romper el checkout sin que se note** — por delante hay dos semanas de auditoría, 110 pruebas y la validación en Cloudflare. La forma correcta es cambiar los **tokens de diseño** (colores, tipografía, radios) y propagarlos tocando los componentes con cuidado, repitiendo después la QA.
+
+### Qué entregó y qué falta — revisado el 2026-10-04
+
+Los archivos están en **`02_ARCHIVOS/`** (versionados en el repo; no son sensibles).
+
+| Entregado | Estado |
+|---|---|
+| `BANNER_ACTUALIZADO.jpeg` (2560×1340) | ✅ **Usable.** Es la foto nueva del hero: calle en B/N con dos prendas ECLIPSSE y el símbolo encima |
+| `LOGO_FONDO_NEGRO.jpeg` (2560²) | ✅ Símbolo en **blanco puro sobre negro puro**. 🔹 De aquí se puede derivar una **versión transparente de forma automática y exacta** (la luminancia hace de canal alfa), sin retoque manual |
+| `LOGO_PRINCIPAL.jpeg` (2560²) | ⚠️ Símbolo + «ECLIPSSE™ universe», pero en **gris sobre gris claro**: el recorte a transparente no sale limpio |
+| `LOGO_SOLO_SIMBOLO.jpeg`, `SOLO_TEXTO.jpeg` | ⚠️ Igual, fondo claro |
+
+**Lo que falta y bloquea de verdad:**
+
+1. ❌ **La tipografía.** No hay ningún archivo de fuente. Sin ella **el punto 3 entero es imposible** (aplicar la fuente a títulos, botones, menús, formularios, footer). Es la mitad del rediseño. ⚠️ **Al pedirla, preguntar si tiene licencia de uso WEB**, que es distinta de la de imprenta: es lo que más veces para un rediseño a medias.
+2. ❌ **La paleta de colores.** No hay códigos hexadecimales, y su encargo dice «usa EXCLUSIVAMENTE los nuevos colores oficiales que proporcionaré». **Deducirlos de las imágenes sería adivinar.** 🔹 Viendo la marca puede que sean simplemente negro y blanco, pero **lo tiene que confirmar él**.
+3. 🔹 **Deseable: el logo en vectorial** (`.svg` o `.ai`). Para favicons y tamaños pequeños se ve bastante mejor que un JPEG, por grande que sea.
+
+### Lo único que sí se hizo
+
+✅ **Punto 10, mitad: retirada la cuenta atrás del drop** (commit `14d5014`). Estaba caducada y abrir con un contador vencido da mala imagen. El componente `DropCountdown.tsx` **se conserva sin usar**: una marca de drops lo necesitará en el siguiente lanzamiento.
+
+⏳ **Punto 10, otra mitad: pendiente.** Falta quitar «la fotografía asociada a la explicación de ECLIPSSE IN ORBIT». **No se tocó porque nadie ha confirmado cuál es** de las varias que hay en esa página.
+
+⏳ **Punto 9 (foto del hero): se puede hacer ya**, es un cambio de una línea. Se dejó a propósito: cambiarla sola deja la portada con la identidad nueva y el resto de la web con la vieja, y una web a medias se nota más que una coherente aunque sea antigua.
+
+### Decisión de fondo, sin tomar
+
+**¿Abrir la tienda con la identidad actual y rediseñar después, o esperar al rediseño?** No es obvio: en una marca de ropa la imagen es el producto, y abrir con una identidad ya descartada tiene coste real. Pero el rediseño son semanas y reinicia la QA, y la tienda lleva lista desde el 2026-09-27. **Se decidirá cuando lleguen la tipografía y la paleta**, no antes.
+
 ## Si retomas aquí, lee esto primero
 
 **Hay compras reales en modo test ya documentadas, pero eso no cierra los bloqueantes actuales.** No desplegar hasta completar la lista de la revisión del 2026-09-23.
@@ -544,17 +586,29 @@ la web **está publicada en `https://www.eclipssebrand.es/`**. De ahí salen
 - `/eclipssebrand` muestra las prendas con sus precios, pero **no hay carrito ni
   botón de comprar**: dice «a través de Instagram DM o WhatsApp».
 - `/checkout` devuelve **404**.
-- La cuenta atrás de la portada se está viendo **a cero** (`00 : 00 : 00 : 00`)
-  para cualquiera que entre hoy. No es una hipótesis del informe de calidad: está
-  pasando en la web real.
+- La cuenta atrás de la portada se estaba viendo **a cero** (`00 : 00 : 00 : 00`).
+  ✅ **Retirada del código el 2026-10-04** (`14d5014`), pero **sigue viéndose en la web
+  publicada** hasta que se despliegue, porque lo que está en producción es `main`.
 
 ✅ **Dominio canónico centralizado el 2026-09-23.** `og:url`, canonicals y las
 imágenes sociales absolutas se construyen desde `src/data/site.ts`.
 
 ⚠️ **La rama buena es ahora `auditoria-preproduccion`**, no `feature/stripe-integration`.
-Tras registrar la decisión de Cloudflare, la rama queda **80 commits por delante de `main`
-y 0 por detrás**; seis commits están todavía solo en local. En `main` está la web antigua, sin
-tienda. El repositorio remoto es `github.com/afombuena-art/ECLIPSSEINORBIT` y `main` lo sigue.
+En `main` está la web antigua, sin tienda.
+
+✅ **Todo subido el 2026-10-04**: los 32 commits que quedaban en local están ya en el remoto.
+No queda trabajo viviendo solo en el portátil.
+
+⚠️ **Corrección del 2026-10-04 — aquí se decía algo incorrecto.** El remoto `origin`
+(`github.com/afombuena-art/ECLIPSSEINORBIT`) es una **bifurcación** del repositorio de
+Jacobo, y **no es el que despliega**. Ver «Se trabaja sobre una BIFURCACIÓN» más abajo:
+Vercel vigila `eclipsseuniverse/ECLIPSSEINORBIT`, rama `main`. Subir cualquier cosa al
+remoto de Ana es inofensivo; **lo que despliega es aceptar el Pull Request**.
+
+🎨 **Y desde el 2026-10-04 hay un encargo nuevo encima de la mesa: el rediseño de identidad
+de Jacobo**, bloqueado a falta de la tipografía y la paleta. Ver la sección «🎨 Rediseño de
+identidad» al principio de este archivo, **incluido el aviso de no pasarle ese encargo a una
+herramienta generativa**.
 
 ⚠️ **Decisiones todavía abiertas:** contador, 4 o 5 camisetas, imagen principal de
 las camisetas y cómo mantendrá Jacobo el catálogo sin romper precios.
