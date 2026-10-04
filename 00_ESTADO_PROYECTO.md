@@ -1074,6 +1074,28 @@ que hay ahora.**
 **9 · Decisiones visibles pendientes:** contador caducado, 4 o 5 camisetas e imagen
 frontal/trasera. `og:image` quedó resuelto el 2026-09-23 (`3072a63`).
 
+**10 · ⏳ DESPUÉS DE ABRIR LA TIENDA · Poner los repositorios en privado y quitar la
+bifurcación.** Ana lo pidió el 2026-10-04 y **quiere que se le recuerde**; se aplazó a
+propósito para no reestructurar los repositorios justo antes del despliegue.
+
+⚠️ **Hacerlo solo en el de Jacobo no sirve de nada.** Al poner en privado un repositorio
+con bifurcaciones, GitHub **no las vuelve privadas: las separa y siguen públicas**. El código
+quedaría igual de visible en el de Ana. Y el de Ana **no se puede poner en privado**: GitHub
+lo impide expresamente por ser una bifurcación (comprobado el 2026-10-04).
+
+**La única secuencia que funciona, y es un paquete, no un clic:**
+1. Jacobo pone `eclipsseuniverse/ECLIPSSEINORBIT` en privado.
+2. Ana **deja de usar una bifurcación**: o borra la suya y Jacobo la añade como colaboradora
+   del repositorio original, o crea un repositorio propio y privado.
+3. Reapuntar el `origin` local y comprobar que el despliegue sigue conectado a donde toca.
+
+🔹 **La opción de «colaboradora en el de Jacobo» es la mejor a futuro**: además de resolver
+la privacidad, **elimina el Pull Request entre repositorios** del punto anterior.
+
+**Qué se gana:** que deje de verse la tabla de tarifas de envío, de la que se deducen los
+costes de Jacobo. **No hay secretos en el repositorio** (`.env` ignorado, gitleaks en cada
+commit, `01_DOCUMENTOS/` ignorado), así que no es una fuga: es discreción comercial.
+
 ## Cómo pasar a producción
 
 ⛔ **Esta sección queda sustituida por la migración a Cloudflare. No ejecutar todavía.**
