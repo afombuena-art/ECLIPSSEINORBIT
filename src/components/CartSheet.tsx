@@ -64,7 +64,7 @@ export function CartSheet() {
                     </span>
 
                     <div className="mt-auto flex items-center justify-between pt-3">
-                      <div className="flex items-center border border-black">
+                      <div className="flex items-center rounded-md border border-black">
                         <button
                           type="button"
                           onClick={() => cart.setQty(line.id, line.size, line.qty - 1)}

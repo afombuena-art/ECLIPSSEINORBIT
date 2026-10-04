@@ -206,7 +206,7 @@ function BrandPage() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: "-40px" }}
                   transition={{ duration: 0.55, delay: i * 0.07 }}
-                  className="flex-none snap-start w-[72vw] md:w-[36vw] lg:w-[26vw] aspect-[4/5] overflow-hidden bg-white/5"
+                  className="flex-none snap-start w-[72vw] md:w-[36vw] lg:w-[26vw] aspect-[4/5] overflow-hidden rounded-xl bg-white/5"
                 >
                   <img
                     src={img.src}
@@ -373,7 +373,7 @@ function ProductCard({
         onMouseLeave={() => setHover(false)}
         className="group block text-center"
       >
-        <div className="relative aspect-[4/5] overflow-hidden bg-muted">
+        <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-muted">
           <img
             src={front}
             alt={name}

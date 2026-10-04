@@ -275,7 +275,7 @@ function CustomPage() {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-          className="w-full max-w-[540px] aspect-[4/5] overflow-hidden"
+          className="w-full max-w-[540px] aspect-[4/5] rounded-2xl overflow-hidden"
         >
           <img
             src="/images/sudaderas-grupos.png"

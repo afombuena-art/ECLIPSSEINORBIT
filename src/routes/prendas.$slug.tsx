@@ -124,7 +124,7 @@ function ProductPage() {
 
       <section className="mx-auto max-w-7xl px-5 md:px-8 py-10 md:py-16 grid md:grid-cols-2 gap-10 md:gap-16">
         <div>
-          <div className="relative aspect-[4/5] bg-muted overflow-hidden select-none">
+          <div className="relative aspect-[4/5] rounded-2xl bg-muted overflow-hidden select-none">
             <AnimatePresence initial={false} custom={direction} mode="popLayout">
               <motion.img
                 key={active}
@@ -158,7 +158,7 @@ function ProductPage() {
               <button
                 key={i}
                 onClick={() => goTo(i)}
-                className={`cursor-pointer aspect-square overflow-hidden border-2 transition-colors ${active === i ? "border-black" : "border-transparent"}`}
+                className={`cursor-pointer aspect-square overflow-hidden rounded-lg border-2 transition-colors ${active === i ? "border-black" : "border-transparent"}`}
                 aria-label={`Imagen ${i + 1}`}
               >
                 <img
@@ -414,7 +414,7 @@ function ProductPage() {
                   params={{ slug: p.slug }}
                   className="group block text-center"
                 >
-                  <div className="aspect-[4/5] bg-muted overflow-hidden">
+                  <div className="aspect-[4/5] rounded-xl bg-muted overflow-hidden">
                     <img
                       src={p.front}
                       alt={p.name}
