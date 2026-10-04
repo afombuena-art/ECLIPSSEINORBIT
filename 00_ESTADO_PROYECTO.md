@@ -1139,7 +1139,15 @@ Connected Git Repository:  eclipsseuniverse/ECLIPSSEINORBIT   (conectado el 2 de
 - ⚠️ **El punto de riesgo real es aceptar el Pull Request en el repositorio de Jacobo.** Ese es el momento en que Vercel se entera y despliega; nada antes.
 - ✅ **No hay deploy hooks** («This project does not have any deploy hooks»), así que no existe ninguna URL capaz de disparar un despliegue por su cuenta.
 
-🔹 **Queda un detalle menor por mirar cuando se vaya a hacer el merge:** cuál es exactamente la *Production Branch* del proyecto en Vercel. No sale en esa pantalla —en las versiones nuevas está en **Settings → Environments → Production**—, pero el sitio ya sirve `main`, así que casi con seguridad es esa.
+✅ **Confirmado también el 2026-10-04** en Settings → Environments:
+
+| Entorno | Rama que sigue | Dominio |
+|---|---|---|
+| **Production** | **`main`** | **www.eclipssebrand.es** |
+| Preview | todas las demás ramas | sin dominio propio |
+| Development | solo por CLI | sin dominio propio |
+
+Es decir: **el despliegue a producción lo dispara exactamente un merge a `main` de `eclipsseuniverse/ECLIPSSEINORBIT`**, y nada más.
 
 ⚠️ **Aun así, no aceptar el PR hasta tener Cloudflare preparado y decidido qué proveedor queda vinculado a producción.**
 
