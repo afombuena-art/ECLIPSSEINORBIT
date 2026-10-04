@@ -13,6 +13,17 @@
   --font-display: "League Spartan", system-ui, sans-serif;
   --font-body: "Inter", system-ui, sans-serif;
   --font-sans: "Inter", system-ui, sans-serif;
+
+  /* Geometría suave (encargo de Jacobo, punto 5: nada de esquinas rectas).
+     Al redefinir aquí la escala, las ~100 clases `rounded-*` que ya existen en
+     los componentes adoptan la curva nueva sin tocar ni un componente.
+     `rounded-none` y `rounded-full` no se ven afectadas, que es lo correcto. */
+  --radius-sm: 0.5rem;   /*  8px — chips, etiquetas, campos pequeños */
+  --radius-md: 0.75rem;  /* 12px — botones, campos de formulario */
+  --radius-lg: 1rem;     /* 16px — tarjetas, paneles */
+  --radius-xl: 1.25rem;  /* 20px — contenedores grandes, modales */
+  --radius-2xl: 1.5rem;  /* 24px — bloques destacados, imágenes */
+  --radius-3xl: 2rem;    /* 32px — secciones completas */
 }
 
 :root {
@@ -21,6 +32,39 @@
   --muted: #f5f5f5;
   --muted-foreground: #6b6b6b;
   --border: #ececec;
+
+  /* Identidad ECLIPSSE: estrictamente monocroma. Medido el 2026-10-05 sobre los
+     cinco archivos de `02_ARCHIVOS/` con saturación 0.000 en los cinco. No
+     introducir color: solo blanco, negro, grises y transparencias. */
+  --marca-negro: #000000;
+  --marca-blanco: #f8f8f8;  /* el blanco real del símbolo, no el #fff puro */
+
+  /* Transparencias (punto 6): profundidad sin abusar del cristal esmerilado. */
+  --velo-claro: rgb(255 255 255 / 0.72);
+  --velo-oscuro: rgb(0 0 0 / 0.55);
+  --desenfoque: 14px;
+
+  /* Movimiento (punto 7): aceleración y frenada naturales, nunca rebotes. */
+  --sal-suave: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-corta: 180ms;
+  --dur-media: 320ms;
+  --dur-larga: 560ms;
+}
+
+/* Quien prefiera menos movimiento no debe sufrir las animaciones nuevas.
+   Sin esto, el punto 7 empeora la accesibilidad en vez de mejorarla. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-corta: 0ms;
+    --dur-media: 0ms;
+    --dur-larga: 0ms;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @layer base {
