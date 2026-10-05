@@ -130,24 +130,6 @@ function BrandPage() {
         </div>
       </section>
 
-      <section className="border-t border-border bg-white flex justify-center overflow-hidden">
-        <motion.div
-          initial={{ opacity: 0, scale: 1.02 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-          className="w-full max-w-[540px] aspect-[4/5] overflow-hidden"
-        >
-          <img
-            src="/images/drop008-banner.png"
-            alt="ECLIPSSE™ IN ORBIT — DROP 008"
-            className="w-full h-full object-cover"
-            loading="lazy"
-            decoding="async"
-          />
-        </motion.div>
-      </section>
-
       <section id="sobre-nosotros" className="border-t border-border bg-black text-white">
         <div className="mx-auto max-w-5xl px-5 md:px-8 py-20 md:py-28">
           <motion.div
