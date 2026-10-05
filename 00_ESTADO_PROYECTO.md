@@ -531,7 +531,7 @@ referencia. Sin commit de código: el cambio vive en n8n, fuera de este reposito
 
 ⛔ **Quedan código, configuración externa, pruebas y decisiones de contenido.** Ver la revisión del 2026-09-23 y «Próxima acción».
 
-## 🎨 Rediseño de identidad pedido por Jacobo — desbloqueado el 2026-10-05, sin empezar
+## 🎨 Rediseño de identidad pedido por Jacobo — EN CURSO desde el 2026-10-05
 
 Jacobo entregó un encargo largo (14 puntos) para **adaptar la web a una identidad de marca nueva**. El texto completo lo tiene Ana en la conversación del 2026-10-04.
 
@@ -583,14 +583,36 @@ saturación media: 0.000   en los CINCO archivos
 
 **3 · 🔹 Sigue siendo deseable el logo en vectorial** (`.svg` o `.ai`) para favicons y tamaños pequeños. No bloquea: de `LOGO_FONDO_NEGRO.jpeg` se puede derivar una versión transparente exacta.
 
-### Plan acordado, sin empezar
+### ✅ Avance del 2026-10-05 — EN CURSO (rama `auditoria-preproduccion`)
 
-1. **Tokens primero**: fijar la paleta monocroma y la escala tipográfica en un único sitio.
-2. **Enseñar 2-3 fuentes aplicadas** y que elija Ana.
-3. **Después** propagar a componentes, formas, transparencias y animaciones.
-4. **Repetir la QA**, que es lo que el rediseño invalida.
+**Cambio de rumbo importante:** Jacobo dijo que **le gusta la tipografía actual** y que se mantenga. La web ya usa **League Spartan** (títulos) e **Inter** (texto), ambas de Google Fonts, con licencia de uso web. **El punto 3 del encargo desaparece entero**, y con él el riesgo de licencias.
 
-⛔ **Nada de esto se ha empezado.** La sesión del 2026-10-05 terminó aquí.
+**Estado punto por punto del encargo de Jacobo:**
+
+| Punto | Estado |
+|---|---|
+| 1 · Logos y favicon | ✅ **Ya estaban**: navegación y favicon ya son las tres lunas |
+| 2 · Colores | ✅ **Ya eran monocromos** (`#fff`/`#000` y grises). Tokens documentados en `styles.css` |
+| 3 · Tipografía | ✅ **Se mantiene la actual** |
+| 5 · Formas | ✅ Escala de radios suave en `styles.css`; ~100 elementos la adoptan de golpe. Redondeados además: selector de cantidad (carrito y ficha), fotos de producto, miniaturas, imagen de Personaliza |
+| 6 · Transparencias | ✅ La cabecera **ya era** translúcida con desenfoque. Aviso de cookies convertido en tarjeta flotante translúcida |
+| 7 · Animaciones | 🟡 **Parcial.** Hecho: las animaciones de `framer-motion` ahora **respetan «reducir movimiento»** (`MotionConfig` en la raíz; antes ignoraban esa opción). **Pendiente** el pulido de microinteracciones, hover y transiciones |
+| 9 · Foto del hero | ✅ **No tocar.** El hero **ya es esa foto** y en **3750×1963**, más resolución que los 2560×1340 del archivo entregado: cambiarla sería empeorarla |
+| 10 · Quitar cuenta atrás y foto de IN ORBIT | ✅ Ambas retiradas (`14d5014`, `af07313`) |
+
+**⚠️ Pendientes y decisiones abiertas que salen de esto:**
+
+1. **El cartel de IN ORBIT sigue siendo la imagen de la vista previa al compartir el enlace** (`og:image` y `twitter:image` en `__root.tsx`). Es **el único elemento a todo color** que queda en la identidad de la web y contradice la paleta monocroma. Se quitó de la página pero **el archivo `drop008-banner.png` se conserva** para no romper esa vista previa. **Decidir con Jacobo si se cambia por la foto del hero.**
+2. **El texto del cartel** («Summer has its own gravity… En verano no vas en línea recta: orbitas…») **solo existía dentro de la imagen**: al quitarla deja de estar en la web. Si Jacobo lo quiere, se puede poner como texto real con la tipografía de la web.
+3. **El botón verde de WhatsApp** es el único color que queda en la interfaz. No se ha tocado: el verde es lo que lo hace reconocible y favorece que escriban. **Decisión de Ana o de Jacobo.**
+4. **Quedan por pulir** microinteracciones y estados hover (punto 7). Las animaciones de entrada ya existen y son suaves.
+5. **QA completa pendiente de repetir** sobre la versión final: accesibilidad, Firefox/Safari/Edge y rendimiento en móvil. Lo hecho hasta ahora se ha comprobado con `scripts/revision-visual.mjs`.
+
+**🔧 Herramienta nueva: `scripts/revision-visual.mjs`.** Con `npm run dev` arrancado, `node scripts/revision-visual.mjs` revisa en escritorio y móvil que nada se sale de la pantalla, que no hay errores de consola y qué cajas siguen con esquinas rectas; deja capturas en `tmp-capturas/` (ignorada por git junto a cualquier `tmp-*`). **No sustituye la QA de preproducción**: es el chequeo de ida y vuelta mientras se diseña.
+
+**⚠️ Lección técnica del día:** al usar fondos translúcidos, **el contraste cambia según lo que haya debajo**. El texto gris del aviso de cookies pasaba de legible sobre blanco a ~2,7:1 sobre una sección negra (mínimo exigible 4,5:1). Se corrigió con texto casi negro. **Todo componente translúcido nuevo debe comprobarse sobre fondo claro Y oscuro.**
+
+**🔎 Dato sin resolver:** en una captura de Jacobo aparecía un rectángulo gris borroso junto a «INICIO» en la cuadrícula de camisetas. No se ha vuelto a ver al revisarlo con Playwright, que no muestra errores; probablemente fue una imagen cargando.
 
 ### Lo único que sí se hizo
 
