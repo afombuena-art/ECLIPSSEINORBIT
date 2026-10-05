@@ -591,24 +591,28 @@ saturación media: 0.000   en los CINCO archivos
 
 | Punto | Estado |
 |---|---|
-| 1 · Logos y favicon | ✅ **Ya estaban**: navegación y favicon ya son las tres lunas |
+| 1 · Logos y favicon | ✅ **Cambiados** (`9edc329`). ⚠️ **Corrección:** antes se anotó aquí que «ya estaban», **y era falso**: se comparó el contenido sin mirar la forma. El símbolo de la web era otro (lunas más finas, punta roma, corte con tramo recto); el nuevo son medias lunas limpias con corte circular y puntas afiladas. Fue Jacobo quien lo señaló |
 | 2 · Colores | ✅ **Ya eran monocromos** (`#fff`/`#000` y grises). Tokens documentados en `styles.css` |
 | 3 · Tipografía | ✅ **Se mantiene la actual** |
 | 5 · Formas | ✅ Escala de radios suave en `styles.css`; ~100 elementos la adoptan de golpe. Redondeados además: selector de cantidad (carrito y ficha), fotos de producto, miniaturas, imagen de Personaliza |
 | 6 · Transparencias | ✅ La cabecera **ya era** translúcida con desenfoque. Aviso de cookies convertido en tarjeta flotante translúcida |
 | 7 · Animaciones | 🟡 **Parcial.** Hecho: las animaciones de `framer-motion` ahora **respetan «reducir movimiento»** (`MotionConfig` en la raíz; antes ignoraban esa opción). **Pendiente** el pulido de microinteracciones, hover y transiciones |
-| 9 · Foto del hero | ✅ **No tocar.** El hero **ya es esa foto** y en **3750×1963**, más resolución que los 2560×1340 del archivo entregado: cambiarla sería empeorarla |
+| 9 · Foto del hero | ✅ **Cambiada** (`9edc329`) por `BANNER_ACTUALIZADO.jpeg`. ⚠️ **Corrección:** antes se anotó «no tocar, ya es esa foto, en mejor resolución», **y era un error**: es la misma escena pero la foto antigua llevaba **integrado el símbolo viejo**, y la nueva el símbolo nuevo. Se perdió resolución a cambio (**2560×1340 frente a 3750×1963**); sigue sobrando para pantallas de escritorio normales. Si se ve blanda en pantallas grandes o retina, pedir a Jacobo el original sin comprimir |
 | 10 · Quitar cuenta atrás y foto de IN ORBIT | ✅ Ambas retiradas (`14d5014`, `af07313`) |
 
 **⚠️ Pendientes y decisiones abiertas que salen de esto:**
 
-1. **El cartel de IN ORBIT sigue siendo la imagen de la vista previa al compartir el enlace** (`og:image` y `twitter:image` en `__root.tsx`). Es **el único elemento a todo color** que queda en la identidad de la web y contradice la paleta monocroma. Se quitó de la página pero **el archivo `drop008-banner.png` se conserva** para no romper esa vista previa. **Decidir con Jacobo si se cambia por la foto del hero.**
+1. ✅ **Resuelto el 2026-10-05 (decisión de Jacobo vía Ana): la vista previa al compartir el enlace** (`og:image` y `twitter:image`) **ahora es la foto de portada** (`hero_drop.jpeg`), coherente con la identidad monocroma. Su proporción (2560×1340 ≈ 1,91:1) es casi exactamente la que piden las redes. `drop008-banner.png` **ya no lo usa nada**; sigue en `public/images/` (pesa mucho, 3375×4219) y se puede borrar cuando se quiera, el historial de git lo conserva. ⚠️ **Las redes cachean la vista previa**: WhatsApp e Instagram pueden seguir enseñando el cartel antiguo en enlaces ya compartidos hasta que caduque su caché.
 2. **El texto del cartel** («Summer has its own gravity… En verano no vas en línea recta: orbitas…») **solo existía dentro de la imagen**: al quitarla deja de estar en la web. Si Jacobo lo quiere, se puede poner como texto real con la tipografía de la web.
 3. **El botón verde de WhatsApp** es el único color que queda en la interfaz. No se ha tocado: el verde es lo que lo hace reconocible y favorece que escriban. **Decisión de Ana o de Jacobo.**
 4. **Quedan por pulir** microinteracciones y estados hover (punto 7). Las animaciones de entrada ya existen y son suaves.
 5. **QA completa pendiente de repetir** sobre la versión final: accesibilidad, Firefox/Safari/Edge y rendimiento en móvil. Lo hecho hasta ahora se ha comprobado con `scripts/revision-visual.mjs`.
 
+**🧬 Cómo se derivaron el logo y el favicon, por si hay que repetirlo** (script temporal, no guardado, basado en Playwright + canvas): se partió de `02_ARCHIVOS/LOGO_FONDO_NEGRO.jpeg`, no de `LOGO_SOLO_SIMBOLO.jpeg`, porque **tienen la misma silueta (coincidencia 99,94 %)** pero el primero es blanco puro sobre negro puro y el segundo gris sobre gris claro, donde el ruido del JPEG ensucia los bordes. La luminancia hace de canal alfa con un umbral suave (24–232), y el símbolo sale **negro sobre transparente**. `logo.png` conserva el lienzo de 1920×960 y el **mismo ancho y centro** del símbolo anterior para no mover la maquetación. `favicon.png`: 512×512, negro sobre blanco, símbolo al 88 % del ancho. Todo pasa por un único componente `Logo` que lee `/images/logo.png`.
+
 **🔧 Herramienta nueva: `scripts/revision-visual.mjs`.** Con `npm run dev` arrancado, `node scripts/revision-visual.mjs` revisa en escritorio y móvil que nada se sale de la pantalla, que no hay errores de consola y qué cajas siguen con esquinas rectas; deja capturas en `tmp-capturas/` (ignorada por git junto a cualquier `tmp-*`). **No sustituye la QA de preproducción**: es el chequeo de ida y vuelta mientras se diseña.
+
+**⚠️ Lección sobre mi propio trabajo, para quien retome esto:** dos veces el 2026-10-05 se afirmó que algo «ya estaba hecho» (logos, hero) **comparando nombres y tamaños de archivo en vez del contenido**. Resultó falso las dos veces. **Antes de decir que un recurso gráfico ya coincide, hay que mirarlo, o medirlo.** La comparación visual lado a lado (símbolo en la foto vieja / foto nueva / símbolo entregado) lo resolvió en un solo paso.
 
 **⚠️ Lección técnica del día:** al usar fondos translúcidos, **el contraste cambia según lo que haya debajo**. El texto gris del aviso de cookies pasaba de legible sobre blanco a ~2,7:1 sobre una sección negra (mínimo exigible 4,5:1). Se corrigió con texto casi negro. **Todo componente translúcido nuevo debe comprobarse sobre fondo claro Y oscuro.**
 
