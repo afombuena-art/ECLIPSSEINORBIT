@@ -600,6 +600,15 @@ saturación media: 0.000   en los CINCO archivos
 | 9 · Foto del hero | ✅ **Cambiada** (`9edc329`) por `BANNER_ACTUALIZADO.jpeg`. ⚠️ **Corrección:** antes se anotó «no tocar, ya es esa foto, en mejor resolución», **y era un error**: es la misma escena pero la foto antigua llevaba **integrado el símbolo viejo**, y la nueva el símbolo nuevo. Se perdió resolución a cambio (**2560×1340 frente a 3750×1963**); sigue sobrando para pantallas de escritorio normales. Si se ve blanda en pantallas grandes o retina, pedir a Jacobo el original sin comprimir |
 | 10 · Quitar cuenta atrás y foto de IN ORBIT | ✅ Ambas retiradas (`14d5014`, `af07313`) |
 
+**📌 BALANCE AL CIERRE DEL 2026-10-05 — qué falta de verdad del encargo de Jacobo**
+
+- **Hecho y comprobado en pantalla:** símbolo gris nuevo (logo, favicon, foto de portada, imagen al compartir), toda la interfaz en gris/blanco/negro (medido en tienda, checkout, páginas legales y Personaliza: ningún color), curvas en toda la web **incluido el checkout** (campo de código postal, notas, aviso de zona y resumen del pedido, corregido el mismo día porque una revisión previa había dado por bueno el checkout sin llegar a verlo: redirige si el carrito está vacío), cuenta atrás y cartel de IN ORBIT fuera, pantalla de entrada intacta, sin desbordes en móvil a 390 px.
+- **A medias:** transparencias (cabecera ya la tenía; aviso de cookies nuevo) y animaciones (solo arreglado que respeten «reducir movimiento»).
+- **SIN HACER — punto 7, pulido de animaciones:** hover, microinteracciones y transiciones entre páginas. Es lo único sustancial que queda.
+- **SIN MEDIR:** rendimiento en móvil. **SIN PROBAR:** Firefox, Safari, Edge. La QA completa de preproducción **hay que repetirla** antes de publicar.
+- **Las fotos de producto y la galería siguen llevando el símbolo antiguo dentro** (p. ej. la camiseta Orbit). No lo cambia el logo; habría que sustituir las fotos. Avisar a Jacobo.
+- **Decisión sin tomar:** ¿abrir la tienda ya o esperar a pulir las animaciones? La tienda lleva lista desde el 2026-09-27.
+
 **⚠️ Pendientes y decisiones abiertas que salen de esto:**
 
 1. ✅ **Resuelto el 2026-10-05 (decisión de Jacobo vía Ana): la vista previa al compartir el enlace** (`og:image` y `twitter:image`) **ahora es la foto de portada** (`hero_drop.jpeg`), coherente con la identidad monocroma. Su proporción (2560×1340 ≈ 1,91:1) es casi exactamente la que piden las redes. `drop008-banner.png` **ya no lo usa nada**; sigue en `public/images/` (pesa mucho, 3375×4219) y se puede borrar cuando se quiera, el historial de git lo conserva. ⚠️ **Las redes cachean la vista previa**: WhatsApp e Instagram pueden seguir enseñando el cartel antiguo en enlaces ya compartidos hasta que caduque su caché.
