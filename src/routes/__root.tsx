@@ -88,14 +88,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
       },
       { property: "og:url", content: absoluteSiteUrl() },
-      { property: "og:image", content: absoluteSiteUrl("/images/drop008-banner.png") },
+      { property: "og:image", content: absoluteSiteUrl("/images/hero_drop.jpeg") },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "ECLIPSSE™ UNIVERSE | Por y para jóvenes" },
       {
         name: "twitter:description",
         content: "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
       },
-      { name: "twitter:image", content: absoluteSiteUrl("/images/drop008-banner.png") },
+      { name: "twitter:image", content: absoluteSiteUrl("/images/hero_drop.jpeg") },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
