@@ -23,12 +23,16 @@ export function WhatsAppButton() {
         }}
         whileHover={{ scale: 1.1, y: 0 }}
         className="flex w-14 h-14 rounded-full items-center justify-center cursor-pointer shadow-lg"
-        style={{ backgroundColor: "#25D366" }}
+        // Gris de la identidad de Jacobo (fondo #EBEBEB) en vez del verde de WhatsApp.
+        // El icono va en #6B6B6B y no en el gris del logo (#BCBCBC): blanco o gris claro
+        // sobre este fondo daba ~1,9:1 y un botón que hay que encontrar a la primera no
+        // puede perderse. Así sale ~4,5:1 (para un icono se exige 3:1).
+        style={{ backgroundColor: "#EBEBEB" }}
       >
         <svg
           viewBox="0 0 24 24"
           className="w-7 h-7"
-          fill="white"
+          fill="#6b6b6b"
           xmlns="http://www.w3.org/2000/svg"
           aria-hidden="true"
         >
