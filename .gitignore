@@ -29,6 +29,9 @@ playwright-report/
 .vscode/
 .idea/
 
+# Capturas y scripts temporales de la revisión visual (scripts/revision-visual.mjs)
+tmp-*
+
 # Documentos firmados y papeleo del negocio. No son código y llevan datos
 # personales (firmas, NIF, direcciones): no se suben al repositorio.
 01_DOCUMENTOS/
