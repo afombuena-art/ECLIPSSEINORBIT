@@ -7,6 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { MotionConfig } from "framer-motion";
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
@@ -152,11 +153,18 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <CartProvider>
-        <Outlet />
-        <CartSheet />
-        <CookieBanner />
-      </CartProvider>
+      {/* `reducedMotion="user"`: las animaciones de framer-motion (JavaScript) no se
+          enteran de `prefers-reduced-motion` por sí solas, a diferencia de las de CSS.
+          Sin esto, quien tiene activado «reducir movimiento» en su dispositivo sigue
+          viendo todas las entradas y desplazamientos. Con "user" se desactivan los
+          movimientos de posición y escala y se conservan los fundidos suaves. */}
+      <MotionConfig reducedMotion="user">
+        <CartProvider>
+          <Outlet />
+          <CartSheet />
+          <CookieBanner />
+        </CartProvider>
+      </MotionConfig>
     </QueryClientProvider>
   );
 }
