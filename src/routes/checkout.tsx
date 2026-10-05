@@ -45,7 +45,7 @@ export const Route = createFileRoute("/checkout")({
 });
 
 const inputClass =
-  "w-full border border-black/20 bg-white px-3.5 py-3 text-sm outline-none transition-colors focus:border-black";
+  "w-full rounded-md border border-black/20 bg-white px-3.5 py-3 text-sm outline-none transition-colors focus:border-black";
 
 function CheckoutPage() {
   const navigate = useNavigate();
@@ -182,7 +182,7 @@ function CheckoutPage() {
               {noSePuedeEnviar && (
                 <div
                   role="alert"
-                  className="mt-3 border border-black/20 bg-muted px-4 py-3 text-sm"
+                  className="mt-3 rounded-xl border border-black/20 bg-muted px-4 py-3 text-sm"
                 >
                   <p className="font-display text-base">
                     {sinCobertura ? "No enviamos a esa zona" : "Pedido demasiado grande"}
@@ -275,7 +275,7 @@ function CheckoutPage() {
             </p>
           </form>
 
-          <aside className="lg:sticky lg:top-24 border border-border p-5 md:p-6">
+          <aside className="lg:sticky lg:top-24 rounded-2xl border border-border p-5 md:p-6">
             <h2 className="font-display text-lg mb-4">Tu pedido</h2>
             <div className="divide-y divide-border">
               {detailedLines.map((l) => (
