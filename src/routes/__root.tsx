@@ -15,6 +15,8 @@ import appCss from "../styles.css?url";
 import { Logo } from "@/components/Logo";
 import { CookieBanner } from "@/components/CookieBanner";
 import { CartProvider } from "@/lib/cart";
+import { StockProvider } from "@/lib/stock-context";
+import { getStockPublico } from "@/lib/stock.server";
 import { CartSheet } from "@/components/CartSheet";
 import { absoluteSiteUrl } from "@/data/site";
 
@@ -119,7 +121,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           slogan: "Por y para Jóvenes",
           description: "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
           url: absoluteSiteUrl(),
-          sameAs: ["https://www.instagram.com/eclipsseuniverse/", "https://www.tiktok.com/@eclipssebrand"],
+          sameAs: [
+            "https://www.instagram.com/eclipsseuniverse/",
+            "https://www.tiktok.com/@eclipssebrand",
+          ],
           address: {
             "@type": "PostalAddress",
             addressLocality: "Sevilla",
@@ -130,6 +135,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
   }),
   shellComponent: RootShell,
+  // Stock real (Airtable) para pintar la web. Nunca falla: ver `leerStockPublico`.
+  loader: () => getStockPublico(),
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
@@ -151,6 +158,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const { stock } = Route.useLoaderData();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
     <QueryClientProvider client={queryClient}>
@@ -160,13 +168,15 @@ function RootComponent() {
           viendo todas las entradas y desplazamientos. Con "user" se desactivan los
           movimientos de posición y escala y se conservan los fundidos suaves. */}
       <MotionConfig reducedMotion="user">
-        <CartProvider>
-          <div key={pathname} className="pagina-entra">
-            <Outlet />
-          </div>
-          <CartSheet />
-          <CookieBanner />
-        </CartProvider>
+        <StockProvider datos={stock}>
+          <CartProvider>
+            <div key={pathname} className="pagina-entra">
+              <Outlet />
+            </div>
+            <CartSheet />
+            <CookieBanner />
+          </CartProvider>
+        </StockProvider>
       </MotionConfig>
     </QueryClientProvider>
   );

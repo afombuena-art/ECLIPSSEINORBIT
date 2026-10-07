@@ -6,7 +6,7 @@ import { Marquee } from "@/components/Marquee";
 import { ContactCTA } from "@/components/ContactCTA";
 import { SiteFooter } from "@/components/SiteFooter";
 import { products } from "@/data/products";
-import { isSoldOut } from "@/data/stock";
+import { useStock } from "@/lib/stock-context";
 import { formatEuros } from "@/lib/money";
 import hero from "@/assets/hero_drop.jpeg.asset.json";
 import { absoluteSiteUrl } from "@/data/site";
@@ -347,6 +347,7 @@ function ProductCard({
   index: number;
 }) {
   const [hover, setHover] = useState(false);
+  const { isSoldOut } = useStock();
   const agotada = isSoldOut(id, sizes);
   return (
     <motion.div

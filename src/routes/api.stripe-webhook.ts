@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe.server";
+import { liberarReserva, registrarVenta } from "@/lib/stock-airtable.server";
 import { alreadyForwarded, markForwarded, seenInMemory } from "@/lib/webhook-dedup.server";
 import { zoneFromPostalCode, compararEnvioCobradoConEntrega } from "@/lib/shipping";
 import { ORIGEN_PEDIDO } from "@/lib/checkout-schema";
@@ -330,6 +331,32 @@ export const Route = createFileRoute("/api/stripe-webhook")({
         // n8n ha confirmado: se apunta el evento para no volver a entregarlo.
         const tMarcar = Date.now();
         await markForwarded(stripe, session, event.id);
+
+        // Stock: se anota la venta (o se suelta la reserva si el pago falló). Va
+        // DESPUÉS de n8n a propósito: el pedido ya está a salvo y esto nunca debe
+        // hacer que Stripe reintente y duplique el pedido. Si falla, queda en el
+        // log con el pedido y hay que anotar la venta a mano en Airtable.
+        const refStock = orderPayload.orderRef;
+        if (refStock) {
+          if (orderPayload.status === "paid") {
+            const lineas = orderPayload.items.flatMap((it) => {
+              const m = it.productMetadata as { productId?: string; size?: string } | null;
+              return m?.productId && m.size && it.quantity
+                ? [{ producto: m.productId, talla: m.size, cantidad: it.quantity }]
+                : [];
+            });
+            try {
+              await registrarVenta(refStock, lineas);
+            } catch (err) {
+              console.error(
+                `stripe-webhook: ⚠️ NO se pudo anotar la venta en el stock del pedido ${refStock}. ANOTAR A MANO.`,
+                errorSeguro(err),
+              );
+            }
+          } else {
+            await liberarReserva(refStock);
+          }
+        }
 
         console.info(
           `stripe-webhook: ${event.id} entregado en ${Date.now() - tInicio} ms ` +

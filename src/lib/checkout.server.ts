@@ -3,9 +3,9 @@ import { getRequest } from "@tanstack/react-start/server";
 import type Stripe from "stripe";
 import { checkoutSchema, ORIGEN_PEDIDO, type CheckoutResult } from "@/lib/checkout-schema";
 import { getProductById } from "@/data/products";
-import { stockOf } from "@/data/stock";
 import { quoteShipping, zoneFromPostalCode, ZONE_LABELS } from "@/lib/shipping";
 import { getStripe } from "@/lib/stripe.server";
+import { liberarReserva, reservarStock } from "@/lib/stock-airtable.server";
 
 function resolveOrigin(): string {
   const fromEnv = process.env.SITE_URL?.replace(/\/$/, "");
@@ -82,13 +82,6 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         return { ok: false, error: "TALLA_NO_DISPONIBLE" };
       }
 
-      // El stock se comprueba aquí, en el servidor: el carrito del navegador se puede
-      // manipular o llevar días guardado.
-      if (stockOf(product.id, item.size) < item.qty) {
-        console.warn(`checkout: sin stock (${product.id} / ${item.size})`);
-        return { ok: false, error: "SIN_STOCK" };
-      }
-
       subtotalCents += product.priceCents * item.qty;
       lineItems.push({
         quantity: item.qty,
@@ -130,52 +123,76 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     // un UUID; no concede acceso a datos ni se usa para confiar en importes.
     const orderRef = data.checkoutAttemptId;
 
-    const session = await stripe.checkout.sessions.create(
-      {
-        mode: "payment",
-        locale: "es",
-        client_reference_id: orderRef,
-        line_items: lineItems,
-        shipping_address_collection: { allowed_countries: ["ES"] },
-        phone_number_collection: { enabled: true },
-        shipping_options: [
-          {
-            shipping_rate_data: {
-              type: "fixed_amount",
-              display_name:
-                shippingCents === 0
-                  ? "Envío gratis"
-                  : `Envío estándar (Correos) · ${ZONE_LABELS[lookup.zone]}`,
-              fixed_amount: { amount: shippingCents, currency: "eur" },
-              delivery_estimate: {
-                minimum: { unit: "business_day", value: 3 },
-                maximum: { unit: "business_day", value: 10 },
+    // Se aparta el stock ANTES de crear la sesión de Stripe y se pregunta a
+    // Airtable en directo (nada de caché). Si no hay stock o Airtable no responde,
+    // no se cobra: es la decisión de Ana, mejor no vender que vender lo que no hay.
+    const reserva = await reservarStock(
+      orderRef,
+      items.map((i) => ({ producto: i.id, talla: i.size, cantidad: i.qty })),
+    );
+    if (!reserva.ok) return { ok: false, error: reserva.error };
+
+    // La sesión caduca justo cuando caduca la reserva: así nadie puede pagar una
+    // unidad que ya se ha soltado. La clave de idempotencia incluye esa hora para
+    // que un reintento de la misma operación repita EXACTAMENTE los mismos
+    // parámetros, y para que, pasada la caducidad, se cree una sesión nueva.
+    const expiraEn = reserva.expiresAt ? Math.floor(reserva.expiresAt / 1000) : null;
+
+    let session: Stripe.Checkout.Session;
+    try {
+      session = await stripe.checkout.sessions.create(
+        {
+          mode: "payment",
+          locale: "es",
+          client_reference_id: orderRef,
+          line_items: lineItems,
+          shipping_address_collection: { allowed_countries: ["ES"] },
+          phone_number_collection: { enabled: true },
+          shipping_options: [
+            {
+              shipping_rate_data: {
+                type: "fixed_amount",
+                display_name:
+                  shippingCents === 0
+                    ? "Envío gratis"
+                    : `Envío estándar (Correos) · ${ZONE_LABELS[lookup.zone]}`,
+                fixed_amount: { amount: shippingCents, currency: "eur" },
+                delivery_estimate: {
+                  minimum: { unit: "business_day", value: 3 },
+                  maximum: { unit: "business_day", value: 10 },
+                },
               },
             },
+          ],
+          success_url: `${origin}/pedido/confirmado?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${origin}/pedido/cancelado`,
+          metadata: {
+            // Marca de origen. El webhook exige encontrarla antes de mandar nada a
+            // n8n: así, si algún día esta cuenta de Stripe se usa para otro flujo,
+            // sus sesiones no acaban en el Airtable de pedidos de la tienda.
+            // Si se cambia este valor, hay que cambiarlo también en el webhook.
+            source: ORIGEN_PEDIDO,
+            orderRef,
+            notes: data.orderNotes ?? "",
+            marketingOptIn: String(Boolean(data.marketingOptIn)),
+            // Con qué se cobró el envío. El webhook lo compara con la dirección
+            // que acabe recogiendo Stripe, por si no coinciden.
+            shippingZone: lookup.zone,
+            shippingPostalCode: data.shippingPostalCode,
           },
-        ],
-        success_url: `${origin}/pedido/confirmado?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/pedido/cancelado`,
-        metadata: {
-          // Marca de origen. El webhook exige encontrarla antes de mandar nada a
-          // n8n: así, si algún día esta cuenta de Stripe se usa para otro flujo,
-          // sus sesiones no acaban en el Airtable de pedidos de la tienda.
-          // Si se cambia este valor, hay que cambiarlo también en el webhook.
-          source: ORIGEN_PEDIDO,
-          orderRef,
-          notes: data.orderNotes ?? "",
-          marketingOptIn: String(Boolean(data.marketingOptIn)),
-          // Con qué se cobró el envío. El webhook lo compara con la dirección
-          // que acabe recogiendo Stripe, por si no coinciden.
-          shippingZone: lookup.zone,
-          shippingPostalCode: data.shippingPostalCode,
+          payment_intent_data: { metadata: { orderRef } },
+          ...(expiraEn ? { expires_at: expiraEn } : {}),
         },
-        payment_intent_data: { metadata: { orderRef } },
-      },
-      { idempotencyKey: `checkout:${orderRef}` },
-    );
+        { idempotencyKey: expiraEn ? `checkout:${orderRef}:${expiraEn}` : `checkout:${orderRef}` },
+      );
+    } catch (err) {
+      // Stripe falló: la unidad no puede quedarse apartada sin que nadie la pague.
+      await liberarReserva(orderRef);
+      throw err;
+    }
 
     if (!session.url) {
+      await liberarReserva(orderRef);
       throw new Error("Stripe no devolvió una URL de pago");
     }
 

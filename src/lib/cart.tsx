@@ -1,7 +1,15 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { getProductById, type Product } from "@/data/products";
 import { calcShippingCents } from "@/lib/shipping";
-import { stockOf } from "@/data/stock";
+import { useStock } from "@/lib/stock-context";
 
 const STORAGE_KEY = "eclipsse_cart_v1";
 const MAX_QTY = 99;
@@ -37,10 +45,12 @@ type CartContextValue = {
 const CartContext = createContext<CartContextValue | null>(null);
 
 /** Cantidad válida de una línea: entre 1 y lo que haya en stock (nunca más de MAX_QTY). */
-const clampQty = (n: number, id: string, size: string) =>
+type StockOf = (id: string, size: string) => number;
+
+const clampQty = (n: number, id: string, size: string, stockOf: StockOf) =>
   Math.max(1, Math.min(MAX_QTY, stockOf(id, size), Math.floor(n)));
 
-function readStorage(): CartLine[] {
+function readStorage(stockOf: StockOf): CartLine[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
@@ -63,7 +73,7 @@ function readStorage(): CartLine[] {
         .filter((l) => getProductById(l.id)?.sizes.includes(l.size))
         // Una prenda que se ha agotado desde que se guardó el carrito no puede seguir en él.
         .filter((l) => stockOf(l.id, l.size) > 0)
-        .map((l) => ({ id: l.id, size: l.size, qty: clampQty(l.qty, l.id, l.size) }))
+        .map((l) => ({ id: l.id, size: l.size, qty: clampQty(l.qty, l.id, l.size, stockOf) }))
     );
   } catch {
     return [];
@@ -74,9 +84,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [isOpen, setOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  // Siempre el stock más reciente, sin regenerar el valor del contexto cada vez que cambia.
+  const { stockOf } = useStock();
+  const stockRef = useRef(stockOf);
+  stockRef.current = stockOf;
 
   useEffect(() => {
-    setLines(readStorage());
+    setLines(readStorage(stockRef.current));
     setHydrated(true);
   }, []);
 
@@ -121,12 +135,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
         // Misma regla que al leer de localStorage: producto y talla tienen que
         // existir hoy en el catálogo.
         if (!getProductById(id)?.sizes.includes(size)) return;
-        if (stockOf(id, size) <= 0) return;
+        if (stockRef.current(id, size) <= 0) return;
         setLines((prev) => {
           const i = prev.findIndex((l) => l.id === id && l.size === size);
-          if (i === -1) return [...prev, { id, size, qty: clampQty(qty, id, size) }];
+          if (i === -1)
+            return [...prev, { id, size, qty: clampQty(qty, id, size, stockRef.current) }];
           const next = [...prev];
-          next[i] = { ...next[i], qty: clampQty(next[i].qty + qty, id, size) };
+          next[i] = { ...next[i], qty: clampQty(next[i].qty + qty, id, size, stockRef.current) };
           return next;
         });
       },
@@ -134,7 +149,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setLines((prev) => {
           if (qty <= 0) return prev.filter((l) => !(l.id === id && l.size === size));
           return prev.map((l) =>
-            l.id === id && l.size === size ? { ...l, qty: clampQty(qty, id, size) } : l,
+            l.id === id && l.size === size
+              ? { ...l, qty: clampQty(qty, id, size, stockRef.current) }
+              : l,
           );
         });
       },

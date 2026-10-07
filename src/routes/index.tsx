@@ -158,7 +158,9 @@ function ChoiceButton({
     >
       <span
         className={`block w-full rounded-full border border-black/80 px-8 py-4 md:py-5 font-display text-base md:text-lg tracking-[0.12em] text-center transition-colors duration-300 ${
-          selected ? "bg-black text-white" : "bg-transparent text-black backdrop-blur-[2px] hover:bg-black hover:text-white"
+          selected
+            ? "bg-black text-white"
+            : "bg-transparent text-black backdrop-blur-[2px] hover:bg-black hover:text-white"
         }`}
       >
         {label}

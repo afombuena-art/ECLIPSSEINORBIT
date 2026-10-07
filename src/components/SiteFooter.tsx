@@ -42,10 +42,7 @@ export function SiteFooter() {
             </a>
           ))}
         </div>
-        <nav
-          aria-label="Enlaces legales"
-          className="flex flex-wrap justify-center gap-x-4"
-        >
+        <nav aria-label="Enlaces legales" className="flex flex-wrap justify-center gap-x-4">
           {links.map((l) => (
             <Link
               key={l.to}

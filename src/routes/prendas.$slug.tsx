@@ -8,7 +8,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { getProduct, products, type Product } from "@/data/products";
 import { formatEuros } from "@/lib/money";
 import { useCart } from "@/lib/cart";
-import { isSoldOut, stockOf } from "@/data/stock";
+import { useStock } from "@/lib/stock-context";
 import { WHATSAPP_URL } from "@/data/contacto";
 import { absoluteSiteUrl } from "@/data/site";
 
@@ -72,6 +72,7 @@ function ProductPage() {
   // arriba, devuelve exactamente `{ product: Product }` o lanza `notFound()`. Si
   // alguien cambia el loader, hay que cambiar esto con él.
   const { product } = Route.useLoaderData() as { product: Product };
+  const { stockOf, isSoldOut } = useStock();
   const [active, setActive] = useState(0);
   const [direction, setDirection] = useState(0);
   // Talla inicial: la primera que tenga unidades (si todas están agotadas, la primera).
