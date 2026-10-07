@@ -61,6 +61,7 @@ export type CheckoutInput = z.infer<typeof checkoutSchema>;
 export type CheckoutError =
   | "PRODUCTO_NO_DISPONIBLE"
   | "TALLA_NO_DISPONIBLE"
+  | "SIN_STOCK"
   | "FUERA_DE_COBERTURA"
   | "CODIGO_POSTAL_INVALIDO"
   | "DEMASIADO_PESO"

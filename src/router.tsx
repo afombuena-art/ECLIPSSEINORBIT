@@ -10,8 +10,6 @@ export const getRouter = () => {
     context: { queryClient },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
-    // Transición suave entre páginas (View Transitions API; sin soporte, navega normal).
-    defaultViewTransition: true,
   });
 
   return router;

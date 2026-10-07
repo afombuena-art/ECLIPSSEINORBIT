@@ -4,9 +4,16 @@ import { ShoppingBag } from "lucide-react";
 import { Logo } from "./Logo";
 import { useCart } from "@/lib/cart";
 
-export function SiteHeader({ current }: { current: "brand" | "custom" }) {
+export function SiteHeader({
+  current,
+  overlay = false,
+}: {
+  current: "brand" | "custom";
+  /** La isla flota sobre el hero (altura 0 en el flujo): sin franja entre banda y foto. */
+  overlay?: boolean;
+}) {
   const other = current === "brand" ? "custom" : "brand";
-  const otherLabel = other === "brand" ? "ECLIPSSEBRAND" : "PERSONALIZA";
+  const otherLabel = other === "brand" ? "ECLIPSSE™ universe" : "PERSONALIZA";
   const otherTo = other === "brand" ? "/eclipssebrand" : "/personaliza";
   const homeTo = current === "brand" ? "/eclipssebrand" : "/personaliza";
   const navigate = useNavigate();
@@ -28,19 +35,19 @@ export function SiteHeader({ current }: { current: "brand" | "custom" }) {
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className="sticky top-3 z-40 px-3 md:px-6 pt-3 pointer-events-none"
+      className={`sticky top-3 z-40 px-3 md:px-6 pointer-events-none ${overlay ? "h-0" : "pt-3"}`}
     >
       {/* Isla centrada y translúcida (referencia de Jacobo: Becay). El cristal deja ver
           el fondo y las fotos al pasar por debajo; el borde claro y la sombra suave
           la separan sin necesidad de una barra a todo el ancho. */}
-      <div className="pointer-events-auto mx-auto flex w-fit max-w-full items-center justify-between gap-3 md:gap-8 rounded-full border border-white/70 bg-white/75 px-3 py-2 md:px-5 md:py-2.5 shadow-[0_8px_30px_rgb(0_0_0/0.08)] backdrop-blur-xl backdrop-saturate-150">
+      <div className={`pointer-events-auto mx-auto flex w-fit max-w-full items-center justify-between gap-3 md:gap-8 rounded-full border border-white/70 ${overlay ? "mt-3 bg-white/78" : "bg-white/75"} px-3 py-2 md:px-5 md:py-2.5 shadow-[0_8px_30px_rgb(0_0_0/0.08)] backdrop-blur-xl backdrop-saturate-150`}>
         <div className="flex items-center gap-3 md:gap-5 shrink-0">
-          <Link to="/" className="flex items-center" aria-label="Inicio ECLIPSSE">
+          <Link to="/" className="flex items-center py-2" aria-label="Inicio ECLIPSSE">
             <Logo className="h-5 md:h-6" />
           </Link>
           <button
             onClick={handleInicio}
-            className="font-display text-[10px] md:text-[11px] uppercase tracking-[0.2em] text-black transition-opacity duration-300 hover:opacity-50"
+            className="py-2.5 font-display text-[10px] md:text-[11px] uppercase tracking-[0.2em] text-black transition-opacity duration-300 hover:opacity-50"
           >
             INICIO
           </button>
@@ -49,7 +56,7 @@ export function SiteHeader({ current }: { current: "brand" | "custom" }) {
         <nav className="flex items-center gap-2 md:gap-3">
           <Link
             to={otherTo}
-            className="font-display text-[10px] md:text-[11px] uppercase tracking-[0.2em] rounded-full border border-black/80 px-3 py-1.5 md:px-4 md:py-2 transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-px"
+            className={`font-display text-[10px] md:text-[11px] ${other === "brand" ? "normal-case tracking-[0.1em]" : "uppercase tracking-[0.2em]"} rounded-full border border-black/80 px-3 py-1.5 md:px-4 md:py-2 transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-px`}
           >
             ↔ {otherLabel}
           </Link>

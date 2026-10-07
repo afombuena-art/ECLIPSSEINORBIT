@@ -6,6 +6,7 @@ import { Marquee } from "@/components/Marquee";
 import { ContactCTA } from "@/components/ContactCTA";
 import { SiteFooter } from "@/components/SiteFooter";
 import { products } from "@/data/products";
+import { isSoldOut } from "@/data/stock";
 import { formatEuros } from "@/lib/money";
 import hero from "@/assets/hero_drop.jpeg.asset.json";
 import { absoluteSiteUrl } from "@/data/site";
@@ -13,27 +14,27 @@ import { absoluteSiteUrl } from "@/data/site";
 export const Route = createFileRoute("/eclipssebrand")({
   head: () => ({
     meta: [
-      { title: "ECLIPSSEBRAND | ECLIPSSE™ UNIVERSE" },
+      { title: "Tienda | ECLIPSSE™ universe" },
       {
         name: "description",
         content:
-          "Descubre las prendas y drops de ECLIPSSEBRAND. Marca de ropa por y para jóvenes. De Sevilla al mundo.",
+          "Descubre las prendas y drops de ECLIPSSE™ universe. Marca de ropa por y para jóvenes. De Sevilla al mundo.",
       },
       { name: "robots", content: "index, follow" },
-      { property: "og:title", content: "ECLIPSSEBRAND | ECLIPSSE™ UNIVERSE" },
+      { property: "og:title", content: "Tienda | ECLIPSSE™ universe" },
       {
         property: "og:description",
         content:
-          "Descubre las prendas y drops de ECLIPSSEBRAND. Marca de ropa por y para jóvenes. De Sevilla al mundo.",
+          "Descubre las prendas y drops de ECLIPSSE™ universe. Marca de ropa por y para jóvenes. De Sevilla al mundo.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: absoluteSiteUrl("/eclipssebrand") },
       { property: "og:image", content: absoluteSiteUrl(hero.url) },
-      { name: "twitter:title", content: "ECLIPSSEBRAND | ECLIPSSE™ UNIVERSE" },
+      { name: "twitter:title", content: "Tienda | ECLIPSSE™ universe" },
       {
         name: "twitter:description",
         content:
-          "Descubre las prendas y drops de ECLIPSSEBRAND. Marca de ropa por y para jóvenes. De Sevilla al mundo.",
+          "Descubre las prendas y drops de ECLIPSSE™ universe. Marca de ropa por y para jóvenes. De Sevilla al mundo.",
       },
     ],
     links: [
@@ -64,7 +65,7 @@ const historia = [
     d: 'SUMMER DROP 006: camiseta para el verano en blanco, celeste y amarillo, corte oversize y 100% algodón. DROP 002 / SUPERNOVA 1.0: segunda edición de la camiseta del SUPERNOVA DROP 001, blanca, oversize, 100% algodón. DROP 004: camiseta blanca con diseño en rojo y negro, corte oversize y 100% algodón, "Creadores del futuro".',
   },
   {
-    t: "DROP 007 — ECLIPSSEBRAND × ANDEX",
+    t: "DROP 007 — ECLIPSSE™ universe × ANDEX",
     d: "La crewneck en dos colores sacada en nuestro primer invierno oficial. Una sudadera sin capucha de unidades limitadas en colaboración con Andex Cáncer Infantil Sevilla, en la que el 75% del beneficio obtenido fue donado a la asociación.",
   },
   {
@@ -88,12 +89,13 @@ function BrandPage() {
   return (
     <div className="min-h-screen bg-background text-black">
       <Marquee text="POR Y PARA JÓVENES" />
-      <SiteHeader current="brand" />
+      <SiteHeader current="brand" overlay />
 
+      <h1 className="sr-only">ECLIPSSE™ universe — Tienda</h1>
       <section className="relative h-[72vh] min-h-[480px] overflow-hidden">
         <motion.img
           src={hero.url}
-          alt="ECLIPSSE™ UNIVERSE — DROP 008"
+          alt="ECLIPSSE™ universe — DROP 008"
           initial={{ scale: 1.08 }}
           animate={{ scale: 1 }}
           transition={{ duration: 2, ease: [0.22, 1, 0.36, 1] }}
@@ -176,11 +178,11 @@ function BrandPage() {
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
             >
               {[
-                { src: "/images/gallery-1.png", alt: "ECLIPSSE™ — Calle" },
-                { src: "/images/gallery-2.png", alt: "ECLIPSSE™ — DROP 007 Andex" },
-                { src: "/images/gallery-3.png", alt: "ECLIPSSE™ — Summer Drop" },
-                { src: "/images/gallery-4.png", alt: "ECLIPSSE™ — Supernova Drop 001" },
-                { src: "/images/gallery-5.png", alt: "ECLIPSSE™ — DROP 006" },
+                { src: "/images/gallery-1.png", alt: "ECLIPSSE™ universe — Calle" },
+                { src: "/images/gallery-2.png", alt: "ECLIPSSE™ universe — DROP 007 Andex" },
+                { src: "/images/gallery-3.png", alt: "ECLIPSSE™ universe — Summer Drop" },
+                { src: "/images/gallery-4.png", alt: "ECLIPSSE™ universe — Supernova Drop 001" },
+                { src: "/images/gallery-5.png", alt: "ECLIPSSE™ universe — DROP 006" },
               ].map((img, i) => (
                 <motion.div
                   key={img.src}
@@ -241,7 +243,7 @@ function BrandPage() {
         >
           <img
             src="/images/instagram-banner.png"
-            alt="ECLIPSSE™ UNIVERSE"
+            alt="ECLIPSSE™ universe"
             className="w-full h-full object-cover grayscale"
             loading="lazy"
             decoding="async"
@@ -326,6 +328,8 @@ function FaqItem({
 }
 
 function ProductCard({
+  id,
+  sizes,
   slug,
   name,
   priceCents,
@@ -333,6 +337,8 @@ function ProductCard({
   back,
   index,
 }: {
+  id: string;
+  sizes: string[];
   slug: string;
   name: string;
   priceCents: number;
@@ -341,6 +347,7 @@ function ProductCard({
   index: number;
 }) {
   const [hover, setHover] = useState(false);
+  const agotada = isSoldOut(id, sizes);
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -356,6 +363,11 @@ function ProductCard({
         className="group block text-center"
       >
         <div className="relative aspect-[4/5] overflow-hidden rounded-xl">
+          {agotada && (
+            <span className="absolute left-3 top-3 z-10 rounded-full border border-white/60 bg-white/55 px-3 py-1 font-display text-[10px] uppercase tracking-[0.2em] text-black backdrop-blur-md">
+              Agotada
+            </span>
+          )}
           <img
             src={front}
             alt={name}
@@ -377,7 +389,7 @@ function ProductCard({
             {name}
           </h3>
           <span className="text-xs md:text-sm tabular-nums text-muted-foreground">
-            {formatEuros(priceCents)}
+            {agotada ? "Agotada" : formatEuros(priceCents)}
           </span>
         </div>
       </Link>

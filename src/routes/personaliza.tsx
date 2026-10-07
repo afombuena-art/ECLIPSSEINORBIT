@@ -11,18 +11,18 @@ import { absoluteSiteUrl } from "@/data/site";
 export const Route = createFileRoute("/personaliza")({
   head: () => ({
     meta: [
-      { title: "Personaliza tu ropa | ECLIPSSE™ UNIVERSE" },
+      { title: "Personaliza tu ropa | ECLIPSSE™ universe" },
       {
         name: "description",
         content:
-          "Personaliza prendas con ECLIPSSE™ UNIVERSE. Ropa y personalización por y para jóvenes. De Sevilla al mundo.",
+          "Personaliza prendas con ECLIPSSE™ universe. Ropa y personalización por y para jóvenes. De Sevilla al mundo.",
       },
       { name: "robots", content: "index, follow" },
-      { property: "og:title", content: "Personaliza tu ropa | ECLIPSSE™ UNIVERSE" },
+      { property: "og:title", content: "Personaliza tu ropa | ECLIPSSE™ universe" },
       {
         property: "og:description",
         content:
-          "Personaliza prendas con ECLIPSSE™ UNIVERSE. Ropa y personalización por y para jóvenes. De Sevilla al mundo.",
+          "Personaliza prendas con ECLIPSSE™ universe. Ropa y personalización por y para jóvenes. De Sevilla al mundo.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: absoluteSiteUrl("/personaliza") },
@@ -30,11 +30,11 @@ export const Route = createFileRoute("/personaliza")({
         property: "og:image",
         content: absoluteSiteUrl("/images/personaliza-hero-wide.png"),
       },
-      { name: "twitter:title", content: "Personaliza tu ropa | ECLIPSSE™ UNIVERSE" },
+      { name: "twitter:title", content: "Personaliza tu ropa | ECLIPSSE™ universe" },
       {
         name: "twitter:description",
         content:
-          "Personaliza prendas con ECLIPSSE™ UNIVERSE. Ropa y personalización por y para jóvenes. De Sevilla al mundo.",
+          "Personaliza prendas con ECLIPSSE™ universe. Ropa y personalización por y para jóvenes. De Sevilla al mundo.",
       },
     ],
     links: [
@@ -100,7 +100,7 @@ function CustomPage() {
             transition={{ duration: 0.6 }}
             className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground mb-6"
           >
-            Personalizados · ECLIPSSE™ UNIVERSE
+            Personalizados · ECLIPSSE™ universe
           </motion.p>
           <motion.h1
             initial={{ y: 40, opacity: 0 }}
@@ -120,7 +120,7 @@ function CustomPage() {
             transition={{ duration: 0.7, delay: 0.3 }}
             className="mt-8 max-w-2xl text-base md:text-lg text-muted-foreground leading-relaxed"
           >
-            En ECLIPSSE™ UNIVERSE creemos que cada idea merece convertirse en algo real. Ofrecemos
+            En ECLIPSSE™ universe creemos que cada idea merece convertirse en algo real. Ofrecemos
             productos personalizados, tanto para pedidos pequeños como para proyectos más grandes.
           </motion.p>
           <motion.a
@@ -151,7 +151,7 @@ function CustomPage() {
       <section className="relative h-[72vh] min-h-[420px] overflow-hidden border-t border-border">
         <motion.img
           src="/images/personaliza-hero-wide.png"
-          alt="ECLIPSSE™ UNIVERSE — Personaliza"
+          alt="ECLIPSSE™ universe — Personaliza"
           initial={{ scale: 1.06 }}
           animate={{ scale: 1 }}
           transition={{ duration: 2, ease: [0.22, 1, 0.36, 1] }}
@@ -279,7 +279,7 @@ function CustomPage() {
         >
           <img
             src="/images/sudaderas-grupos.png"
-            alt="ECLIPSSE™ UNIVERSE — Sudaderas para grupos"
+            alt="ECLIPSSE™ universe — Sudaderas para grupos"
             className="w-full h-full object-cover"
             loading="lazy"
             decoding="async"

@@ -4,10 +4,10 @@ import { LegalLayout } from "@/components/LegalLayout";
 export const Route = createFileRoute("/legal/cookies")({
   head: () => ({
     meta: [
-      { title: "Política de cookies — ECLIPSSE™ UNIVERSE" },
+      { title: "Política de cookies — ECLIPSSE™ universe" },
       {
         name: "description",
-        content: "Información sobre el uso de cookies en el sitio de ECLIPSSE™ UNIVERSE.",
+        content: "Información sobre el uso de cookies en el sitio de ECLIPSSE™ universe.",
       },
       { name: "robots", content: "index,follow" },
     ],

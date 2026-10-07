@@ -25,6 +25,8 @@ const MENSAJES_DE_ERROR: Record<CheckoutError, string> = {
     "Una de las prendas de tu carrito ya no está disponible. Quítala y vuelve a intentarlo.",
   TALLA_NO_DISPONIBLE:
     "Una de las tallas de tu carrito ya no está disponible. Elige otra talla y vuelve a intentarlo.",
+  SIN_STOCK:
+    "Una de las prendas de tu carrito se ha agotado o no quedan tantas unidades. Revisa el carrito y vuelve a intentarlo.",
   FUERA_DE_COBERTURA:
     "No enviamos a ese código postal. Escríbenos por WhatsApp y gestionamos tu pedido de otra manera.",
   CODIGO_POSTAL_INVALIDO: "El código postal no es válido. Revísalo y vuelve a intentarlo.",
@@ -37,7 +39,7 @@ const MENSAJES_DE_ERROR: Record<CheckoutError, string> = {
 export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
-      { title: "Finalizar compra — ECLIPSSE™ UNIVERSE" },
+      { title: "Finalizar compra — ECLIPSSE™ universe" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),

@@ -12,8 +12,8 @@
 /** Enlace corto de WhatsApp Business de ECLIPSSE. */
 export const WHATSAPP_URL = "https://wa.me/message/P5FFTHYMWKNRA1";
 
-export const INSTAGRAM_URL = "https://www.instagram.com/eclipssebrand/";
+export const INSTAGRAM_URL = "https://www.instagram.com/eclipsseuniverse/";
 
-export const TIKTOK_URL = "https://tiktok.com/@eclipssebrand";
+export const TIKTOK_URL = "https://www.tiktok.com/@eclipssebrand";
 
 export const EMAIL = "eclipssebrand@gmail.com";

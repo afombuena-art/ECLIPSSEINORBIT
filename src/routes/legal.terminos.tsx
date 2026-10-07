@@ -4,8 +4,8 @@ import { LegalLayout } from "@/components/LegalLayout";
 export const Route = createFileRoute("/legal/terminos")({
   head: () => ({
     meta: [
-      { title: "Términos y condiciones — ECLIPSSE™ UNIVERSE" },
-      { name: "description", content: "Términos y condiciones de venta de ECLIPSSE™ UNIVERSE." },
+      { title: "Términos y condiciones — ECLIPSSE™ universe" },
+      { name: "description", content: "Términos y condiciones de venta de ECLIPSSE™ universe." },
       { name: "robots", content: "index,follow" },
     ],
     links: [{ rel: "canonical", href: "/legal/terminos" }],
@@ -15,7 +15,7 @@ export const Route = createFileRoute("/legal/terminos")({
       <h2>Información general</h2>
       <p>
         Las presentes condiciones regulan la venta de productos a través de la tienda online de
-        ECLIPSSE™ UNIVERSE, cuyos datos de titular figuran en el{" "}
+        ECLIPSSE™ universe, cuyos datos de titular figuran en el{" "}
         <a href="/legal/aviso-legal">Aviso legal</a>. Realizar un pedido implica la aceptación
         expresa de estas condiciones.
       </p>
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/legal/terminos")({
       <p>
         Los precios se expresan en euros (€) e incluyen el IVA aplicable. Los gastos de envío se
         calculan y se muestran durante el proceso de compra (checkout), antes de que confirmes y
-        pagues el pedido. ECLIPSSE™ UNIVERSE se reserva el derecho a modificar precios sin previo
+        pagues el pedido. ECLIPSSE™ universe se reserva el derecho a modificar precios sin previo
         aviso, respetando siempre los pedidos ya confirmados y pagados.
       </p>
       <h2>Proceso de compra y pago</h2>
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/legal/terminos")({
         envío en el checkout y pagas con tarjeta. El pago se procesa de forma segura a través de{" "}
         <strong>Stripe</strong> como proveedor de servicios de pago; los datos de tu tarjeta se
         introducen y se tratan directamente en el entorno seguro de Stripe y en ningún momento son
-        almacenados por ECLIPSSE™ UNIVERSE.
+        almacenados por ECLIPSSE™ universe.
       </p>
       <p>
         El pedido se considera perfeccionado cuando el pago queda confirmado. Recibirás la

@@ -128,11 +128,13 @@
    Todo con las mismas curvas y duraciones de :root, y apagado por completo con
    «reducir movimiento» (más arriba). Nada rebota: entra, se asienta y ya. */
 
-/* Transición entre páginas: fundido corto, sin desplazar la cabecera. */
-::view-transition-old(root) { animation: vt-sale var(--dur-media) var(--sal-suave) both; }
-::view-transition-new(root) { animation: vt-entra var(--dur-larga) var(--sal-suave) both; }
-@keyframes vt-sale { to { opacity: 0; } }
-@keyframes vt-entra { from { opacity: 0; transform: translateY(8px); } }
+/* Transición entre páginas: fundido de entrada de la nueva página. Solo opacidad: con
+   transform el contenedor pasaría a ser el «marco» de los elementos fijos y rompería
+   la cabecera pegajosa. ⚠️ NO usar la API View Transitions (`defaultViewTransition`):
+   comprobado el 2026-10-07 que cuelga WebKit (Safari) al redirigir /checkout con el
+   carrito vacío (3 de 3 caídas con ella, 3 de 3 bien sin ella). */
+.pagina-entra { animation: pagina-entra var(--dur-larga) var(--sal-suave) both; }
+@keyframes pagina-entra { from { opacity: 0; } }
 
 /* Botones y enlaces con forma de botón: se pulsan de verdad. */
 a[class*="rounded-full"], button[class*="rounded-full"] {

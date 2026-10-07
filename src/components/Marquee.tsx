@@ -2,7 +2,7 @@ export function Marquee({ text }: { text: string }) {
   const items = Array.from({ length: 14 }, (_, i) => i);
   return (
     <div
-      className="overflow-hidden border-b border-black/10 text-black/55 py-1.5"
+      className="overflow-hidden text-black/55 py-1.5"
       role="presentation"
       aria-hidden="true"
     >

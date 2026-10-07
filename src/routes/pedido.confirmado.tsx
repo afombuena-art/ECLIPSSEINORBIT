@@ -10,7 +10,7 @@ import type { OrderStatus } from "@/lib/order-status.server";
 export const Route = createFileRoute("/pedido/confirmado")({
   head: () => ({
     meta: [
-      { title: "Gracias por tu compra — ECLIPSSE™ UNIVERSE" },
+      { title: "Gracias por tu compra — ECLIPSSE™ universe" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),

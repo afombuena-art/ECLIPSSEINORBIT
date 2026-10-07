@@ -4,10 +4,10 @@ import { LegalLayout } from "@/components/LegalLayout";
 export const Route = createFileRoute("/legal/devoluciones")({
   head: () => ({
     meta: [
-      { title: "Envíos y devoluciones — ECLIPSSE™ UNIVERSE" },
+      { title: "Envíos y devoluciones — ECLIPSSE™ universe" },
       {
         name: "description",
-        content: "Condiciones de envío y devoluciones de ECLIPSSE™ UNIVERSE.",
+        content: "Condiciones de envío y devoluciones de ECLIPSSE™ universe.",
       },
       { name: "robots", content: "index,follow" },
     ],

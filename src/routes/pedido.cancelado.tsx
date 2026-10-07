@@ -6,7 +6,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const Route = createFileRoute("/pedido/cancelado")({
   head: () => ({
     meta: [
-      { title: "Pago cancelado — ECLIPSSE™ UNIVERSE" },
+      { title: "Pago cancelado — ECLIPSSE™ universe" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),

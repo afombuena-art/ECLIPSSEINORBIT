@@ -7,20 +7,20 @@ import { absoluteSiteUrl } from "@/data/site";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "ECLIPSSE™ UNIVERSE | Por y para jóvenes" },
+      { title: "ECLIPSSE™ universe | Por y para jóvenes" },
       {
         name: "description",
         content: "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
       },
       { name: "robots", content: "index, follow" },
-      { property: "og:title", content: "ECLIPSSE™ UNIVERSE | Por y para jóvenes" },
+      { property: "og:title", content: "ECLIPSSE™ universe | Por y para jóvenes" },
       {
         property: "og:description",
         content: "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: absoluteSiteUrl() },
-      { name: "twitter:title", content: "ECLIPSSE™ UNIVERSE | Por y para jóvenes" },
+      { name: "twitter:title", content: "ECLIPSSE™ universe | Por y para jóvenes" },
       {
         name: "twitter:description",
         content: "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
@@ -74,6 +74,8 @@ function Landing() {
         )}
       </AnimatePresence>
 
+      <h1 className="sr-only">ECLIPSSE™ universe</h1>
+
       {/* Logo — fixed, no float */}
       <motion.div
         initial={{ y: -16, opacity: 0 }}
@@ -97,7 +99,7 @@ function Landing() {
 
         <div className="w-full flex flex-col gap-4 md:gap-5">
           <ChoiceButton
-            label="ECLIPSSEBRAND"
+            label="ECLIPSSE™ universe"
             delay={0.3}
             onClick={() => go("brand")}
             dimmed={going === "custom"}
@@ -155,8 +157,8 @@ function ChoiceButton({
       aria-label={`Entrar en ${label}`}
     >
       <span
-        className={`block w-full rounded-full border border-black px-8 py-4 md:py-5 font-display text-base md:text-lg tracking-[0.12em] text-center transition-colors duration-300 ${
-          selected ? "bg-black text-white" : "bg-white text-black hover:bg-black hover:text-white"
+        className={`block w-full rounded-full border border-black/80 px-8 py-4 md:py-5 font-display text-base md:text-lg tracking-[0.12em] text-center transition-colors duration-300 ${
+          selected ? "bg-black text-white" : "bg-transparent text-black backdrop-blur-[2px] hover:bg-black hover:text-white"
         }`}
       >
         {label}

@@ -4,10 +4,10 @@ import { LegalLayout } from "@/components/LegalLayout";
 export const Route = createFileRoute("/legal/privacidad")({
   head: () => ({
     meta: [
-      { title: "Política de privacidad — ECLIPSSE™ UNIVERSE" },
+      { title: "Política de privacidad — ECLIPSSE™ universe" },
       {
         name: "description",
-        content: "Política de privacidad y tratamiento de datos personales en ECLIPSSE™ UNIVERSE.",
+        content: "Política de privacidad y tratamiento de datos personales en ECLIPSSE™ universe.",
       },
       { name: "robots", content: "index,follow" },
     ],
@@ -16,12 +16,12 @@ export const Route = createFileRoute("/legal/privacidad")({
   component: () => (
     <LegalLayout title="Política de privacidad">
       <p>
-        En ECLIPSSE™ UNIVERSE tratamos tus datos personales con el máximo respeto y conforme al
+        En ECLIPSSE™ universe tratamos tus datos personales con el máximo respeto y conforme al
         Reglamento (UE) 2016/679 (RGPD) y a la Ley Orgánica 3/2018 de Protección de Datos.
       </p>
       <h2>Responsable</h2>
       <p>
-        Jacobo Otero Campos, titular de ECLIPSSE™ UNIVERSE (resto de datos en el{" "}
+        Jacobo Otero Campos, titular de ECLIPSSE™ universe (resto de datos en el{" "}
         <a href="/legal/aviso-legal">Aviso legal</a>) ·{" "}
         <a href="mailto:eclipssebrand@gmail.com">eclipssebrand@gmail.com</a>
       </p>

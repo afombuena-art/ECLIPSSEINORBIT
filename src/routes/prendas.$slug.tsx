@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { getProduct, products, type Product } from "@/data/products";
 import { formatEuros } from "@/lib/money";
 import { useCart } from "@/lib/cart";
+import { isSoldOut, stockOf } from "@/data/stock";
 import { WHATSAPP_URL } from "@/data/contacto";
 import { absoluteSiteUrl } from "@/data/site";
 
@@ -31,8 +32,8 @@ export const Route = createFileRoute("/prendas/$slug")({
     const p = getProduct(params.slug);
     return {
       meta: [
-        { title: p ? `${p.name} — ECLIPSSE™ UNIVERSE` : "Prenda | ECLIPSSE™ UNIVERSE" },
-        { name: "description", content: p?.description ?? "Prenda ECLIPSSE™ UNIVERSE" },
+        { title: p ? `${p.name} — ECLIPSSE™ universe` : "Prenda | ECLIPSSE™ universe" },
+        { name: "description", content: p?.description ?? "Prenda ECLIPSSE™ universe" },
         ...(p ? [{ property: "og:image" as const, content: absoluteSiteUrl(p.front) }] : []),
         { property: "og:url", content: absoluteSiteUrl(`/prendas/${params.slug}`) },
       ],
@@ -73,7 +74,10 @@ function ProductPage() {
   const { product } = Route.useLoaderData() as { product: Product };
   const [active, setActive] = useState(0);
   const [direction, setDirection] = useState(0);
-  const [size, setSize] = useState(product.sizes[0]);
+  // Talla inicial: la primera que tenga unidades (si todas están agotadas, la primera).
+  const primeraConStock = (p: Product) =>
+    p.sizes.find((s) => stockOf(p.id, s) > 0) ?? p.sizes[0];
+  const [size, setSize] = useState(primeraConStock(product));
   const [qty, setQty] = useState(1);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [careOpen, setCareOpen] = useState(false);
@@ -82,12 +86,15 @@ function ProductPage() {
   const cart = useCart();
   const images = product.images;
   const isCamiseta = product.category === "Camiseta";
+  const agotada = isSoldOut(product.id, product.sizes);
+  const disponibles = stockOf(product.id, size);
 
   useEffect(() => {
     setActive(0);
     setDirection(0);
     setQty(1);
-    setSize(product.sizes[0]);
+    setSize(primeraConStock(product));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.slug, product.sizes]);
 
   const goTo = (index: number) => {
@@ -176,7 +183,7 @@ function ProductPage() {
         <div>
           <Link
             to="/eclipssebrand"
-            className="text-[11px] uppercase tracking-[0.25em] hover:underline"
+            className="inline-block py-2.5 text-[11px] uppercase tracking-[0.25em] hover:underline"
           >
             ← Volver a DROP 008
           </Link>
@@ -187,7 +194,15 @@ function ProductPage() {
           <div className="flex items-start gap-4 mt-2">
             <div className="flex-1">
               <h1 className="font-display text-4xl md:text-6xl leading-tight">{product.name}</h1>
-              <p className="mt-4 text-2xl">{formatEuros(product.priceCents)}</p>
+              <p className="mt-4 text-2xl">
+                {agotada ? (
+                  <span className="inline-block rounded-full border border-white/60 bg-white/55 px-4 py-1 font-display text-sm uppercase tracking-[0.2em] backdrop-blur-md">
+                    Agotada
+                  </span>
+                ) : (
+                  formatEuros(product.priceCents)
+                )}
+              </p>
             </div>
             <div className="shrink-0 mt-1">
               <span
@@ -207,12 +222,19 @@ function ProductPage() {
               {product.sizes.map((s: string) => (
                 <button
                   key={s}
-                  onClick={() => setSize(s)}
+                  onClick={() => {
+                    setSize(s);
+                    setQty((q) => Math.max(1, Math.min(q, stockOf(product.id, s))));
+                  }}
+                  disabled={stockOf(product.id, s) === 0}
                   aria-pressed={size === s}
-                  className={`cursor-pointer min-w-[52px] min-h-[44px] px-4 py-3 text-sm rounded-full border transition-colors ${
-                    size === s
-                      ? "bg-black text-white border-black"
-                      : "border-black hover:bg-black hover:text-white"
+                  aria-label={stockOf(product.id, s) === 0 ? `Talla ${s}, agotada` : `Talla ${s}`}
+                  className={`min-w-[52px] min-h-[44px] px-4 py-3 text-sm rounded-full border transition-colors ${
+                    stockOf(product.id, s) === 0
+                      ? "cursor-not-allowed border-black/25 text-black/45 line-through"
+                      : size === s
+                        ? "cursor-pointer bg-black text-white border-black"
+                        : "cursor-pointer border-black hover:bg-black hover:text-white"
                   }`}
                 >
                   {s}
@@ -220,10 +242,16 @@ function ProductPage() {
               ))}
             </div>
 
+            {!agotada && disponibles > 0 && disponibles <= 3 && (
+              <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-black">
+                {disponibles === 1 ? "Última unidad" : `Quedan ${disponibles}`}
+              </p>
+            )}
+
             {isCamiseta && (
               <button
                 onClick={openSizeGuide}
-                className="cursor-pointer mt-3 text-[11px] uppercase tracking-[0.2em] text-muted-foreground underline underline-offset-4 hover:text-black transition-colors"
+                className="cursor-pointer mt-1 py-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground underline underline-offset-4 hover:text-black transition-colors"
               >
                 Guía de tallas
               </button>
@@ -243,7 +271,7 @@ function ProductPage() {
               <span className="w-10 text-center tabular-nums">{qty}</span>
               <button
                 type="button"
-                onClick={() => setQty((q) => Math.min(99, q + 1))}
+                onClick={() => setQty((q) => Math.min(Math.max(1, disponibles), q + 1))}
                 aria-label="Añadir una unidad"
                 className="cursor-pointer h-12 w-12 text-lg leading-none hover:bg-black hover:text-white transition-colors"
               >
@@ -252,13 +280,14 @@ function ProductPage() {
             </div>
             <button
               type="button"
+              disabled={disponibles === 0}
               onClick={() => {
                 cart.add(product.id, size, qty);
                 cart.open();
               }}
-              className="cursor-pointer flex-1 text-center rounded-full border border-black bg-black text-white px-10 py-4 font-display text-[11px] uppercase tracking-[0.25em] hover:bg-white hover:text-black transition-colors"
+              className="cursor-pointer flex-1 text-center rounded-full border border-black bg-black text-white px-10 py-4 font-display text-[11px] uppercase tracking-[0.25em] hover:bg-white hover:text-black transition-colors disabled:cursor-not-allowed disabled:border-black/25 disabled:bg-transparent disabled:text-black/50 disabled:hover:bg-transparent disabled:hover:text-black/50"
             >
-              Añadir al carrito
+              {disponibles === 0 ? "Agotada" : "Añadir al carrito"}
             </button>
           </div>
           <p className="mt-4 text-xs uppercase tracking-[0.25em] text-muted-foreground">
@@ -426,7 +455,7 @@ function ProductPage() {
                   <div className="mt-3 flex flex-col items-center gap-0.5">
                     <span className="font-display text-sm">{p.name}</span>
                     <span className="text-xs text-muted-foreground">
-                      {formatEuros(p.priceCents)}
+                      {isSoldOut(p.id, p.sizes) ? "Agotada" : formatEuros(p.priceCents)}
                     </span>
                   </div>
                 </Link>

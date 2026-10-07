@@ -4,10 +4,10 @@ import { LegalLayout } from "@/components/LegalLayout";
 export const Route = createFileRoute("/legal/aviso-legal")({
   head: () => ({
     meta: [
-      { title: "Aviso legal — ECLIPSSE™ UNIVERSE" },
+      { title: "Aviso legal — ECLIPSSE™ universe" },
       {
         name: "description",
-        content: "Aviso legal e información del responsable de ECLIPSSE™ UNIVERSE.",
+        content: "Aviso legal e información del responsable de ECLIPSSE™ universe.",
       },
       { name: "robots", content: "index,follow" },
     ],
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/legal/aviso-legal")({
       </p>
       <h2>Titular</h2>
       <p>
-        Jacobo Otero Campos (marca comercial «ECLIPSSE™ UNIVERSE» / «ECLIPSSEBRAND»).
+        Jacobo Otero Campos (marca comercial «ECLIPSSE™ universe»).
         <br />
         NIF / CIF: 48806552T
         <br />
@@ -32,11 +32,11 @@ export const Route = createFileRoute("/legal/aviso-legal")({
         <br />
         Instagram:{" "}
         <a
-          href="https://www.instagram.com/eclipssebrand/"
+          href="https://www.instagram.com/eclipsseuniverse/"
           target="_blank"
           rel="noopener noreferrer"
         >
-          @eclipssebrand
+          @eclipsseuniverse
         </a>
       </p>
       <h2>Objeto</h2>
@@ -49,12 +49,12 @@ export const Route = createFileRoute("/legal/aviso-legal")({
       <h2>Propiedad intelectual e industrial</h2>
       <p>
         Todos los contenidos del sitio (textos, imágenes, logotipos, marcas, diseños) son
-        titularidad de ECLIPSSE™ FACTORY o se utilizan con autorización. Queda prohibida cualquier
+        titularidad de ECLIPSSE™ universe o se utilizan con autorización. Queda prohibida cualquier
         reproducción, distribución o comunicación pública sin autorización expresa.
       </p>
       <h2>Responsabilidad</h2>
       <p>
-        ECLIPSSE™ UNIVERSE no se responsabiliza de los daños o perjuicios que pudieran derivarse de
+        ECLIPSSE™ universe no se responsabiliza de los daños o perjuicios que pudieran derivarse de
         un mal uso del sitio web o de la información contenida en él.
       </p>
       <h2>Legislación aplicable</h2>

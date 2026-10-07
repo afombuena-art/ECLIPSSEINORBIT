@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
+  useRouterState,
   createRootRouteWithContext,
   useRouter,
   HeadContent,
@@ -74,15 +75,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "theme-color", content: "#ffffff" },
-      { title: "ECLIPSSE™ UNIVERSE | Por y para jóvenes" },
+      { title: "ECLIPSSE™ universe | Por y para jóvenes" },
       {
         name: "description",
         content: "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
       },
       { name: "robots", content: "index, follow" },
-      { property: "og:site_name", content: "ECLIPSSE™ UNIVERSE" },
+      { property: "og:site_name", content: "ECLIPSSE™ universe" },
       { property: "og:type", content: "website" },
-      { property: "og:title", content: "ECLIPSSE™ UNIVERSE | Por y para jóvenes" },
+      { property: "og:title", content: "ECLIPSSE™ universe | Por y para jóvenes" },
       {
         property: "og:description",
         content: "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
@@ -90,7 +91,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:url", content: absoluteSiteUrl() },
       { property: "og:image", content: absoluteSiteUrl("/images/hero_drop.jpeg") },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "ECLIPSSE™ UNIVERSE | Por y para jóvenes" },
+      { name: "twitter:title", content: "ECLIPSSE™ universe | Por y para jóvenes" },
       {
         name: "twitter:description",
         content: "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
@@ -114,12 +115,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
-          name: "ECLIPSSE™ UNIVERSE",
-          alternateName: "ECLIPSSEBRAND",
+          name: "ECLIPSSE™ universe",
           slogan: "Por y para Jóvenes",
           description: "Marca de ropa y personalización por y para jóvenes. De Sevilla al mundo.",
           url: absoluteSiteUrl(),
-          sameAs: ["https://www.instagram.com/eclipssebrand/"],
+          sameAs: ["https://www.instagram.com/eclipsseuniverse/", "https://www.tiktok.com/@eclipssebrand"],
           address: {
             "@type": "PostalAddress",
             addressLocality: "Sevilla",
@@ -151,6 +151,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
     <QueryClientProvider client={queryClient}>
       {/* `reducedMotion="user"`: las animaciones de framer-motion (JavaScript) no se
@@ -160,7 +161,9 @@ function RootComponent() {
           movimientos de posición y escala y se conservan los fundidos suaves. */}
       <MotionConfig reducedMotion="user">
         <CartProvider>
-          <Outlet />
+          <div key={pathname} className="pagina-entra">
+            <Outlet />
+          </div>
           <CartSheet />
           <CookieBanner />
         </CartProvider>

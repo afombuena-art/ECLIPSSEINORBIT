@@ -3,6 +3,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import type Stripe from "stripe";
 import { checkoutSchema, ORIGEN_PEDIDO, type CheckoutResult } from "@/lib/checkout-schema";
 import { getProductById } from "@/data/products";
+import { stockOf } from "@/data/stock";
 import { quoteShipping, zoneFromPostalCode, ZONE_LABELS } from "@/lib/shipping";
 import { getStripe } from "@/lib/stripe.server";
 
@@ -79,6 +80,13 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       if (!product.sizes.includes(item.size)) {
         console.warn(`checkout: talla no disponible (${product.id} / ${item.size})`);
         return { ok: false, error: "TALLA_NO_DISPONIBLE" };
+      }
+
+      // El stock se comprueba aquí, en el servidor: el carrito del navegador se puede
+      // manipular o llevar días guardado.
+      if (stockOf(product.id, item.size) < item.qty) {
+        console.warn(`checkout: sin stock (${product.id} / ${item.size})`);
+        return { ok: false, error: "SIN_STOCK" };
       }
 
       subtotalCents += product.priceCents * item.qty;

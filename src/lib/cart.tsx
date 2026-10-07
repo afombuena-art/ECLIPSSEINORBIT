@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { getProductById, type Product } from "@/data/products";
 import { calcShippingCents } from "@/lib/shipping";
+import { stockOf } from "@/data/stock";
 
 const STORAGE_KEY = "eclipsse_cart_v1";
 const MAX_QTY = 99;
@@ -35,7 +36,9 @@ type CartContextValue = {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-const clampQty = (n: number) => Math.max(1, Math.min(MAX_QTY, Math.floor(n)));
+/** Cantidad válida de una línea: entre 1 y lo que haya en stock (nunca más de MAX_QTY). */
+const clampQty = (n: number, id: string, size: string) =>
+  Math.max(1, Math.min(MAX_QTY, stockOf(id, size), Math.floor(n)));
 
 function readStorage(): CartLine[] {
   try {
@@ -58,7 +61,9 @@ function readStorage(): CartLine[] {
         // y puede llevar meses guardado; sin esto, una talla que desapareció deja
         // la línea a la vista y cada intento de pago muere en el servidor.
         .filter((l) => getProductById(l.id)?.sizes.includes(l.size))
-        .map((l) => ({ id: l.id, size: l.size, qty: clampQty(l.qty) }))
+        // Una prenda que se ha agotado desde que se guardó el carrito no puede seguir en él.
+        .filter((l) => stockOf(l.id, l.size) > 0)
+        .map((l) => ({ id: l.id, size: l.size, qty: clampQty(l.qty, l.id, l.size) }))
     );
   } catch {
     return [];
@@ -116,11 +121,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         // Misma regla que al leer de localStorage: producto y talla tienen que
         // existir hoy en el catálogo.
         if (!getProductById(id)?.sizes.includes(size)) return;
+        if (stockOf(id, size) <= 0) return;
         setLines((prev) => {
           const i = prev.findIndex((l) => l.id === id && l.size === size);
-          if (i === -1) return [...prev, { id, size, qty: clampQty(qty) }];
+          if (i === -1) return [...prev, { id, size, qty: clampQty(qty, id, size) }];
           const next = [...prev];
-          next[i] = { ...next[i], qty: clampQty(next[i].qty + qty) };
+          next[i] = { ...next[i], qty: clampQty(next[i].qty + qty, id, size) };
           return next;
         });
       },
@@ -128,7 +134,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setLines((prev) => {
           if (qty <= 0) return prev.filter((l) => !(l.id === id && l.size === size));
           return prev.map((l) =>
-            l.id === id && l.size === size ? { ...l, qty: clampQty(qty) } : l,
+            l.id === id && l.size === size ? { ...l, qty: clampQty(qty, id, size) } : l,
           );
         });
       },
