@@ -282,7 +282,7 @@ function CheckoutPage() {
             <div className="divide-y divide-border">
               {detailedLines.map((l) => (
                 <div key={`${l.id}-${l.size}`} className="flex gap-3 py-3 first:pt-0 text-sm">
-                  <div className="h-16 w-14 shrink-0 overflow-hidden rounded-lg">
+                  <div className="h-16 w-14 shrink-0 overflow-hidden rounded-lg bg-background">
                     <img
                       src={l.product.front}
                       alt={l.product.name}

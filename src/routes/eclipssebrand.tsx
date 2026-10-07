@@ -362,7 +362,7 @@ function ProductCard({
         onMouseLeave={() => setHover(false)}
         className="group block text-center"
       >
-        <div className="relative aspect-[4/5] overflow-hidden rounded-xl">
+        <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-background">
           {agotada && (
             <span className="absolute left-3 top-3 z-10 rounded-full border border-white/60 bg-white/55 px-3 py-1 font-display text-[10px] uppercase tracking-[0.2em] text-black backdrop-blur-md">
               Agotada

@@ -40,7 +40,7 @@ export function CartSheet() {
             <div className="flex-1 overflow-y-auto px-5 md:px-6 py-4 divide-y divide-border">
               {detailedLines.map((line) => (
                 <div key={`${line.id}-${line.size}`} className="flex gap-4 py-4 first:pt-0">
-                  <div className="h-24 w-20 shrink-0 overflow-hidden rounded-lg">
+                  <div className="h-24 w-20 shrink-0 overflow-hidden rounded-lg bg-background">
                     <img
                       src={line.product.front}
                       alt={line.product.name}

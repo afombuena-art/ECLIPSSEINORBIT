@@ -75,8 +75,7 @@ function ProductPage() {
   const [active, setActive] = useState(0);
   const [direction, setDirection] = useState(0);
   // Talla inicial: la primera que tenga unidades (si todas están agotadas, la primera).
-  const primeraConStock = (p: Product) =>
-    p.sizes.find((s) => stockOf(p.id, s) > 0) ?? p.sizes[0];
+  const primeraConStock = (p: Product) => p.sizes.find((s) => stockOf(p.id, s) > 0) ?? p.sizes[0];
   const [size, setSize] = useState(primeraConStock(product));
   const [qty, setQty] = useState(1);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
@@ -131,7 +130,7 @@ function ProductPage() {
 
       <section className="mx-auto max-w-7xl px-5 md:px-8 py-10 md:py-16 grid md:grid-cols-2 gap-10 md:gap-16">
         <div>
-          <div className="relative aspect-[4/5] rounded-2xl overflow-hidden select-none">
+          <div className="relative aspect-[4/5] rounded-2xl overflow-hidden select-none bg-background">
             <AnimatePresence initial={false} custom={direction} mode="popLayout">
               <motion.img
                 key={active}
@@ -165,7 +164,7 @@ function ProductPage() {
               <button
                 key={i}
                 onClick={() => goTo(i)}
-                className={`cursor-pointer aspect-square overflow-hidden rounded-lg border-2 transition-colors ${active === i ? "border-black" : "border-transparent"}`}
+                className={`cursor-pointer aspect-square overflow-hidden rounded-lg border-2 bg-background transition-colors ${active === i ? "border-black" : "border-transparent"}`}
                 aria-label={`Imagen ${i + 1}`}
               >
                 <img
@@ -204,16 +203,18 @@ function ProductPage() {
                 )}
               </p>
             </div>
-            <div className="shrink-0 mt-1">
-              <span
-                className="inline-block rotate-[-8deg] border-2 border-black rounded-sm px-2.5 py-1.5 font-display text-[9px] uppercase tracking-[0.2em] leading-tight bg-white shadow-sm"
-                style={{ textAlign: "center", minWidth: "76px" }}
-              >
-                Unidades
-                <br />
-                limitadas
-              </span>
-            </div>
+            {!agotada && (
+              <div className="shrink-0 mt-1">
+                <span
+                  className="inline-block rotate-[-8deg] border-2 border-black rounded-sm px-2.5 py-1.5 font-display text-[9px] uppercase tracking-[0.2em] leading-tight bg-white shadow-sm"
+                  style={{ textAlign: "center", minWidth: "76px" }}
+                >
+                  Unidades
+                  <br />
+                  limitadas
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="mt-10">
@@ -259,10 +260,13 @@ function ProductPage() {
           </div>
 
           <div className="mt-10 flex flex-col sm:flex-row gap-3">
-            <div className="flex items-center rounded-md border border-black self-start">
+            <div
+              className={`flex items-center rounded-md border self-start ${disponibles === 0 ? "border-black/25 opacity-50" : "border-black"}`}
+            >
               <button
                 type="button"
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
+                disabled={disponibles === 0}
                 aria-label="Quitar una unidad"
                 className="cursor-pointer h-12 w-12 text-lg leading-none hover:bg-black hover:text-white transition-colors"
               >
@@ -272,6 +276,7 @@ function ProductPage() {
               <button
                 type="button"
                 onClick={() => setQty((q) => Math.min(Math.max(1, disponibles), q + 1))}
+                disabled={disponibles === 0}
                 aria-label="Añadir una unidad"
                 className="cursor-pointer h-12 w-12 text-lg leading-none hover:bg-black hover:text-white transition-colors"
               >
@@ -443,7 +448,7 @@ function ProductPage() {
                   params={{ slug: p.slug }}
                   className="group block text-center"
                 >
-                  <div className="aspect-[4/5] rounded-xl overflow-hidden">
+                  <div className="aspect-[4/5] rounded-xl overflow-hidden bg-background">
                     <img
                       src={p.front}
                       alt={p.name}
