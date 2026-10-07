@@ -178,11 +178,11 @@ function BrandPage() {
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
             >
               {[
-                { src: "/images/gallery-1.png", alt: "ECLIPSSE™ universe — Calle" },
-                { src: "/images/gallery-2.png", alt: "ECLIPSSE™ universe — DROP 007 Andex" },
-                { src: "/images/gallery-3.png", alt: "ECLIPSSE™ universe — Summer Drop" },
-                { src: "/images/gallery-4.png", alt: "ECLIPSSE™ universe — Supernova Drop 001" },
-                { src: "/images/gallery-5.png", alt: "ECLIPSSE™ universe — DROP 006" },
+                { src: "/images/gallery-1.webp", alt: "ECLIPSSE™ universe — Calle" },
+                { src: "/images/gallery-2.webp", alt: "ECLIPSSE™ universe — DROP 007 Andex" },
+                { src: "/images/gallery-3.webp", alt: "ECLIPSSE™ universe — Summer Drop" },
+                { src: "/images/gallery-4.webp", alt: "ECLIPSSE™ universe — Supernova Drop 001" },
+                { src: "/images/gallery-5.webp", alt: "ECLIPSSE™ universe — DROP 006" },
               ].map((img, i) => (
                 <motion.div
                   key={img.src}
@@ -242,7 +242,7 @@ function BrandPage() {
           className="relative w-full aspect-[16/7] md:aspect-[21/9] overflow-hidden"
         >
           <img
-            src="/images/instagram-banner.png"
+            src="/images/instagram-banner.webp"
             alt="ECLIPSSE™ universe"
             className="w-full h-full object-cover grayscale"
             loading="lazy"

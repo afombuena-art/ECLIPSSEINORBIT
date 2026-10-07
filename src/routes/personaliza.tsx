@@ -150,7 +150,7 @@ function CustomPage() {
 
       <section className="relative h-[72vh] min-h-[420px] overflow-hidden border-t border-border">
         <motion.img
-          src="/images/personaliza-hero-wide.png"
+          src="/images/personaliza-hero-wide.webp"
           alt="ECLIPSSE™ universe — Personaliza"
           initial={{ scale: 1.06 }}
           animate={{ scale: 1 }}
@@ -278,7 +278,7 @@ function CustomPage() {
           className="w-full max-w-[540px] aspect-[4/5] rounded-2xl overflow-hidden"
         >
           <img
-            src="/images/sudaderas-grupos.png"
+            src="/images/sudaderas-grupos.webp"
             alt="ECLIPSSE™ universe — Sudaderas para grupos"
             className="w-full h-full object-cover"
             loading="lazy"
