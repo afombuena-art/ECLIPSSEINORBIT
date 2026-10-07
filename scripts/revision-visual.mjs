@@ -75,7 +75,8 @@ for (const v of vistas) {
           const fondo = !["rgba(0, 0, 0, 0)", "transparent"].includes(s.backgroundColor);
           const control = ["IMG", "BUTTON", "INPUT", "TEXTAREA"].includes(el.tagName);
           if (!borde && !fondo && !control) continue;
-          const clase = typeof el.className === "string" ? el.className.split(" ").slice(0, 3).join(".") : "";
+          const clase =
+            typeof el.className === "string" ? el.className.split(" ").slice(0, 3).join(".") : "";
           fuera.add(`${el.tagName.toLowerCase()}.${clase}`.slice(0, 90));
         }
         return [...fuera];
@@ -86,7 +87,8 @@ for (const v of vistas) {
     await p.screenshot({ path: `${SALIDA}/${pg.id}-${v.nombre}.png` });
   }
 
-  if (errores.length) problemas.push(`errores de consola @${v.nombre}: ${errores.slice(0, 3).join(" | ")}`);
+  if (errores.length)
+    problemas.push(`errores de consola @${v.nombre}: ${errores.slice(0, 3).join(" | ")}`);
   await ctx.close();
 }
 await navegador.close();
@@ -95,7 +97,9 @@ console.log("\n=== PROBLEMAS ===");
 console.log(problemas.length ? problemas.map((x) => "  ⚠️  " + x).join("\n") : "  ninguno");
 
 console.log("\n=== CAJAS CON ESQUINAS RECTAS (escritorio) ===");
-console.log("  Muchas son correctas a propósito: secciones a todo el ancho, cabecera fija, marquee.");
+console.log(
+  "  Muchas son correctas a propósito: secciones a todo el ancho, cabecera fija, marquee.",
+);
 for (const [id, lista] of cuadradas) {
   console.log(`\n  ${id}: ${lista.length}`);
   for (const c of lista.slice(0, 8)) console.log("     " + c);
