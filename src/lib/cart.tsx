@@ -134,7 +134,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       },
       remove: (id, size) =>
         setLines((prev) => prev.filter((l) => !(l.id === id && l.size === size))),
-      clear: () => setLines([]),
+      // Si ya está vacío devuelve el MISMO array: un array nuevo cada vez regeneraba
+      // `clear` y reiniciaba en bucle el efecto de /pedido/confirmado.
+      clear: () => setLines((prev) => (prev.length === 0 ? prev : [])),
     };
   }, [lines, isOpen, hydrated]);
 

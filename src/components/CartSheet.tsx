@@ -16,7 +16,7 @@ export function CartSheet() {
     <Sheet open={isOpen} onOpenChange={setOpen}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-md flex flex-col bg-white text-black p-0"
+        className="w-full sm:max-w-md flex flex-col bg-background text-black p-0"
       >
         <SheetHeader className="px-5 md:px-6 pt-6 pb-4 border-b border-border text-left">
           <SheetTitle className="font-display text-2xl tracking-tight">Tu carrito</SheetTitle>
@@ -40,13 +40,13 @@ export function CartSheet() {
             <div className="flex-1 overflow-y-auto px-5 md:px-6 py-4 divide-y divide-border">
               {detailedLines.map((line) => (
                 <div key={`${line.id}-${line.size}`} className="flex gap-4 py-4 first:pt-0">
-                  <div className="h-24 w-20 shrink-0 overflow-hidden bg-muted">
+                  <div className="h-24 w-20 shrink-0 overflow-hidden rounded-lg">
                     <img
                       src={line.product.front}
                       alt={line.product.name}
                       loading="lazy"
                       decoding="async"
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover mix-blend-multiply"
                     />
                   </div>
 

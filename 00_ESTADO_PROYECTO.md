@@ -631,6 +631,20 @@ saturación media: 0.000   en los CINCO archivos
 
 **🔎 Dato sin resolver:** en una captura de Jacobo aparecía un rectángulo gris borroso junto a «INICIO» en la cuadrícula de camisetas. No se ha vuelto a ver al revisarlo con Playwright, que no muestra errores; probablemente fue una imagen cargando.
 
+### 🆕 Cambios del 2026-10-07 — SIN COMMIT (rama `auditoria-preproduccion`)
+
+Jacobo pidió (vía Ana) cambiar la paleta, la cabecera y el aspecto general. Hecho y **comprobado en pantalla** (Chromium, escritorio y móvil 390 px; `tsc` limpio, 110 pruebas pasan, `revision-visual.mjs` sin desbordes ni errores de consola):
+
+- **Paleta nueva (sustituye a «blanco y negro»):** fondo de toda la web `#EBEBEB`, superficies `#BCBCBC` (tokens `--background` y `--surface` en `styles.css`). Las secciones que eran negras (Sobre nosotros, Personaliza, pie) pasan a `#BCBCBC` con texto negro. Negro y blanco solo en texto, botones y detalles. ⚠️ `#BCBCBC` sobre `#EBEBEB` ≈ 1,9:1: no usar nunca como color de texto.
+- **Cabecera en isla** centrada, translúcida (cristal con desenfoque), tipo Becay. **Banda «POR Y PARA JÓVENES»** más fina, texto pequeño gris y más lenta.
+- **Línea fina en las fotos de producto:** era el fondo casi blanco de las fotos contra el de la página. Arreglado con `mix-blend-multiply` y sin fondo en el contenedor. ⚠️ Oscurece ~8 % cualquier foto con color (p. ej. la del modelo en la galería); si molesta, recortar las fotos a PNG transparente.
+- **Animaciones (punto 7):** transición suave entre páginas (View Transitions, `defaultViewTransition` en `router.tsx`), pulsación de botones, zoom suave de foto en hover, todo apagado con «reducir movimiento». **Falta probar la transición entre páginas a mano en navegador real** (solo comprobado que no da errores).
+- **Páginas legales:** nombre, NIF y domicilio quedan **solo en el Aviso legal** (LSSI art. 10 los exige; no se pueden quitar). Privacidad y Términos remiten a él. ⚠️ **Decisión de Jacobo pendiente:** el domicilio es su casa; si no quiere mostrarlo, necesita domicilio de actividad (oficina virtual/coworking) declarado a Hacienda. Consultar a su gestor.
+- ✅ **Repaso con la paleta nueva (2026-10-07), solo Chromium escritorio:** checkout con carrito lleno, pedido cancelado/confirmado, Aviso legal, Privacidad, Cookies, Términos, Devoluciones, Personaliza, tienda y ficha. Contraste de texto medido con script (`tmp-contraste.mjs`, no versionado): **peor caso 4,55:1** (banda del eslogan, decorativa), ningún texto por debajo de 4,5:1 (3:1 en texto grande). Límites: no mide texto sobre fotos ni el cristal translúcido de la cabecera y de las cookies sobre lo que tengan detrás.
+- 🐞 **Error previo corregido, no era de este rediseño:** en `src/lib/cart.tsx`, `clear()` guardaba siempre un array nuevo y `/pedido/confirmado` caía en un bucle («Maximum update depth exceeded») cuando llegabas con el carrito aún lleno, que es lo normal tras pagar. Ahora `clear()` no cambia nada si ya está vacío. Comprobado: sin errores de consola, `tsc` limpio, 110 pruebas pasan. ⚠️ **No probado con un pago real de Stripe en test**, solo cargando la página con un carrito sembrado a mano: conviene repetir una compra de prueba completa antes de publicar.
+- La isla de la cabecera sube a `bg-white/75` porque sobre las secciones grises el logo gris desaparecía.
+- ⚠️ **La QA completa (Firefox, Safari, Edge, rendimiento en móvil, accesibilidad con teclado/lector) sigue sin hacer.**
+
 ### Lo único que sí se hizo
 
 ✅ **Punto 10, mitad: retirada la cuenta atrás del drop** (commit `14d5014`). Estaba caducada y abrir con un contador vencido da mala imagen. El componente `DropCountdown.tsx` **se conserva sin usar**: una marca de drops lo necesitará en el siguiente lanzamiento.

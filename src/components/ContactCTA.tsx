@@ -55,7 +55,7 @@ const itemVariants: Variants = {
 
 export function ContactCTA({ variant = "shop" }: { variant?: "shop" | "contact" }) {
   return (
-    <section id="contacto" className="border-t border-border bg-white">
+    <section id="contacto" className="border-t border-border bg-background">
       <motion.div
         className="mx-auto max-w-lg px-5 md:px-8 py-20 md:py-28 text-center"
         variants={containerVariants}

@@ -15,7 +15,7 @@ export const Route = createFileRoute("/pedido/cancelado")({
 
 function PedidoCanceladoPage() {
   return (
-    <div className="min-h-screen bg-white text-black flex flex-col">
+    <div className="min-h-screen bg-background text-black flex flex-col">
       <Marquee text="POR Y PARA JÓVENES" />
       <SiteHeader current="brand" />
 

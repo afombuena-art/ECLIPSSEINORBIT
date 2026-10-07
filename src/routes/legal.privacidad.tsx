@@ -21,8 +21,8 @@ export const Route = createFileRoute("/legal/privacidad")({
       </p>
       <h2>Responsable</h2>
       <p>
-        <strong>Jacobo Otero Campos</strong> — NIF <strong>48806552T</strong> —{" "}
-        <strong>Plaza del Cabildo 12, 41001</strong>, Sevilla, España ·{" "}
+        Jacobo Otero Campos, titular de ECLIPSSE™ UNIVERSE (resto de datos en el{" "}
+        <a href="/legal/aviso-legal">Aviso legal</a>) ·{" "}
         <a href="mailto:eclipssebrand@gmail.com">eclipssebrand@gmail.com</a>
       </p>
       <h2>Datos que recogemos</h2>

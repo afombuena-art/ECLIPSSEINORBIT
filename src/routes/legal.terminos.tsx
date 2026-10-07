@@ -15,10 +15,9 @@ export const Route = createFileRoute("/legal/terminos")({
       <h2>Información general</h2>
       <p>
         Las presentes condiciones regulan la venta de productos a través de la tienda online de
-        ECLIPSSE™ UNIVERSE, titularidad de <strong>Jacobo Otero Campos</strong>, con NIF{" "}
-        <strong>48806552T</strong> y domicilio en
-        <strong> Plaza del Cabildo 12, 41001</strong>, Sevilla (España). Realizar un pedido implica
-        la aceptación expresa de estas condiciones.
+        ECLIPSSE™ UNIVERSE, cuyos datos de titular figuran en el{" "}
+        <a href="/legal/aviso-legal">Aviso legal</a>. Realizar un pedido implica la aceptación
+        expresa de estas condiciones.
       </p>
       <h2>Productos y precios</h2>
       <p>

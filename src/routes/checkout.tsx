@@ -130,7 +130,7 @@ function CheckoutPage() {
   if (hydrated && detailedLines.length === 0) return null;
 
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-background text-black">
       <Marquee text="POR Y PARA JÓVENES" />
       <SiteHeader current="brand" />
 
@@ -280,13 +280,13 @@ function CheckoutPage() {
             <div className="divide-y divide-border">
               {detailedLines.map((l) => (
                 <div key={`${l.id}-${l.size}`} className="flex gap-3 py-3 first:pt-0 text-sm">
-                  <div className="h-16 w-14 shrink-0 overflow-hidden bg-muted">
+                  <div className="h-16 w-14 shrink-0 overflow-hidden rounded-lg">
                     <img
                       src={l.product.front}
                       alt={l.product.name}
                       loading="lazy"
                       decoding="async"
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover mix-blend-multiply"
                     />
                   </div>
                   <div className="flex flex-1 justify-between gap-2">

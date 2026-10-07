@@ -42,7 +42,7 @@ export function DropCountdown() {
   }, []);
 
   return (
-    <section className="border-t border-border bg-white text-black">
+    <section className="border-t border-border bg-background text-black">
       <motion.div
         className="mx-auto max-w-4xl px-5 md:px-8 py-20 md:py-32 text-center"
         initial={{ opacity: 0, y: 28 }}

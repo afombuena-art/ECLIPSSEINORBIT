@@ -41,7 +41,7 @@ export const Route = createFileRoute("/prendas/$slug")({
   },
   component: ProductPage,
   notFoundComponent: () => (
-    <div className="min-h-screen flex items-center justify-center bg-white">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <p className="text-sm uppercase tracking-[0.3em]">Prenda no encontrada</p>
     </div>
   ),
@@ -118,13 +118,13 @@ function ProductPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-background text-black">
       <Marquee text="POR Y PARA JÓVENES" />
       <SiteHeader current="brand" />
 
       <section className="mx-auto max-w-7xl px-5 md:px-8 py-10 md:py-16 grid md:grid-cols-2 gap-10 md:gap-16">
         <div>
-          <div className="relative aspect-[4/5] rounded-2xl bg-muted overflow-hidden select-none">
+          <div className="relative aspect-[4/5] rounded-2xl overflow-hidden select-none">
             <AnimatePresence initial={false} custom={direction} mode="popLayout">
               <motion.img
                 key={active}
@@ -136,7 +136,7 @@ function ProductPage() {
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                className="absolute inset-0 w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover mix-blend-multiply"
                 decoding="async"
                 draggable={false}
               />
@@ -166,7 +166,7 @@ function ProductPage() {
                   alt=""
                   loading="lazy"
                   decoding="async"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover mix-blend-multiply"
                 />
               </button>
             ))}
@@ -414,13 +414,13 @@ function ProductPage() {
                   params={{ slug: p.slug }}
                   className="group block text-center"
                 >
-                  <div className="aspect-[4/5] rounded-xl bg-muted overflow-hidden">
+                  <div className="aspect-[4/5] rounded-xl overflow-hidden">
                     <img
                       src={p.front}
                       alt={p.name}
                       loading="lazy"
                       decoding="async"
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="w-full h-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
                     />
                   </div>
                   <div className="mt-3 flex flex-col items-center gap-0.5">

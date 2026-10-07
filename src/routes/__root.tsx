@@ -19,7 +19,7 @@ import { absoluteSiteUrl } from "@/data/site";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-white px-6 text-black">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-black">
       <div className="mb-10">
         <Logo className="h-12 md:h-16" />
       </div>
@@ -50,7 +50,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white px-4 text-black">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 text-black">
       <div className="max-w-md text-center">
         <h1 className="font-display text-3xl">Algo ha fallado</h1>
         <p className="mt-2 text-sm text-muted-foreground">Inténtalo de nuevo en unos segundos.</p>

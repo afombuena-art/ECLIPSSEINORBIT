@@ -52,7 +52,7 @@ function Landing() {
   }, [going, navigate]);
 
   return (
-    <main className="relative min-h-[100svh] overflow-hidden bg-white text-black flex flex-col items-center px-6">
+    <main className="relative min-h-[100svh] overflow-hidden bg-background text-black flex flex-col items-center px-6">
       {/* Transition overlay */}
       <AnimatePresence>
         {going && (
@@ -62,7 +62,7 @@ function Landing() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-white"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background"
           >
             <motion.div
               animate={{ rotate: 360 }}

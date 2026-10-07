@@ -88,7 +88,7 @@ const services = [
 
 function CustomPage() {
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-background text-black">
       <Marquee text="TÚ NOS DAS LA IDEA, NOSOTROS LA CREAMOS" />
       <SiteHeader current="custom" />
 
@@ -161,7 +161,7 @@ function CustomPage() {
         />
       </section>
 
-      <section className="border-t border-border bg-black text-white">
+      <section className="border-t border-border bg-surface text-black">
         <div className="mx-auto max-w-5xl px-5 md:px-8 py-20 md:py-28">
           <motion.div
             initial={{ opacity: 0, y: 28 }}
@@ -269,7 +269,7 @@ function CustomPage() {
         </div>
       </section>
 
-      <section className="border-t border-border flex justify-center bg-white overflow-hidden">
+      <section className="border-t border-border flex justify-center bg-background overflow-hidden">
         <motion.div
           initial={{ opacity: 0, scale: 1.02 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -317,7 +317,7 @@ function CustomPage() {
         </div>
       </section>
 
-      <section className="bg-black text-white border-t border-border">
+      <section className="bg-surface text-black border-t border-border">
         <div className="mx-auto max-w-7xl px-5 md:px-8 py-20 md:py-28">
           <p className="text-[10px] uppercase tracking-[0.4em] opacity-60 mb-4">Servicios</p>
           <h2 className="font-display text-4xl md:text-6xl mb-14">Técnicas y acabados</h2>

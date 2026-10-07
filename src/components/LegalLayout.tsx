@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 
 export function LegalLayout({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-background text-black">
       <SiteHeader current="brand" />
       <article className="mx-auto max-w-3xl px-5 md:px-8 py-16 md:py-24">
         <button

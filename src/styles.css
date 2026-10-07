@@ -9,6 +9,7 @@
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-surface: var(--surface);
   --color-border: var(--border);
   --font-display: "League Spartan", system-ui, sans-serif;
   --font-body: "Inter", system-ui, sans-serif;
@@ -27,11 +28,16 @@
 }
 
 :root {
-  --background: #ffffff;
+  /* Paleta de marca (2026-10-07, pedido de Jacobo): el fondo de TODA la web es el
+     gris claro del logo y, sobre él, el gris más oscuro. Medidos sobre el archivo:
+     fondo #EBEBEB, símbolo #BCBCBC. Negro y blanco solo en texto, botones y detalles.
+     ⚠️ #BCBCBC sobre #EBEBEB da ~1,9:1: vale de superficie o decoración, NUNCA de texto. */
+  --background: #ebebeb;
+  --surface: #bcbcbc;
   --foreground: #000000;
-  --muted: #f5f5f5;
-  --muted-foreground: #6b6b6b;
-  --border: #ececec;
+  --muted: #e0e0e0;
+  --muted-foreground: #4f4f4f;
+  --border: #d2d2d2;
 
   /* Identidad ECLIPSSE: estrictamente monocroma. Medido el 2026-10-05 sobre los
      cinco archivos de `02_ARCHIVOS/` con saturación 0.000 en los cinco. No
@@ -71,7 +77,7 @@
   * { border-color: var(--color-border); }
   html { scroll-behavior: smooth; }
   html, body {
-    background-color: #ffffff;
+    background-color: var(--background);
     color: #000000;
     font-family: "Inter", system-ui, sans-serif;
     font-weight: 400;
@@ -117,3 +123,30 @@
 @utility float-slow {
   animation: float-y-slow 5.5s ease-in-out infinite;
 }
+
+/* ───── Pulido de movimiento (punto 7) ─────
+   Todo con las mismas curvas y duraciones de :root, y apagado por completo con
+   «reducir movimiento» (más arriba). Nada rebota: entra, se asienta y ya. */
+
+/* Transición entre páginas: fundido corto, sin desplazar la cabecera. */
+::view-transition-old(root) { animation: vt-sale var(--dur-media) var(--sal-suave) both; }
+::view-transition-new(root) { animation: vt-entra var(--dur-larga) var(--sal-suave) both; }
+@keyframes vt-sale { to { opacity: 0; } }
+@keyframes vt-entra { from { opacity: 0; transform: translateY(8px); } }
+
+/* Botones y enlaces con forma de botón: se pulsan de verdad. */
+a[class*="rounded-full"], button[class*="rounded-full"] {
+  transition-property: background-color, color, border-color, transform, box-shadow, opacity;
+  transition-duration: var(--dur-media);
+  transition-timing-function: var(--sal-suave);
+}
+a[class*="rounded-full"]:active, button[class*="rounded-full"]:active { transform: scale(0.97); }
+
+/* Tarjetas de producto: la foto respira al pasar el cursor. */
+@media (hover: hover) {
+  .group:hover img { transform: scale(1.035); }
+}
+.group img { transition: transform var(--dur-larga) var(--sal-suave), opacity var(--dur-larga) var(--sal-suave); }
+
+/* Enfoque visible con transición, para quien navega con teclado. */
+:focus-visible { transition: outline-offset var(--dur-corta) var(--sal-suave); }

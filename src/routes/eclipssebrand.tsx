@@ -86,7 +86,7 @@ const faqs = [
 
 function BrandPage() {
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-background text-black">
       <Marquee text="POR Y PARA JÓVENES" />
       <SiteHeader current="brand" />
 
@@ -130,7 +130,7 @@ function BrandPage() {
         </div>
       </section>
 
-      <section id="sobre-nosotros" className="border-t border-border bg-black text-white">
+      <section id="sobre-nosotros" className="border-t border-border bg-surface text-black">
         <div className="mx-auto max-w-5xl px-5 md:px-8 py-20 md:py-28">
           <motion.div
             initial={{ opacity: 0, y: 28 }}
@@ -188,7 +188,7 @@ function BrandPage() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: "-40px" }}
                   transition={{ duration: 0.55, delay: i * 0.07 }}
-                  className="flex-none snap-start w-[72vw] md:w-[36vw] lg:w-[26vw] aspect-[4/5] overflow-hidden rounded-xl bg-white/5"
+                  className="flex-none snap-start w-[72vw] md:w-[36vw] lg:w-[26vw] aspect-[4/5] overflow-hidden rounded-xl bg-black/5"
                 >
                   <img
                     src={img.src}
@@ -204,7 +204,7 @@ function BrandPage() {
         </div>
       </section>
 
-      <section id="mas" className="border-t border-border bg-white">
+      <section id="mas" className="border-t border-border bg-background">
         <div className="mx-auto max-w-4xl px-5 md:px-8 pt-20 md:pt-28 pb-10">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -355,13 +355,13 @@ function ProductCard({
         onMouseLeave={() => setHover(false)}
         className="group block text-center"
       >
-        <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-muted">
+        <div className="relative aspect-[4/5] overflow-hidden rounded-xl">
           <img
             src={front}
             alt={name}
             loading="lazy"
             decoding="async"
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${hover ? "opacity-0" : "opacity-100"}`}
+            className={`absolute inset-0 w-full h-full object-cover mix-blend-multiply transition-opacity duration-500 ${hover ? "opacity-0" : "opacity-100"}`}
           />
           <img
             src={back}
@@ -369,7 +369,7 @@ function ProductCard({
             aria-hidden="true"
             loading="lazy"
             decoding="async"
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${hover ? "opacity-100" : "opacity-0"}`}
+            className={`absolute inset-0 w-full h-full object-cover mix-blend-multiply transition-opacity duration-500 ${hover ? "opacity-100" : "opacity-0"}`}
           />
         </div>
         <div className="mt-4 flex flex-col items-center gap-1">
