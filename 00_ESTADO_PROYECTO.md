@@ -1,6 +1,6 @@
 # Estado del proyecto · ECLIPSSEINORBIT
 
-**Última actualización:** 2026-10-07
+**Última actualización:** 2026-10-08
 **Tipo:** integración de Stripe para tienda online
 **Estado:** activo — **preproducción validada; apto con pendientes para preparar una puesta en producción controlada, todavía no para conmutar el dominio**
 **Ingresos confirmados:** no confirmados
@@ -13,6 +13,16 @@
 ## 📌 CIERRE DEL 2026-10-07 — LEE ESTO PRIMERO
 
 **Este bloque manda sobre «Si retomas aquí, lee esto primero» y sobre «Próxima acción», que son anteriores y están en parte desfasados.**
+
+### ✅ ACTUALIZACIÓN 2026-10-08 — manda sobre la lista de abajo
+
+**Confirmado por Ana, probado por ella en la preproducción (Stripe en modo test):** compras completas, reservas, **email de stock negativo, email de talla agotada**, y el stock real de Airtable **restaurado y correcto** tras borrar las ventas de prueba. Preproducción desplegada con `npm run deploy:preprod` (versión `f318a760-22cb-48b4-a2ba-15ba09906236`). Todo guardado en git hasta `97fe6b9` (el commit de cierre de hoy va encima).
+
+- **Arreglo de hoy (ya en preprod):** tras comprar, la web seguía enseñando el stock anterior en la misma pestaña, porque el cargador del enrutador no se repite al navegar. Ahora se vuelve a pedir al cambiar de página, al volver a la pestaña y 8 s tras `/pedido/confirmado`; caché del servidor de 60 a 15 s. Aprendizaje guardado en el playbook.
+- **Emails de Airtable (configuración que vive en Airtable, NO en el repositorio):** un enlace a una vista **no sirve en el móvil** (pide la aplicación), así que el correo lleva los datos dentro: un campo fórmula `Aviso` en `Stock` redacta el mensaje y la automatización inserta **una sola etiqueta**. Hay dos: «Stock negativo» (`Disponible` < 0, acción urgente: reembolsar) y «Agotado» (`Disponible` = 0 y `Unidades iniciales` > 0, informativa). Solo avisa cuando una fila **entra** en la vista.
+- **De la lista de abajo, ya hechos:** 1 (email), 2 (stock restaurado). **El 3** (enlace `Ventas.Stock` a un solo registro, formato de fecha, borrar «Table 1») **no se ha confirmado**.
+- **Siguen pendientes, por este orden:** (4) probar en un iPhone real; (5) decidir con Jacobo el domicilio del Aviso legal y si se abre la tienda; (6) poner `AIRTABLE_STOCK_TOKEN` y `AIRTABLE_STOCK_BASE_ID` como Secret en el Worker de **producción** (sin ellos no vende); (7) `git push origin auditoria-preproduccion` a la bifurcación de Ana (hay commits sin subir; ningún PR ni `main` de Jacobo sin hablarlo).
+- **Todavía sin ejercitar en real:** rechazo del servidor por falta de stock, comportamiento con Airtable caído, y la carrera de dos reservas simultáneas.
 
 ### 🔹 Por dónde empezar mañana (en este orden)
 
