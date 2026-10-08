@@ -24,6 +24,23 @@
 - **Siguen pendientes, por este orden:** (4) probar en un iPhone real; (5) decidir con Jacobo el domicilio del Aviso legal y si se abre la tienda; (6) poner `AIRTABLE_STOCK_TOKEN` y `AIRTABLE_STOCK_BASE_ID` como Secret en el Worker de **producción** (sin ellos no vende); (7) `git push origin auditoria-preproduccion` a la bifurcación de Ana (hay commits sin subir; ningún PR ni `main` de Jacobo sin hablarlo).
 - **Todavía sin ejercitar en real:** rechazo del servidor por falta de stock, comportamiento con Airtable caído, y la carrera de dos reservas simultáneas.
 
+### 🚀 2026-10-08 (noche) — SE ABRE LA TIENDA: plan de apertura (nada de esto está hecho todavía)
+
+**Decisiones de Ana:** Jacobo da el sí a **abrir la tienda**. El **DNS de `eclipssebrand.es` lo controla Jacobo** (hará falta su colaboración en la Fase C). **El Worker de producción `eclipsseinorbit` NO existe**: en la cuenta de Cloudflare solo está `eclipsseinorbit-preprod` (comprobado por Ana en el panel).
+
+**Hecho hoy:** política de privacidad corregida, **«Vercel (alojamiento de la web)» → «Cloudflare»** (visto bueno de Ana; no es asesoramiento jurídico, conviene que lo vea su asesor). **Sin confirmar:** que **Hostinger** siga siendo el servidor de n8n tal como dice esa página.
+
+**Fases (cada paso por separado, autorizado y comprobado; ver «Recorrido 2» del playbook):**
+- **A · Crear la tienda real en su propia dirección `workers.dev`, sin tocar el dominio.** `npm run deploy:produccion` (pide escribir PRODUCCION). Cargar **7 valores como Secret** en el panel (los pega Ana, nunca por chat): `STRIPE_SECRET_KEY` (live), `STRIPE_WEBHOOK_SECRET` (live, sale al crear el webhook), `N8N_ORDER_WEBHOOK_URL`, `N8N_ORDER_WEBHOOK_SECRET` (los mismos de preprod), `SITE_URL` (en esta fase, la `workers.dev` de producción; **al cambiar el dominio pasa a `https://www.eclipssebrand.es`**), `AIRTABLE_STOCK_TOKEN`, `AIRTABLE_STOCK_BASE_ID`. ⚠️ **`wrangler.jsonc` no define `SITE_URL` para producción** (solo para preprod): sin ella el pago falla a propósito. Mantener la tienda oculta con `APP_ENV=preprod` (como Secret) hasta abrir, y **quitarla al abrir**.
+- **B · Una compra real pequeña** con tarjeta de verdad; comprobar que llega a Airtable (pedidos y stock) y **devolverla**. Antes, resolver el **IVA con el asesor de Jacobo** (los precios llevan IVA incluido; Stripe no lo desglosa).
+- **C · Cambiar el dominio** `www.eclipssebrand.es` de Vercel a Cloudflare (**lo hace Jacobo en su DNS**), ajustar `SITE_URL`, **crear el webhook live de Stripe con el dominio real** (su `whsec_…` nuevo va a `STRIPE_WEBHOOK_SECRET`) y quitar `APP_ENV`. **Vercel se conserva funcionando** como reversión.
+- **D · Pausar Vercel** pasados unos días de tráfico real. Punto de parada propio. **No** aceptar ningún PR en el repositorio de Jacobo hasta decidir qué proveedor queda vinculado a producción.
+- **Plan de reversión escrito antes de empezar la Fase C** (cómo deshacer cada paso por separado).
+
+⚠️ **Riesgo a decidir antes de la Fase B: preprod y producción comparten la base de stock.** Con la tienda abierta, **una compra de prueba en preprod descontaría stock real**. Opciones: duplicar la base de Airtable para las pruebas (preprod usa su propio token y base), o no comprar nunca en preprod una vez abierta. **Sin decidir.**
+
+⚠️ Otros pendientes de apertura: borrar las compras de prueba de la **tabla real de pedidos** de Airtable (antiguas, a nombre de «ana»/«pepe rodriguez») si siguen ahí; los recibos de Stripe y los métodos de pago ya están configurados en el entorno real (2026-09-21).
+
 ### ✅ 2026-10-08 (noche) — confirmado por Ana y último cambio de contenido
 
 - **Confirmado por Ana:** probada la web en un **iPhone real, todo bien**; el **Aviso legal ya está bien** (queda como está).

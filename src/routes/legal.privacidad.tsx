@@ -59,9 +59,9 @@ export const Route = createFileRoute("/legal/privacidad")({
         con proveedores que actúan como encargados del tratamiento: <strong>Stripe</strong>{" "}
         (procesamiento del pago),
         <strong> Correos</strong> y <strong>Packlink PRO</strong> (preparación y entrega del envío),
-        <strong> Vercel</strong> (alojamiento de la web), <strong>iActivaPráctica</strong> (soporte
-        técnico de la tienda: mantiene la web, la automatización de pedidos y la base de datos donde
-        quedan registrados),
+        <strong> Cloudflare</strong> (alojamiento de la web), <strong>iActivaPráctica</strong>{" "}
+        (soporte técnico de la tienda: mantiene la web, la automatización de pedidos y la base de
+        datos donde quedan registrados),
         <strong> Hostinger</strong> (servidor donde se ejecuta la herramienta que registra tu pedido
         de forma automática una vez confirmado el pago) y <strong>Airtable</strong> (registro y
         gestión de los pedidos).
