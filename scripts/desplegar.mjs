@@ -29,9 +29,13 @@ antes de subirlo; si no coincide, no sube nada.
 }
 
 function ejecutar(orden, args, env) {
-  const r = spawnSync(orden, args, { stdio: "inherit", env, shell: process.platform === "win32" });
+  // Una sola cadena con shell: en Windows `npx` es un .cmd. Los argumentos son
+  // constantes de este archivo, nunca datos externos. (Pasar un array junto con
+  // `shell: true` está desaconsejado por Node: aviso DEP0190.)
+  const r = spawnSync(`${orden} ${args.join(" ")}`, { stdio: "inherit", env, shell: true });
   if (r.status !== 0) {
-    console.error(`\n✖ «${orden} ${args.join(" ")}» ha fallado. No se ha subido nada.`);
+    console.error(`
+✖ «${orden} ${args.join(" ")}» ha fallado. No se ha subido nada.`);
     process.exit(r.status ?? 1);
   }
 }
