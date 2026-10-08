@@ -76,10 +76,6 @@ const historia = [
 
 const faqs = [
   {
-    q: "Cómo comprar",
-    a: "A través de Instagram DM o WhatsApp. Te respondemos lo antes posible y te orientamos en todo el proceso de compra.",
-  },
-  {
     q: "Historia",
     a: "Nuestra marca trabaja mediante DROPS: lanzamientos de un número limitado de prendas, disponibles solo durante un periodo concreto o hasta agotar existencias. Cada DROP es único. Una vez se agota el stock, no vuelve a estar disponible.",
   },
