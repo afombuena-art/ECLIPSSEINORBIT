@@ -24,7 +24,9 @@
 - **Siguen pendientes, por este orden:** (4) probar en un iPhone real; (5) decidir con Jacobo el domicilio del Aviso legal y si se abre la tienda; (6) poner `AIRTABLE_STOCK_TOKEN` y `AIRTABLE_STOCK_BASE_ID` como Secret en el Worker de **producción** (sin ellos no vende); (7) `git push origin auditoria-preproduccion` a la bifurcación de Ana (hay commits sin subir; ningún PR ni `main` de Jacobo sin hablarlo).
 - **Todavía sin ejercitar en real:** rechazo del servidor por falta de stock, comportamiento con Airtable caído, y la carrera de dos reservas simultáneas.
 
-### 🛠️ REVISIÓN AUTOMÁTICA DE VENTAS (Opción 2, hecha el 2026-10-08) — PENDIENTE DE DESPLEGAR Y ENCENDER
+### 🛠️ REVISIÓN AUTOMÁTICA DE VENTAS (Opción 2, hecha el 2026-10-08) — DESPLEGADA EN PREPROD, PRIMERA EJECUCIÓN SIN COMPROBAR
+
+✅ **Desplegada por Ana el 2026-10-08 (19:5x) con `npm run deploy:preprod`: versión `98491ab4-ae20-4ce9-aece-ca1502c7bcec`; Cloudflare confirmó `schedule: 7 * * * *`.** Comprobado desde fuera tras desplegar: 4 páginas responden 200 y el stock servido es el correcto. **La automatización «Incidencias de la tienda» figura como `deployed` (encendida)** según el conector de Airtable. **Falta ver la primera ejecución del horario** (registros del Worker en Cloudflare, línea «conciliación: {…}» tras el minuto 7 de una hora) **y la prueba en real de que no hace nada indebido** (`revisadas`/`pendientes` coherentes y 0 ventas duplicadas). Lo que sigue en el bloque describe el diseño y lo verificado antes de desplegar.
 
 **Para qué:** si se cobra un pedido pero falla anotar su venta en Airtable, la unidad volvería a venderse a los 31 min y **no saltaría ningún aviso** (Airtable nunca supo de esa venta). Esto lo detecta y lo repara.
 
