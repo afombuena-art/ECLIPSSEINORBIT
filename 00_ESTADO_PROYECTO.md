@@ -37,7 +37,9 @@
 - **D · Pausar Vercel** pasados unos días de tráfico real. Punto de parada propio. **No** aceptar ningún PR en el repositorio de Jacobo hasta decidir qué proveedor queda vinculado a producción.
 - **Plan de reversión escrito antes de empezar la Fase C** (cómo deshacer cada paso por separado).
 
-⚠️ **Riesgo a decidir antes de la Fase B: preprod y producción comparten la base de stock.** Con la tienda abierta, **una compra de prueba en preprod descontaría stock real**. Opciones: duplicar la base de Airtable para las pruebas (preprod usa su propio token y base), o no comprar nunca en preprod una vez abierta. **Sin decidir.**
+✅ **RESUELTO el 2026-10-08 (noche): preproducción usa su propia base de stock.** Ana duplicó la base desde Airtable: **«ECLIPSSE Stock PRUEBAS», ID `appM7ee36WS7Vvk6U`** (no es secreto), con su propio token. **Es la que usa SOLO el Worker `eclipsseinorbit-preprod`.** La **real** es `appUjZ8uk9xpMIrB2` («ECLIPSSE Stock») y **será la que use el Worker de producción**. El conector de Claude solo ve la real, no la de pruebas. Comprobado por Ana: una compra de prueba en preprod funciona contra la copia. Incidente de configuración resuelto: el primer intento falló con 404 (el ID de la base estaba mal copiado) y la web mostraba «No se ha podido procesar el pago» (es el comportamiento acordado: sin Airtable no se vende). ⚠️ **Regla:** el ID que va en Cloudflare es el trozo `app…` entero (17 caracteres) de la URL de la base, **no** el `tbl…` ni el `viw…`.
+
+🧹 **Filas heredadas en `Reservas`:** la copia trajo 2 filas de la original (pedido `ef63153b-…`: gorra-verde ×12 y camiseta-orbit M ×1, creadas el 2026-10-08 a las 16:00 UTC y **caducadas a las 16:35 UTC**). Son **inofensivas** (una reserva caducada deja de contar sola), pero siguen en **las dos bases**: conviene borrarlas.
 
 ⚠️ Otros pendientes de apertura: borrar las compras de prueba de la **tabla real de pedidos** de Airtable (antiguas, a nombre de «ana»/«pepe rodriguez») si siguen ahí; los recibos de Stripe y los métodos de pago ya están configurados en el entorno real (2026-09-21).
 
