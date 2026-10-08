@@ -35,7 +35,7 @@ const MINUTOS_MINIMOS = 31;
  *  (si no, su clave de idempotencia rechaza el reintento). */
 const TRAMO_MS = 5 * 60_000;
 const TIMEOUT_MS = 8_000;
-const CACHE_MS = 60_000;
+const CACHE_MS = 15_000;
 
 export type LineaStock = { producto: string; talla: string; cantidad: number };
 

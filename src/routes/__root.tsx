@@ -9,7 +9,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { MotionConfig } from "framer-motion";
-import { useEffect, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { Logo } from "@/components/Logo";
@@ -158,8 +158,43 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const { stock } = Route.useLoaderData();
+  const { stock: stockInicial } = Route.useLoaderData();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // El stock llega con la carga de la página, pero el cargador del enrutador NO se
+  // repite al navegar dentro de la misma pestaña (comprobado: 0 peticiones). Sin
+  // esto, quien compra y vuelve a la tienda sigue viendo el stock de antes hasta
+  // recargar. Se vuelve a pedir al cambiar de página y al volver a la pestaña.
+  const [stock, setStock] = useState(stockInicial);
+  useEffect(() => setStock(stockInicial), [stockInicial]);
+  const refrescar = useCallback(async () => {
+    try {
+      setStock((await getStockPublico()).stock);
+    } catch {
+      // Se queda con el último stock conocido; el cobro siempre pregunta en directo.
+    }
+  }, []);
+  const primera = useRef(true);
+  useEffect(() => {
+    if (primera.current) {
+      primera.current = false;
+      return;
+    }
+    void refrescar();
+    // Tras pagar, el aviso de Stripe tarda unos segundos en anotar la venta.
+    if (pathname.startsWith("/pedido/confirmado")) {
+      const id = window.setTimeout(() => void refrescar(), 8000);
+      return () => window.clearTimeout(id);
+    }
+  }, [pathname, refrescar]);
+  useEffect(() => {
+    const alVolver = () => {
+      if (document.visibilityState === "visible") void refrescar();
+    };
+    document.addEventListener("visibilitychange", alVolver);
+    return () => document.removeEventListener("visibilitychange", alVolver);
+  }, [refrescar]);
+
   return (
     <QueryClientProvider client={queryClient}>
       {/* `reducedMotion="user"`: las animaciones de framer-motion (JavaScript) no se
