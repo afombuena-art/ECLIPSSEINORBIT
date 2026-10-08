@@ -25,6 +25,12 @@
   "observability": {
     "enabled": true,
   },
+  // Revisión automática de ventas (src/lib/conciliacion.server.ts): cada hora, al
+  // minuto 7, compara los pagos de Stripe con el stock de Airtable y anota los que
+  // falten. Los horarios no se heredan entre entornos: se repite en preprod.
+  "triggers": {
+    "crons": ["7 * * * *"],
+  },
   "env": {
     // Entorno de preproducción: Worker independiente, sin rutas ni dominio propio.
     // Los bindings no se heredan entre entornos, así que el rate limiter se
@@ -37,6 +43,9 @@
       "vars": {
         "SITE_URL": "https://eclipsseinorbit-preprod.eclipssebrand.workers.dev",
         "APP_ENV": "preprod",
+      },
+      "triggers": {
+        "crons": ["7 * * * *"],
       },
       "ratelimits": [
         {

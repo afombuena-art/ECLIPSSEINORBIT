@@ -1,7 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe.server";
-import { liberarReserva, registrarVenta } from "@/lib/stock-airtable.server";
+import {
+  anotarIncidencia,
+  liberarReserva,
+  registrarVentaConReintentos,
+} from "@/lib/stock-airtable.server";
+import { marcarStockRegistrado } from "@/lib/conciliacion.server";
 import { alreadyForwarded, markForwarded, seenInMemory } from "@/lib/webhook-dedup.server";
 import { zoneFromPostalCode, compararEnvioCobradoConEntrega } from "@/lib/shipping";
 import { ORIGEN_PEDIDO } from "@/lib/checkout-schema";
@@ -346,12 +351,24 @@ export const Route = createFileRoute("/api/stripe-webhook")({
                 : [];
             });
             try {
-              await registrarVenta(refStock, lineas);
+              await registrarVentaConReintentos(refStock, lineas);
+              // La marca evita que la revisión automática recree esta venta si
+              // alguien la borra a propósito (una prueba, una devolución).
+              if (lineas.length) await marcarStockRegistrado(stripe, paymentIntentId);
             } catch (err) {
               console.error(
-                `stripe-webhook: ⚠️ NO se pudo anotar la venta en el stock del pedido ${refStock}. ANOTAR A MANO.`,
+                `stripe-webhook: ⚠️ NO se pudo anotar la venta en el stock del pedido ${refStock} tras reintentar. La revisión automática lo intentará de nuevo.`,
                 errorSeguro(err),
               );
+              await anotarIncidencia({
+                tipo: "Venta no anotada",
+                pedido: refStock,
+                unicaPorPedido: true,
+                resumen: `Venta sin anotar: pedido ${refStock.slice(0, 8)}`,
+                detalle:
+                  "Se cobró este pedido y llegó a n8n, pero no se pudo anotar en el stock tras varios intentos. " +
+                  "La revisión automática lo intentará de nuevo cada hora; si no se resuelve, hay que añadir la venta a mano en la tabla Ventas.",
+              });
             }
           } else {
             await liberarReserva(refStock);

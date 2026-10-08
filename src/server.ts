@@ -55,4 +55,37 @@ export default {
       });
     }
   },
+
+  /**
+   * Horario de Cloudflare (`triggers.crons` en wrangler.jsonc): revisión automática
+   * de ventas. Compara los pagos de Stripe con el stock de Airtable y anota los que
+   * falten. Ver `src/lib/conciliacion.server.ts`. Nunca lanza: un fallo aquí no puede
+   * afectar a la web, solo se registra (y, si se puede, se avisa por Incidencias).
+   */
+  async scheduled(
+    _event: unknown,
+    env: Record<string, unknown>,
+    ctx: { waitUntil: (p: Promise<unknown>) => void },
+  ) {
+    ctx.waitUntil(
+      (async () => {
+        try {
+          // Los secretos del Worker llegan en `env`; el código del proyecto los lee
+          // de process.env. Se copian solo los textos y sin pisar los que ya estén.
+          for (const [clave, valor] of Object.entries(env)) {
+            if (typeof valor === "string" && process.env[clave] === undefined) {
+              process.env[clave] = valor;
+            }
+          }
+          const [{ conciliarVentas }, { getStripe }] = await Promise.all([
+            import("./lib/conciliacion.server"),
+            import("./lib/stripe.server"),
+          ]);
+          await conciliarVentas(getStripe());
+        } catch (error) {
+          console.error("server: la revisión automática de ventas falló", errorSeguro(error));
+        }
+      })(),
+    );
+  },
 };

@@ -27,6 +27,7 @@ const API = "https://api.airtable.com/v0";
 const T_STOCK = "Stock";
 const T_VENTAS = "Ventas";
 const T_RESERVAS = "Reservas";
+const T_INCIDENCIAS = "Incidencias";
 
 /** Stripe exige que una sesión dure al menos 30 min; 31 deja margen. */
 const MINUTOS_MINIMOS = 31;
@@ -51,6 +52,11 @@ function leerConfig(): Config | null {
   const token = process.env.AIRTABLE_STOCK_TOKEN;
   const baseId = process.env.AIRTABLE_STOCK_BASE_ID;
   return token && baseId ? { token, baseId } : null;
+}
+
+/** `true` si hay token y base de Airtable configurados (secretos del Worker). */
+export function hayConfiguracionDeStock(): boolean {
+  return leerConfig() !== null;
 }
 
 /** Sin configuración y fuera de producción (desarrollo, pruebas): stock estático. */
@@ -380,6 +386,89 @@ export async function registrarVenta(
     );
   }
   return { registradas: nuevas.length, negativas };
+}
+
+/**
+ * `registrarVenta` con reintentos. Una caída breve de Airtable (o un límite de
+ * peticiones) no debe dejar una venta sin anotar. Lanza si agota los intentos.
+ * `esperas` son los milisegundos entre intentos (se pasan a 0 en las pruebas).
+ */
+export async function registrarVentaConReintentos(
+  orderRef: string,
+  lineas: LineaStock[],
+  esperas: number[] = [400, 1500],
+): Promise<ResultadoVenta> {
+  let ultimo: unknown;
+  for (let i = 0; i <= esperas.length; i++) {
+    try {
+      return await registrarVenta(orderRef, lineas);
+    } catch (err) {
+      ultimo = err;
+      console.error(
+        `stock: intento ${i + 1} de anotar la venta del pedido ${orderRef} fallido`,
+        mensajeSeguro(err),
+      );
+      if (i < esperas.length) await new Promise((r) => setTimeout(r, esperas[i]));
+    }
+  }
+  throw ultimo;
+}
+
+// ─── Incidencias: lo que el servidor no puede arreglar solo ──────────────────
+
+export type TipoIncidencia =
+  "Venta no anotada" | "Venta recuperada" | "Stock negativo" | "Revisión con errores";
+
+/**
+ * Escribe una fila en `Incidencias`; una automatización de Airtable la convierte en
+ * un email. Nunca lanza: es un aviso, no puede romper el pago ni el webhook.
+ *
+ * `unicaPorPedido`: no repite si ya hay una del mismo tipo para ese pedido.
+ * `unicaEnHoras`: no repite si hay una del mismo tipo en las últimas N horas
+ * (evita un email por hora cuando algo falla de forma sostenida).
+ * Devuelve `true` si la fila quedó escrita.
+ */
+export async function anotarIncidencia(i: {
+  tipo: TipoIncidencia;
+  resumen: string;
+  detalle: string;
+  pedido?: string;
+  unicaPorPedido?: boolean;
+  unicaEnHoras?: number;
+}): Promise<boolean> {
+  const cfg = leerConfig();
+  if (!cfg) return false;
+  try {
+    if (i.unicaPorPedido && i.pedido) {
+      const previas = await listar(
+        cfg,
+        T_INCIDENCIAS,
+        `AND({Pedido}='${esc(i.pedido)}', {Tipo}='${esc(i.tipo)}')`,
+      );
+      if (previas.length) return false;
+    }
+    if (i.unicaEnHoras) {
+      const previas = await listar(
+        cfg,
+        T_INCIDENCIAS,
+        `AND({Tipo}='${esc(i.tipo)}', IS_AFTER({Registrada}, DATEADD(NOW(), -${Math.floor(i.unicaEnHoras)}, 'hours')))`,
+      );
+      if (previas.length) return false;
+    }
+    await crear(cfg, T_INCIDENCIAS, [
+      {
+        Resumen: i.resumen.slice(0, 200),
+        Tipo: i.tipo,
+        Detalle: i.detalle.slice(0, 5000),
+        ...(i.pedido ? { Pedido: i.pedido } : {}),
+        Registrada: new Date().toISOString(),
+      },
+    ]);
+    return true;
+  } catch (err) {
+    console.error("stock: no se pudo escribir la incidencia", mensajeSeguro(err));
+    return false;
+  }
 }
 
 function mensajeSeguro(err: unknown): string {
